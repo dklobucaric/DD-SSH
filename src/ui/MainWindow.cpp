@@ -1,7 +1,9 @@
 #include "MainWindow.h"
 #include "ConnectDialog.h"
 #include "ssh/SshSession.h"
+
 #include <QAction>
+#include <QApplication>
 #include <QFontDatabase>
 #include <QListWidget>
 #include <QMenuBar>
@@ -56,20 +58,17 @@ void MainWindow::setupMenus()
 
     auto *helpMenu = menuBar()->addMenu("&Help");
 
-
-auto *aboutAction = helpMenu->addAction("About DD-SSH");
-connect(aboutAction, &QAction::triggered, this, [this]() {
-    QMessageBox::about(
-        this,
-        "About DD-SSH",
-        "DD-SSH\n\n"
-        "A clean cross-platform SSH client and session manager.\n\n"
-        "Current phase: libssh build integration.\n\n"
-        "libssh version: " + SshSession::libsshVersion()
-    );
-});
-
-
+    auto *aboutAction = helpMenu->addAction("About DD-SSH");
+    connect(aboutAction, &QAction::triggered, this, [this]() {
+        QMessageBox::about(
+            this,
+            "About DD-SSH",
+            "DD-SSH\n\n"
+            "A clean cross-platform SSH client and session manager.\n\n"
+            "Current phase: first SSH handshake skeleton.\n\n"
+            "libssh version: " + SshSession::libsshVersion()
+        );
+    });
 }
 
 void MainWindow::setupToolbar()
@@ -137,8 +136,8 @@ void MainWindow::setupCentralLayout()
             "DD-SSH terminal placeholder\n\n"
             "Selected session:\n" + item->text() + "\n\n"
             "Next milestone:\n"
-            "- real connect dialog\n"
-            "- libssh connection\n"
+            "- real session manager\n"
+            "- libssh authentication\n"
             "- terminal frontend\n"
         );
 
@@ -169,10 +168,12 @@ void MainWindow::addWelcomeTab()
         "Left side: session list placeholder\n"
         "Right side: terminal tabs placeholder\n\n"
         "Double-click a session on the left to open a placeholder tab.\n\n"
+        "Current milestone:\n"
+        "- first SSH handshake skeleton\n\n"
         "Next milestone:\n"
-        "- ConnectDialog\n"
-        "- libssh detection/build integration\n"
-        "- first SSH backend test\n"
+        "- host key fingerprint\n"
+        "- password/private-key auth\n"
+        "- real terminal channel\n"
     );
 
     m_tabs->addTab(welcome, "Welcome");
@@ -187,6 +188,21 @@ void MainWindow::showConnectDialog()
         return;
     }
 
+    const QString tabTitle =
+        dialog.username() + "@" + dialog.host() + ":" + QString::number(dialog.port());
+
+    statusBar()->showMessage("Testing SSH handshake with " + tabTitle + "...");
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    QApplication::processEvents();
+
+    const SshHandshakeResult handshake = SshSession::testHandshake(
+        dialog.host(),
+        dialog.port(),
+        dialog.username()
+    );
+
+    QApplication::restoreOverrideCursor();
+
     const QString authLabel =
         dialog.authType() == ConnectDialog::AuthType::Password
             ? "Password"
@@ -197,29 +213,49 @@ void MainWindow::showConnectDialog()
             ? "Password: entered, hidden from display"
             : "Private key: " + dialog.keyPath();
 
+    QString output;
+
+    output += "DD-SSH manual connection test\n\n";
+    output += "Host: " + dialog.host() + "\n";
+    output += "Port: " + QString::number(dialog.port()) + "\n";
+    output += "Username: " + dialog.username() + "\n";
+    output += "Auth type: " + authLabel + "\n";
+    output += secretInfo + "\n\n";
+
+    output += "SSH handshake result:\n";
+
+    if (handshake.success) {
+        output += "Status: SUCCESS\n";
+        output += "Message: " + handshake.message + "\n";
+        output += "Server banner: " + handshake.serverBanner + "\n\n";
+        output += "Authentication was NOT attempted yet.\n\n";
+        output += "Next milestone:\n";
+        output += "- host key fingerprint\n";
+        output += "- known-host decision flow\n";
+        output += "- password/private-key authentication\n";
+    } else {
+        output += "Status: FAILED\n";
+        output += "Message: " + handshake.message + "\n";
+        output += "libssh error code: " + QString::number(handshake.sshErrorCode) + "\n";
+        output += "Error: " + handshake.error + "\n\n";
+        output += "Check:\n";
+        output += "- host/IP is correct\n";
+        output += "- port is correct\n";
+        output += "- SSH server is reachable\n";
+        output += "- firewall allows connection\n";
+    }
+
     auto *terminalPlaceholder = new QTextEdit(this);
     terminalPlaceholder->setReadOnly(true);
     terminalPlaceholder->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
-
-    terminalPlaceholder->setPlainText(
-        "DD-SSH manual connection placeholder\n\n"
-        "Host: " + dialog.host() + "\n"
-        "Port: " + QString::number(dialog.port()) + "\n"
-        "Username: " + dialog.username() + "\n"
-        "Auth type: " + authLabel + "\n"
-        + secretInfo + "\n\n"
-        "No real SSH connection yet.\n\n"
-        "Next milestone:\n"
-        "- add libssh to CMake\n"
-        "- create SshSession skeleton\n"
-        "- test TCP/SSH handshake\n"
-    );
-
-    const QString tabTitle =
-        dialog.username() + "@" + dialog.host() + ":" + QString::number(dialog.port());
+    terminalPlaceholder->setPlainText(output);
 
     const int tabIndex = m_tabs->addTab(terminalPlaceholder, tabTitle);
     m_tabs->setCurrentIndex(tabIndex);
 
-    statusBar()->showMessage("Prepared manual connection placeholder for " + tabTitle);
+    if (handshake.success) {
+        statusBar()->showMessage("SSH handshake successful for " + tabTitle);
+    } else {
+        statusBar()->showMessage("SSH handshake failed for " + tabTitle);
+    }
 }
