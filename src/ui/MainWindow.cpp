@@ -1,36 +1,174 @@
 #include "MainWindow.h"
 
-#include <QLabel>
+#include <QAction>
+#include <QFontDatabase>
+#include <QListWidget>
 #include <QMenuBar>
+#include <QMessageBox>
+#include <QSplitter>
 #include <QStatusBar>
-#include <QVBoxLayout>
-#include <QWidget>
+#include <QTabWidget>
+#include <QTextEdit>
+#include <QToolBar>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     setWindowTitle("DD-SSH");
 
-    auto *central = new QWidget(this);
-    auto *layout = new QVBoxLayout(central);
-
-    auto *label = new QLabel(
-        "DD-SSH foundation build\n\n"
-        "Qt app skeleton is alive.\n"
-        "MainWindow class is now separated.\n\n"
-        "Next milestone: terminal frontend + SSH backend.",
-        central
-    );
-
-    label->setAlignment(Qt::AlignCenter);
-
-    layout->addWidget(label);
-    setCentralWidget(central);
-
-    auto *fileMenu = menuBar()->addMenu("&File");
-    fileMenu->addAction("Exit", this, &QWidget::close);
+    setupMenus();
+    setupToolbar();
+    setupCentralLayout();
 
     statusBar()->showMessage("DD-SSH launch pad ready");
 
-    resize(900, 600);
+    resize(1100, 700);
+}
+
+void MainWindow::setupMenus()
+{
+    auto *fileMenu = menuBar()->addMenu("&File");
+
+    auto *newSessionAction = fileMenu->addAction("New Session");
+    connect(newSessionAction, &QAction::triggered, this, [this]() {
+        statusBar()->showMessage("New Session placeholder clicked");
+    });
+
+    fileMenu->addSeparator();
+
+    auto *exitAction = fileMenu->addAction("Exit");
+    connect(exitAction, &QAction::triggered, this, &QWidget::close);
+
+    auto *sessionMenu = menuBar()->addMenu("&Session");
+
+    auto *connectAction = sessionMenu->addAction("Connect Selected");
+    connect(connectAction, &QAction::triggered, this, [this]() {
+        statusBar()->showMessage("Connect Selected placeholder clicked");
+    });
+
+    auto *toolsMenu = menuBar()->addMenu("&Tools");
+
+    auto *multiExecAction = toolsMenu->addAction("Multi-Exec");
+    connect(multiExecAction, &QAction::triggered, this, [this]() {
+        statusBar()->showMessage("Multi-Exec placeholder clicked");
+    });
+
+    auto *helpMenu = menuBar()->addMenu("&Help");
+
+    auto *aboutAction = helpMenu->addAction("About DD-SSH");
+    connect(aboutAction, &QAction::triggered, this, [this]() {
+        QMessageBox::about(
+            this,
+            "About DD-SSH",
+            "DD-SSH\n\n"
+            "A clean cross-platform SSH client and session manager.\n\n"
+            "Current phase: UI layout skeleton."
+        );
+    });
+}
+
+void MainWindow::setupToolbar()
+{
+    auto *toolbar = addToolBar("Main Toolbar");
+    toolbar->setMovable(false);
+
+    auto *newSessionAction = toolbar->addAction("New Session");
+    connect(newSessionAction, &QAction::triggered, this, [this]() {
+        statusBar()->showMessage("New Session placeholder clicked");
+    });
+
+    auto *connectAction = toolbar->addAction("Connect");
+    connect(connectAction, &QAction::triggered, this, [this]() {
+        statusBar()->showMessage("Connect placeholder clicked");
+    });
+
+    toolbar->addSeparator();
+
+    auto *multiExecAction = toolbar->addAction("Multi-Exec");
+    connect(multiExecAction, &QAction::triggered, this, [this]() {
+        statusBar()->showMessage("Multi-Exec placeholder clicked");
+    });
+
+    toolbar->addSeparator();
+
+    auto *settingsAction = toolbar->addAction("Settings");
+    connect(settingsAction, &QAction::triggered, this, [this]() {
+        statusBar()->showMessage("Settings placeholder clicked");
+    });
+}
+
+void MainWindow::setupCentralLayout()
+{
+    auto *splitter = new QSplitter(Qt::Horizontal, this);
+
+    m_sessionList = new QListWidget(splitter);
+    m_sessionList->setMinimumWidth(240);
+    m_sessionList->setMaximumWidth(360);
+
+    m_sessionList->addItem("DD-Lab / Nextcloud Backend");
+    m_sessionList->addItem("DD-Lab / Zabbix");
+    m_sessionList->addItem("Lab / Test VM");
+    m_sessionList->addItem("Local / Raspberry Pi");
+
+    m_tabs = new QTabWidget(splitter);
+    m_tabs->setTabsClosable(true);
+    m_tabs->setMovable(true);
+
+    connect(m_tabs, &QTabWidget::tabCloseRequested, this, [this](int index) {
+        QWidget *widget = m_tabs->widget(index);
+        m_tabs->removeTab(index);
+        widget->deleteLater();
+
+        if (m_tabs->count() == 0) {
+            addWelcomeTab();
+        }
+    });
+
+    connect(m_sessionList, &QListWidget::itemDoubleClicked, this, [this](QListWidgetItem *item) {
+        auto *terminalPlaceholder = new QTextEdit(this);
+        terminalPlaceholder->setReadOnly(true);
+        terminalPlaceholder->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+        terminalPlaceholder->setPlainText(
+            "DD-SSH terminal placeholder\n\n"
+            "Selected session:\n" + item->text() + "\n\n"
+            "Next milestone:\n"
+            "- real connect dialog\n"
+            "- libssh connection\n"
+            "- terminal frontend\n"
+        );
+
+        const int tabIndex = m_tabs->addTab(terminalPlaceholder, item->text());
+        m_tabs->setCurrentIndex(tabIndex);
+
+        statusBar()->showMessage("Opened placeholder tab for " + item->text());
+    });
+
+    splitter->addWidget(m_sessionList);
+    splitter->addWidget(m_tabs);
+    splitter->setStretchFactor(0, 0);
+    splitter->setStretchFactor(1, 1);
+
+    setCentralWidget(splitter);
+
+    addWelcomeTab();
+}
+
+void MainWindow::addWelcomeTab()
+{
+    auto *welcome = new QTextEdit(this);
+    welcome->setReadOnly(true);
+    welcome->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+    welcome->setPlainText(
+        "DD-SSH\n\n"
+        "UI layout skeleton is alive.\n\n"
+        "Left side: session list placeholder\n"
+        "Right side: terminal tabs placeholder\n\n"
+        "Double-click a session on the left to open a placeholder tab.\n\n"
+        "Next milestone:\n"
+        "- ConnectDialog\n"
+        "- libssh detection/build integration\n"
+        "- first SSH backend test\n"
+    );
+
+    m_tabs->addTab(welcome, "Welcome");
 }
