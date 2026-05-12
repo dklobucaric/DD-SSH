@@ -16,6 +16,17 @@ public:
     QString configFilePath() const;
 
     QList<SessionProfile> loadSessions(QString *errorMessage = nullptr) const;
+    bool loadSessionById(
+        const QString &sessionId,
+        SessionProfile *session,
+        QString *errorMessage = nullptr
+    ) const;
+    bool loadPlainSecret(
+        const QString &secretId,
+        QString *secretValue,
+        QString *secretType = nullptr,
+        QString *errorMessage = nullptr
+    ) const;
 
     bool saveSessionWithPlainSecret(
         const SessionProfile &session,

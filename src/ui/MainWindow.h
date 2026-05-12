@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QMainWindow>
+#include <QString>
 
 class QListWidget;
 class QTabWidget;
@@ -17,6 +18,7 @@ private:
     void loadSavedSessionsToSidebar();
     void addWelcomeTab();
     void showConnectDialog();
+    void testSavedSession(const QString &sessionId);
 
     QListWidget *m_sessionList = nullptr;
     QTabWidget *m_tabs = nullptr;

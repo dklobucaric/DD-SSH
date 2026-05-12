@@ -1,10 +1,12 @@
 cmake_minimum_required(VERSION 3.24)
 
 project(DD_SSH
-    VERSION 0.1.0
+    VERSION 0.1.1
     DESCRIPTION "A clean cross-platform SSH client and session manager"
     LANGUAGES CXX
 )
+
+set(DD_SSH_VERSION_STRING "dev 0.1.1.2")
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -37,6 +39,11 @@ qt_add_executable(dd-ssh
 target_include_directories(dd-ssh
     PRIVATE
         src
+)
+
+target_compile_definitions(dd-ssh
+    PRIVATE
+        DD_SSH_VERSION_STRING="${DD_SSH_VERSION_STRING}"
 )
 
 target_link_libraries(dd-ssh

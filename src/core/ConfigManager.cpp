@@ -251,6 +251,117 @@ QList<SessionProfile> ConfigManager::loadSessions(QString *errorMessage) const
     return sessions;
 }
 
+bool ConfigManager::loadSessionById(
+    const QString &sessionId,
+    SessionProfile *session,
+    QString *errorMessage
+) const
+{
+    if (errorMessage != nullptr) {
+        *errorMessage = QString();
+    }
+
+    if (session == nullptr) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Internal error: missing session pointer.");
+        }
+
+        return false;
+    }
+
+    const QList<SessionProfile> sessions = loadSessions(errorMessage);
+
+    if (errorMessage != nullptr && !errorMessage->isEmpty()) {
+        return false;
+    }
+
+    for (const SessionProfile &candidate : sessions) {
+        if (candidate.id == sessionId) {
+            *session = candidate;
+            return true;
+        }
+    }
+
+    if (errorMessage != nullptr) {
+        *errorMessage = QStringLiteral("Saved session not found: ") + sessionId;
+    }
+
+    return false;
+}
+
+bool ConfigManager::loadPlainSecret(
+    const QString &secretId,
+    QString *secretValue,
+    QString *secretType,
+    QString *errorMessage
+) const
+{
+    if (errorMessage != nullptr) {
+        *errorMessage = QString();
+    }
+
+    if (secretValue == nullptr) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Internal error: missing secret value pointer.");
+        }
+
+        return false;
+    }
+
+    *secretValue = QString();
+
+    if (secretType != nullptr) {
+        *secretType = QString();
+    }
+
+    const QString trimmedSecretId = secretId.trimmed();
+
+    if (trimmedSecretId.isEmpty()) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Secret reference is empty.");
+        }
+
+        return false;
+    }
+
+    QJsonObject root;
+
+    if (!readRootObject(&root, errorMessage)) {
+        return false;
+    }
+
+    const QJsonObject secrets = root.value(QStringLiteral("secrets")).toObject();
+    const QString mode = secrets.value(QStringLiteral("mode")).toString();
+
+    if (mode != QStringLiteral("plain-v1")) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Unsupported secrets mode: ") + mode;
+        }
+
+        return false;
+    }
+
+    const QJsonObject items = secrets.value(QStringLiteral("items")).toObject();
+
+    if (!items.contains(trimmedSecretId)) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Secret not found: ") + trimmedSecretId;
+        }
+
+        return false;
+    }
+
+    const QJsonObject secretObject = items.value(trimmedSecretId).toObject();
+    const QString loadedType = secretObject.value(QStringLiteral("type")).toString();
+
+    if (secretType != nullptr) {
+        *secretType = loadedType;
+    }
+
+    *secretValue = secretObject.value(QStringLiteral("value")).toString();
+    return true;
+}
+
 bool ConfigManager::saveSessionWithPlainSecret(
     const SessionProfile &session,
     const QString &secretValue,
