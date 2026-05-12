@@ -11,15 +11,21 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LIBSSH REQUIRED IMPORTED_TARGET libssh)
 
 qt_standard_project_setup()
 
 qt_add_executable(dd-ssh
     src/main.cpp
+
     src/ui/MainWindow.h
     src/ui/MainWindow.cpp
     src/ui/ConnectDialog.h
     src/ui/ConnectDialog.cpp
+
+    src/ssh/SshSession.h
+    src/ssh/SshSession.cpp
 )
 
 target_include_directories(dd-ssh
@@ -31,6 +37,7 @@ target_link_libraries(dd-ssh
     PRIVATE
         Qt6::Core
         Qt6::Widgets
+        PkgConfig::LIBSSH
 )
 
 set_target_properties(dd-ssh PROPERTIES

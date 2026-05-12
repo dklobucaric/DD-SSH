@@ -1,6 +1,6 @@
 #include "MainWindow.h"
 #include "ConnectDialog.h"
-
+#include "ssh/SshSession.h"
 #include <QAction>
 #include <QFontDatabase>
 #include <QListWidget>
@@ -56,16 +56,20 @@ void MainWindow::setupMenus()
 
     auto *helpMenu = menuBar()->addMenu("&Help");
 
-    auto *aboutAction = helpMenu->addAction("About DD-SSH");
-    connect(aboutAction, &QAction::triggered, this, [this]() {
-        QMessageBox::about(
-            this,
-            "About DD-SSH",
-            "DD-SSH\n\n"
-            "A clean cross-platform SSH client and session manager.\n\n"
-            "Current phase: ConnectDialog skeleton."
-        );
-    });
+
+auto *aboutAction = helpMenu->addAction("About DD-SSH");
+connect(aboutAction, &QAction::triggered, this, [this]() {
+    QMessageBox::about(
+        this,
+        "About DD-SSH",
+        "DD-SSH\n\n"
+        "A clean cross-platform SSH client and session manager.\n\n"
+        "Current phase: libssh build integration.\n\n"
+        "libssh version: " + SshSession::libsshVersion()
+    );
+});
+
+
 }
 
 void MainWindow::setupToolbar()
