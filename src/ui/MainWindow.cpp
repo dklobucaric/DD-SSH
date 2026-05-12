@@ -16,6 +16,7 @@
 #include <QListWidgetItem>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QMenu>
 #include <QDir>
 #include <QPushButton>
 #include <QSplitter>
@@ -76,7 +77,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: SSH authentication test.\n\n")
+            + QStringLiteral("Current phase: Saved session delete cleanup.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n\n")
@@ -132,6 +133,11 @@ void MainWindow::setupCentralLayout()
     m_sessionList->setMaximumWidth(360);
 
     loadSavedSessionsToSidebar();
+
+    m_sessionList->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(m_sessionList, &QListWidget::customContextMenuRequested, this, [this](const QPoint &position) {
+        showSessionContextMenu(position);
+    });
 
     m_tabs = new QTabWidget(splitter);
     m_tabs->setTabsClosable(true);
@@ -224,17 +230,126 @@ void MainWindow::addWelcomeTab()
         "UI layout skeleton is alive.\n\n"
         "Left side: saved sessions from dd-ssh.json\n"
         "Right side: terminal tabs placeholder\n\n"
-        "Double-click a saved session on the left to open a placeholder tab.\n\n"
+        "Double-click a saved session on the left to run the saved authentication test.\n\n"
         "Current milestone:\n"
-        "- SSH authentication test\n"
-        "- save successful connection to JSON\n\n"
-        "Next milestone:\n"
+        "- save successful connection to JSON\n"
         "- connect from saved session\n"
+        "- config/session safety cleanup\n"
+        "- delete saved sessions from sidebar context menu\n\n"
+        "Next milestone:\n"
+        "- edit/modify saved sessions\n"
         "- persistent SSH session object\n"
         "- real terminal channel\n"
     );
 
     m_tabs->addTab(welcome, "Welcome");
+}
+
+
+void MainWindow::showSessionContextMenu(const QPoint &position)
+{
+    if (m_sessionList == nullptr) {
+        return;
+    }
+
+    QListWidgetItem *item = m_sessionList->itemAt(position);
+
+    if (item == nullptr) {
+        return;
+    }
+
+    const QString sessionId = item->data(Qt::UserRole).toString();
+
+    if (sessionId.trimmed().isEmpty()) {
+        return;
+    }
+
+    QMenu menu(this);
+    QAction *connectAction = menu.addAction("Connect");
+    menu.addSeparator();
+    QAction *editAction = menu.addAction("Edit session (coming soon)");
+    editAction->setEnabled(false);
+    QAction *deleteAction = menu.addAction("Delete session");
+
+    QAction *selectedAction = menu.exec(m_sessionList->viewport()->mapToGlobal(position));
+
+    if (selectedAction == connectAction) {
+        testSavedSession(sessionId);
+    } else if (selectedAction == deleteAction) {
+        deleteSavedSession(sessionId);
+    }
+}
+
+void MainWindow::deleteSavedSession(const QString &sessionId)
+{
+    ConfigManager config;
+    SessionProfile session;
+    QString loadError;
+
+    if (!config.loadSessionById(sessionId, &session, &loadError)) {
+        QMessageBox::warning(
+            this,
+            "Could not load saved session",
+            loadError
+        );
+        statusBar()->showMessage("Could not load saved session for deletion: " + sessionId);
+        loadSavedSessionsToSidebar();
+        return;
+    }
+
+    const QString target =
+        session.username
+        + QStringLiteral("@")
+        + session.host
+        + QStringLiteral(":")
+        + QString::number(session.port);
+
+    QMessageBox confirmBox(this);
+    confirmBox.setIcon(QMessageBox::Warning);
+    confirmBox.setWindowTitle("Delete saved session");
+    confirmBox.setText("Delete saved session?");
+    confirmBox.setInformativeText(
+        "Session: " + session.name + "\n"
+        "Target: " + target + "\n\n"
+        "This removes the saved session and its password/private-key secret if no other session uses it.\n"
+        "Known-host trust records will NOT be deleted."
+    );
+
+    QAbstractButton *deleteButton = confirmBox.addButton("Delete session", QMessageBox::DestructiveRole);
+    QAbstractButton *cancelButton = confirmBox.addButton("Cancel", QMessageBox::RejectRole);
+    confirmBox.setDefaultButton(qobject_cast<QPushButton *>(cancelButton));
+    confirmBox.exec();
+
+    if (confirmBox.clickedButton() != deleteButton) {
+        statusBar()->showMessage("Delete session cancelled");
+        return;
+    }
+
+    QString deleteError;
+    bool removedSecret = false;
+    QString removedSecretId;
+
+    if (!config.deleteSession(session.id, &deleteError, &removedSecret, &removedSecretId)) {
+        QMessageBox::warning(
+            this,
+            "Could not delete saved session",
+            deleteError
+        );
+        statusBar()->showMessage("Could not delete saved session: " + session.name);
+        return;
+    }
+
+    loadSavedSessionsToSidebar();
+
+    QString message = "Deleted saved session: " + session.name;
+
+    if (removedSecret) {
+        message += " and removed unused secret";
+    } else {
+        message += ". Secret was kept because it is shared or missing";
+    }
+
+    statusBar()->showMessage(message);
 }
 
 void MainWindow::testSavedSession(const QString &sessionId)
@@ -811,6 +926,7 @@ void MainWindow::showConnectDialog()
     bool authSuccessful = false;
     bool sessionSaveAttempted = false;
     bool sessionSaved = false;
+    bool sessionUpdatedExisting = false;
     QString sessionSaveMessage;
     SshAuthResult authResult;
 
@@ -911,11 +1027,14 @@ void MainWindow::showConnectDialog()
                         sessionSaved = config.saveSessionWithPlainSecret(
                             session,
                             secretValue,
-                            &saveError
+                            &saveError,
+                            &sessionUpdatedExisting
                         );
 
                         if (sessionSaved) {
-                            sessionSaveMessage = QStringLiteral("Saved to ") + config.configFilePath();
+                            sessionSaveMessage = sessionUpdatedExisting
+                                ? QStringLiteral("Updated existing session in ") + config.configFilePath()
+                                : QStringLiteral("Created new session in ") + config.configFilePath();
                             loadSavedSessionsToSidebar();
                         } else {
                             sessionSaveMessage = saveError;
@@ -927,7 +1046,9 @@ void MainWindow::showConnectDialog()
                     output += QStringLiteral("Session save result:\n");
 
                     if (sessionSaved) {
-                        output += QStringLiteral("Status: SAVED\n");
+                        output += sessionUpdatedExisting
+                            ? QStringLiteral("Status: UPDATED EXISTING SESSION\n")
+                            : QStringLiteral("Status: CREATED NEW SESSION\n");
                     } else {
                         output += QStringLiteral("Status: FAILED\n");
                     }
@@ -941,7 +1062,6 @@ void MainWindow::showConnectDialog()
 
                 output += QStringLiteral("Authentication works. Shell was NOT opened yet.\n\n");
                 output += QStringLiteral("Next milestone:\n");
-                output += QStringLiteral("- connect from saved session\n");
                 output += QStringLiteral("- persistent SSH session object\n");
                 output += QStringLiteral("- real terminal channel\n");
             } else {
@@ -985,7 +1105,11 @@ void MainWindow::showConnectDialog()
 
     if (handshake.success && knownHostAllowed && authAttempted && authSuccessful) {
         if (sessionSaveAttempted && sessionSaved) {
-            statusBar()->showMessage("SSH authentication successful and session saved for " + tabTitle);
+            statusBar()->showMessage(
+                sessionUpdatedExisting
+                    ? QStringLiteral("SSH authentication successful and session updated for ") + tabTitle
+                    : QStringLiteral("SSH authentication successful and session created for ") + tabTitle
+            );
         } else if (sessionSaveAttempted) {
             statusBar()->showMessage("SSH authentication successful, but session save failed for " + tabTitle);
         } else {

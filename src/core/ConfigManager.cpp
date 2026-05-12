@@ -9,6 +9,7 @@
 #include <QJsonObject>
 #include <QRegularExpression>
 #include <QSaveFile>
+#include <QSet>
 #include <QStandardPaths>
 
 ConfigManager::ConfigManager() = default;
@@ -196,12 +197,44 @@ bool ConfigManager::writeRootObject(const QJsonObject &root, QString *errorMessa
         return false;
     }
 
-    QFile::setPermissions(
+    QString permissionError;
+    secureConfigFilePermissions(&permissionError);
+
+    return true;
+}
+
+bool ConfigManager::secureConfigFilePermissions(QString *errorMessage) const
+{
+    if (errorMessage != nullptr) {
+        *errorMessage = QString();
+    }
+
+    QFile file(configFilePath());
+
+    if (!file.exists()) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Config file does not exist yet: ") + configFilePath();
+        }
+
+        return false;
+    }
+
+#if defined(Q_OS_WIN)
+    // QFile permissions do not map cleanly to Windows ACLs. Do not fail saves because of this.
+    return true;
+#else
+    const bool ok = QFile::setPermissions(
         configFilePath(),
         QFileDevice::ReadOwner | QFileDevice::WriteOwner
     );
 
-    return true;
+    if (!ok && errorMessage != nullptr) {
+        *errorMessage = QStringLiteral("Could not set config file permissions to owner read/write only: ")
+            + file.errorString();
+    }
+
+    return ok;
+#endif
 }
 
 QList<SessionProfile> ConfigManager::loadSessions(QString *errorMessage) const
@@ -365,9 +398,14 @@ bool ConfigManager::loadPlainSecret(
 bool ConfigManager::saveSessionWithPlainSecret(
     const SessionProfile &session,
     const QString &secretValue,
-    QString *errorMessage
+    QString *errorMessage,
+    bool *updatedExistingSession
 ) const
 {
+    if (updatedExistingSession != nullptr) {
+        *updatedExistingSession = false;
+    }
+
     if (session.id.trimmed().isEmpty()) {
         if (errorMessage != nullptr) {
             *errorMessage = QStringLiteral("Session id is empty.");
@@ -456,6 +494,11 @@ bool ConfigManager::saveSessionWithPlainSecret(
             );
             sessions.replace(i, sessionObject);
             replaced = true;
+
+            if (updatedExistingSession != nullptr) {
+                *updatedExistingSession = true;
+            }
+
             break;
         }
     }
@@ -486,6 +529,132 @@ bool ConfigManager::saveSessionWithPlainSecret(
     secrets.insert(QStringLiteral("items"), items);
     root.insert(QStringLiteral("secrets"), secrets);
 
+    QJsonObject metadata = root.value(QStringLiteral("metadata")).toObject();
+    metadata.insert(QStringLiteral("created_by"), QStringLiteral("DD-SSH"));
+    metadata.insert(QStringLiteral("last_modified"), nowUtc);
+    root.insert(QStringLiteral("metadata"), metadata);
+
+    return writeRootObject(root, errorMessage);
+}
+
+bool ConfigManager::deleteSession(
+    const QString &sessionId,
+    QString *errorMessage,
+    bool *removedUnusedSecret,
+    QString *removedSecretId
+) const
+{
+    if (errorMessage != nullptr) {
+        *errorMessage = QString();
+    }
+
+    if (removedUnusedSecret != nullptr) {
+        *removedUnusedSecret = false;
+    }
+
+    if (removedSecretId != nullptr) {
+        *removedSecretId = QString();
+    }
+
+    const QString trimmedSessionId = sessionId.trimmed();
+
+    if (trimmedSessionId.isEmpty()) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Session id is empty.");
+        }
+
+        return false;
+    }
+
+    QJsonObject root;
+
+    if (!readRootObject(&root, errorMessage)) {
+        return false;
+    }
+
+    ensureBaseObjects(&root);
+
+    const QJsonArray originalSessions = root.value(QStringLiteral("sessions")).toArray();
+    QJsonArray newSessions;
+    QString secretCandidate;
+    bool found = false;
+
+    for (const QJsonValue &value : originalSessions) {
+        if (!value.isObject()) {
+            newSessions.append(value);
+            continue;
+        }
+
+        const QJsonObject sessionObject = value.toObject();
+
+        if (sessionObject.value(QStringLiteral("id")).toString() == trimmedSessionId) {
+            const QJsonObject authObject = sessionObject.value(QStringLiteral("auth")).toObject();
+            const QString authType = authObject.value(QStringLiteral("type")).toString();
+
+            secretCandidate = authType == QStringLiteral("key")
+                ? authObject.value(QStringLiteral("key_ref")).toString().trimmed()
+                : authObject.value(QStringLiteral("secret_ref")).toString().trimmed();
+
+            found = true;
+            continue;
+        }
+
+        newSessions.append(sessionObject);
+    }
+
+    if (!found) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Saved session not found: ") + trimmedSessionId;
+        }
+
+        return false;
+    }
+
+    root.insert(QStringLiteral("sessions"), newSessions);
+
+    if (!secretCandidate.isEmpty()) {
+        QSet<QString> referencedSecrets;
+
+        for (const QJsonValue &value : newSessions) {
+            if (!value.isObject()) {
+                continue;
+            }
+
+            const QJsonObject sessionObject = value.toObject();
+            const QJsonObject authObject = sessionObject.value(QStringLiteral("auth")).toObject();
+            const QString passwordRef = authObject.value(QStringLiteral("secret_ref")).toString().trimmed();
+            const QString keyRef = authObject.value(QStringLiteral("key_ref")).toString().trimmed();
+
+            if (!passwordRef.isEmpty()) {
+                referencedSecrets.insert(passwordRef);
+            }
+
+            if (!keyRef.isEmpty()) {
+                referencedSecrets.insert(keyRef);
+            }
+        }
+
+        if (!referencedSecrets.contains(secretCandidate)) {
+            QJsonObject secrets = root.value(QStringLiteral("secrets")).toObject();
+            QJsonObject items = secrets.value(QStringLiteral("items")).toObject();
+
+            if (items.contains(secretCandidate)) {
+                items.remove(secretCandidate);
+                secrets.insert(QStringLiteral("items"), items);
+                root.insert(QStringLiteral("secrets"), secrets);
+
+                if (removedUnusedSecret != nullptr) {
+                    *removedUnusedSecret = true;
+                }
+
+                if (removedSecretId != nullptr) {
+                    *removedSecretId = secretCandidate;
+                }
+            }
+        }
+    }
+
+    const QString nowUtc = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
     QJsonObject metadata = root.value(QStringLiteral("metadata")).toObject();
     metadata.insert(QStringLiteral("created_by"), QStringLiteral("DD-SSH"));
     metadata.insert(QStringLiteral("last_modified"), nowUtc);

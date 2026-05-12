@@ -31,8 +31,18 @@ public:
     bool saveSessionWithPlainSecret(
         const SessionProfile &session,
         const QString &secretValue,
-        QString *errorMessage = nullptr
+        QString *errorMessage = nullptr,
+        bool *updatedExistingSession = nullptr
     ) const;
+
+    bool deleteSession(
+        const QString &sessionId,
+        QString *errorMessage = nullptr,
+        bool *removedUnusedSecret = nullptr,
+        QString *removedSecretId = nullptr
+    ) const;
+
+    bool secureConfigFilePermissions(QString *errorMessage = nullptr) const;
 
     static QString makeSessionId(
         const QString &name,

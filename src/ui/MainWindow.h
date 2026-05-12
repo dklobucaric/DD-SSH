@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QMainWindow>
+#include <QPoint>
 #include <QString>
 
 class QListWidget;
@@ -19,6 +20,8 @@ private:
     void addWelcomeTab();
     void showConnectDialog();
     void testSavedSession(const QString &sessionId);
+    void showSessionContextMenu(const QPoint &position);
+    void deleteSavedSession(const QString &sessionId);
 
     QListWidget *m_sessionList = nullptr;
     QTabWidget *m_tabs = nullptr;
