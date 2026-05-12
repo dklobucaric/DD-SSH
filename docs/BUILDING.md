@@ -17,7 +17,8 @@ sudo apt install -y \
   qt6-base-dev \
   qt6-base-dev-tools \
   qt6-tools-dev \
-  qt6-tools-dev-tools
+  qt6-tools-dev-tools \
+  qt6-webengine-dev
 ```
 
 ## Configure and build
@@ -31,3 +32,7 @@ cmake --build build
 ## Qt Creator
 
 Open `CMakeLists.txt` in Qt Creator, configure the kit, build, and run.
+
+## Qt WebEngine note
+
+`dev 0.1.2.3` continues the first web terminal frontend work, so Qt WebEngine is now required for the default build. On Debian/Ubuntu/Mint systems this is usually provided by `qt6-webengine-dev`. If CMake reports that `Qt6WebEngineWidgetsConfig.cmake` is missing, install the Qt WebEngine development package and re-run CMake.

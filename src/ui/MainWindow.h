@@ -21,6 +21,8 @@ private:
     void showConnectDialog();
     void testSavedSession(const QString &sessionId);
     void openSavedSessionShell(const QString &sessionId);
+    void openSavedSessionWebTerminal(const QString &sessionId);
+    void openSavedSessionShellInternal(const QString &sessionId, bool useWebTerminal);
     void showSessionContextMenu(const QPoint &position);
     void editSavedSession(const QString &sessionId);
     void deleteSavedSession(const QString &sessionId);

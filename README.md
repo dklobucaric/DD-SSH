@@ -20,7 +20,7 @@ Early versions intentionally do **not** include SFTP, split-screen, cloud accoun
 
 ## Project status
 
-Development checkpoint: `dev 0.1.2.1`.
+Development checkpoint: `dev 0.1.2.4`.
 
 Current working foundation:
 
@@ -35,6 +35,7 @@ Current working foundation:
 - Edit saved sessions while keeping or replacing the saved plaintext secret
 - Duplicate target warning when saving `username@host:port` that already exists
 - Experimental basic saved-session SSH shell channel from the sidebar context menu
+- Experimental web terminal tab that captures keyboard input directly inside the terminal area
 
 Saved session management is a real DD-SSH feature direction, not just a test helper. The long-term goal is full session CRUD: create/save, load/connect, edit/update, delete, and later import/export from one portable JSON file.
 
@@ -59,4 +60,4 @@ Start here:
 
 ## Current shell limitation
 
-`dev 0.1.2.0` added an experimental basic shell channel using libssh PTY + shell. `dev 0.1.2.1` cleans up that temporary tab before the xterm.js milestone: common ANSI escape sequences are hidden from the basic text view, the input field is clearer, and quick actions such as Send Ctrl+C and Clear output are available. It is **not** the final terminal emulator yet, so full-screen interactive programs like `htop`, `nano`, `vim`, `mc`, and `tmux` are not expected to behave correctly until the xterm.js terminal frontend is added.
+`dev 0.1.2.0` added an experimental basic shell channel using libssh PTY + shell. `dev 0.1.2.1` cleaned up that temporary tab. `dev 0.1.2.3` added the first Qt WebEngine terminal tab with Ctrl+V/Paste button support. `dev 0.1.2.4` fixes the web terminal input dispatch path so keyboard input and pasted text are sent directly into the SSH worker queue instead of relying on queued Qt slots while the worker thread is busy running the shell loop. This is an xterm.js preparation step with a fallback renderer; it is still **not** the final terminal emulator yet, so full-screen interactive programs like `htop`, `nano`, `vim`, `mc`, and `tmux` are not expected to behave correctly until the real xterm.js renderer is bundled and wired in.

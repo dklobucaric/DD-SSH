@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 #include "ConnectDialog.h"
 #include "BasicTerminalTab.h"
+#include "WebTerminalTab.h"
 #include "core/ConfigManager.h"
 #include "core/KnownHostsManager.h"
 #include "core/SessionProfile.h"
@@ -78,7 +79,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: Basic shell cleanup before xterm.js.\n\n")
+            + QStringLiteral("Current phase: Web terminal direct input/paste dispatch fix.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n\n")
@@ -240,8 +241,11 @@ void MainWindow::addWelcomeTab()
         "- edit/modify saved sessions from sidebar context menu\n"
         "- duplicate host/user warning polish for manual saves\n"
         "- basic saved-session SSH shell channel\n\n"
+        "Current terminal options:\n"
+        "- Open basic shell: temporary QWidget input/output view\n"
+        "- Open web terminal: keyboard input directly inside terminal area, xterm.js-ready fallback renderer\n\n"
         "Next milestone:\n"
-        "- terminal frontend polish / xterm.js preparation\n"
+        "- bundle real xterm.js renderer\n"
         "- stronger persistent session lifecycle handling\n"
     );
 
@@ -269,7 +273,8 @@ void MainWindow::showSessionContextMenu(const QPoint &position)
 
     QMenu menu(this);
     QAction *connectAction = menu.addAction("Connect / auth test");
-    QAction *openShellAction = menu.addAction("Open basic shell");
+    QAction *openWebTerminalAction = menu.addAction("Open web terminal (xterm-ready)");
+    QAction *openShellAction = menu.addAction("Open basic shell (fallback)");
     menu.addSeparator();
     QAction *editAction = menu.addAction("Edit session");
     QAction *deleteAction = menu.addAction("Delete session");
@@ -278,6 +283,8 @@ void MainWindow::showSessionContextMenu(const QPoint &position)
 
     if (selectedAction == connectAction) {
         testSavedSession(sessionId);
+    } else if (selectedAction == openWebTerminalAction) {
+        openSavedSessionWebTerminal(sessionId);
     } else if (selectedAction == openShellAction) {
         openSavedSessionShell(sessionId);
     } else if (selectedAction == editAction) {
@@ -495,6 +502,16 @@ void MainWindow::deleteSavedSession(const QString &sessionId)
 
 void MainWindow::openSavedSessionShell(const QString &sessionId)
 {
+    openSavedSessionShellInternal(sessionId, false);
+}
+
+void MainWindow::openSavedSessionWebTerminal(const QString &sessionId)
+{
+    openSavedSessionShellInternal(sessionId, true);
+}
+
+void MainWindow::openSavedSessionShellInternal(const QString &sessionId, bool useWebTerminal)
+{
     ConfigManager config;
     SessionProfile session;
     QString loadError;
@@ -657,11 +674,25 @@ void MainWindow::openSavedSessionShell(const QString &sessionId)
         return;
     }
 
-    auto *terminal = new BasicTerminalTab(session, secretValue, this);
-    const int tabIndex = m_tabs->addTab(terminal, session.name + QStringLiteral(" shell"));
+    QWidget *terminal = nullptr;
+    QString titleSuffix;
+
+    if (useWebTerminal) {
+        terminal = new WebTerminalTab(session, secretValue, this);
+        titleSuffix = QStringLiteral(" web");
+    } else {
+        terminal = new BasicTerminalTab(session, secretValue, this);
+        titleSuffix = QStringLiteral(" shell");
+    }
+
+    const int tabIndex = m_tabs->addTab(terminal, session.name + titleSuffix);
     m_tabs->setCurrentIndex(tabIndex);
 
-    statusBar()->showMessage("Opening basic shell for " + tabTitle);
+    statusBar()->showMessage(
+        useWebTerminal
+            ? "Opening web terminal for " + tabTitle
+            : "Opening basic shell for " + tabTitle
+    );
 }
 
 void MainWindow::testSavedSession(const QString &sessionId)

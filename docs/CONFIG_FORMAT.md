@@ -42,4 +42,4 @@ When saving a new session, DD-SSH should warn if another session already uses th
 
 ## Saved session shell channel
 
-`dev 0.1.2.0` can open an experimental shell channel from a saved session. `dev 0.1.2.1` only cleans up the temporary shell UI and does not change the JSON format. The session still resolves authentication through `auth.secret_ref` or `auth.key_ref` and loads the plaintext value from `secrets.items` when `secrets.mode` is `plain-v1`.
+`dev 0.1.2.0` can open an experimental shell channel from a saved session. `dev 0.1.2.1` cleans up the temporary shell UI. `dev 0.1.2.3` adds a Qt WebEngine terminal fallback with paste support as preparation for xterm.js. `dev 0.1.2.4` fixes direct input/paste dispatch in that fallback terminal. These shell/frontend milestones do not change the JSON format. The session still resolves authentication through `auth.secret_ref` or `auth.key_ref` and loads the plaintext value from `secrets.items` when `secrets.mode` is `plain-v1`.
