@@ -37,3 +37,5 @@ Sessions should reference secrets with `secret_ref` or `key_ref`; password/priva
 
 Deleting a saved session should not automatically delete `known_hosts`. Known-host trust is a separate security record.
 
+When saving a new session, DD-SSH should warn if another session already uses the same `username + host + port` target. The user should be able to update the existing session, create a copy, or cancel.
+

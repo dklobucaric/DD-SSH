@@ -16,6 +16,18 @@ public:
     QString configFilePath() const;
 
     QList<SessionProfile> loadSessions(QString *errorMessage = nullptr) const;
+    QList<SessionProfile> findSessionsByTarget(
+        const QString &host,
+        int port,
+        const QString &username,
+        const QString &excludedSessionId = QString(),
+        QString *errorMessage = nullptr
+    ) const;
+    QString makeUniqueSessionId(
+        const QString &desiredSessionId,
+        const QString &excludedSessionId = QString(),
+        QString *errorMessage = nullptr
+    ) const;
     bool loadSessionById(
         const QString &sessionId,
         SessionProfile *session,

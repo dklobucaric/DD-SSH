@@ -77,7 +77,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: Saved session edit/delete cleanup.\n\n")
+            + QStringLiteral("Current phase: Duplicate saved-session warning polish.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n\n")
@@ -236,9 +236,9 @@ void MainWindow::addWelcomeTab()
         "- connect from saved session\n"
         "- config/session safety cleanup\n"
         "- delete saved sessions from sidebar context menu\n"
-        "- edit/modify saved sessions from sidebar context menu\n\n"
+        "- edit/modify saved sessions from sidebar context menu\n"
+        "- duplicate host/user warning polish for manual saves\n\n"
         "Next milestone:\n"
-        "- duplicate host/user warning polish\n"
         "- persistent SSH session object\n"
         "- real terminal channel\n"
     );
@@ -1062,6 +1062,8 @@ void MainWindow::showConnectDialog()
     bool sessionSaveAttempted = false;
     bool sessionSaved = false;
     bool sessionUpdatedExisting = false;
+    bool sessionSaveCancelled = false;
+    bool sessionSavedAsCopy = false;
     QString sessionSaveMessage;
     SshAuthResult authResult;
 
@@ -1157,22 +1159,168 @@ void MainWindow::showConnectDialog()
                     }
 
                     if (sessionSaveMessage.isEmpty()) {
-                        QString saveError;
-
-                        sessionSaved = config.saveSessionWithPlainSecret(
-                            session,
-                            secretValue,
-                            &saveError,
-                            &sessionUpdatedExisting
+                        QString duplicateCheckError;
+                        const QList<SessionProfile> duplicateTargetSessions = config.findSessionsByTarget(
+                            session.host,
+                            session.port,
+                            session.username,
+                            QString(),
+                            &duplicateCheckError
                         );
 
-                        if (sessionSaved) {
-                            sessionSaveMessage = sessionUpdatedExisting
-                                ? QStringLiteral("Updated existing session in ") + config.configFilePath()
-                                : QStringLiteral("Created new session in ") + config.configFilePath();
-                            loadSavedSessionsToSidebar();
+                        if (!duplicateCheckError.isEmpty()) {
+                            sessionSaveMessage = QStringLiteral("Could not check for duplicate saved sessions: ")
+                                + duplicateCheckError;
+                        } else if (!duplicateTargetSessions.isEmpty()) {
+                            const SessionProfile existingSession = duplicateTargetSessions.first();
+                            const QString target =
+                                session.username
+                                + QStringLiteral("@")
+                                + session.host
+                                + QStringLiteral(":")
+                                + QString::number(session.port);
+
+                            QMessageBox duplicateBox(this);
+                            duplicateBox.setIcon(QMessageBox::Question);
+                            duplicateBox.setWindowTitle("Saved session already exists");
+                            duplicateBox.setText("A session for " + target + " already exists.");
+
+                            QString duplicateInfo =
+                                QStringLiteral("Existing session: ") + existingSession.name + QStringLiteral("\n")
+                                + QStringLiteral("Existing session id: ") + existingSession.id + QStringLiteral("\n")
+                                + QStringLiteral("New session name: ") + session.name + QStringLiteral("\n\n")
+                                + QStringLiteral("What do you want to do?");
+
+                            if (duplicateTargetSessions.size() > 1) {
+                                duplicateInfo +=
+                                    QStringLiteral("\n\nNote: there are ")
+                                    + QString::number(duplicateTargetSessions.size())
+                                    + QStringLiteral(" saved sessions for this same target. Update existing will update the first match shown above.");
+                            }
+
+                            duplicateBox.setInformativeText(duplicateInfo);
+
+                            QAbstractButton *updateExistingButton = duplicateBox.addButton(
+                                "Update existing",
+                                QMessageBox::AcceptRole
+                            );
+                            QAbstractButton *createCopyButton = duplicateBox.addButton(
+                                "Create copy",
+                                QMessageBox::ActionRole
+                            );
+                            QAbstractButton *cancelButton = duplicateBox.addButton(
+                                "Cancel",
+                                QMessageBox::RejectRole
+                            );
+
+                            duplicateBox.setDefaultButton(qobject_cast<QPushButton *>(cancelButton));
+                            duplicateBox.exec();
+
+                            if (duplicateBox.clickedButton() == updateExistingButton) {
+                                QString updateError;
+                                bool changedSessionId = false;
+
+                                sessionSaved = config.updateSessionWithOptionalPlainSecret(
+                                    existingSession.id,
+                                    session,
+                                    secretValue,
+                                    true,
+                                    &updateError,
+                                    &changedSessionId
+                                );
+
+                                sessionUpdatedExisting = sessionSaved;
+
+                                if (sessionSaved) {
+                                    sessionSaveMessage = changedSessionId
+                                        ? QStringLiteral("Updated existing session and changed its session id in ") + config.configFilePath()
+                                        : QStringLiteral("Updated existing session in ") + config.configFilePath();
+                                    loadSavedSessionsToSidebar();
+                                } else {
+                                    sessionSaveMessage = updateError;
+                                }
+                            } else if (duplicateBox.clickedButton() == createCopyButton) {
+                                SessionProfile copySession = session;
+                                QString uniqueIdError;
+                                QString uniqueSessionId = config.makeUniqueSessionId(
+                                    copySession.id,
+                                    QString(),
+                                    &uniqueIdError
+                                );
+
+                                if (!uniqueIdError.isEmpty()) {
+                                    sessionSaveMessage = QStringLiteral("Could not prepare unique session id: ")
+                                        + uniqueIdError;
+                                } else {
+                                    if (uniqueSessionId != copySession.id) {
+                                        copySession.name = copySession.name.trimmed() + QStringLiteral(" (copy)");
+                                        copySession.id = ConfigManager::makeSessionId(
+                                            copySession.name,
+                                            copySession.host,
+                                            copySession.port,
+                                            copySession.username
+                                        );
+                                        uniqueSessionId = config.makeUniqueSessionId(
+                                            copySession.id,
+                                            QString(),
+                                            &uniqueIdError
+                                        );
+
+                                        if (!uniqueIdError.isEmpty()) {
+                                            sessionSaveMessage = QStringLiteral("Could not prepare copy session id: ")
+                                                + uniqueIdError;
+                                        } else {
+                                            copySession.id = uniqueSessionId;
+                                        }
+                                    } else {
+                                        copySession.id = uniqueSessionId;
+                                    }
+
+                                    if (sessionSaveMessage.isEmpty()) {
+                                        QString saveError;
+
+                                        sessionSaved = config.saveSessionWithPlainSecret(
+                                            copySession,
+                                            secretValue,
+                                            &saveError,
+                                            &sessionUpdatedExisting
+                                        );
+
+                                        sessionSavedAsCopy = sessionSaved;
+
+                                        if (sessionSaved) {
+                                            sessionSaveMessage = QStringLiteral("Created copy as new session '")
+                                                + copySession.name
+                                                + QStringLiteral("' in ")
+                                                + config.configFilePath();
+                                            loadSavedSessionsToSidebar();
+                                        } else {
+                                            sessionSaveMessage = saveError;
+                                        }
+                                    }
+                                }
+                            } else {
+                                sessionSaveCancelled = true;
+                                sessionSaveMessage = QStringLiteral("User cancelled saving because a matching saved session already exists.");
+                            }
                         } else {
-                            sessionSaveMessage = saveError;
+                            QString saveError;
+
+                            sessionSaved = config.saveSessionWithPlainSecret(
+                                session,
+                                secretValue,
+                                &saveError,
+                                &sessionUpdatedExisting
+                            );
+
+                            if (sessionSaved) {
+                                sessionSaveMessage = sessionUpdatedExisting
+                                    ? QStringLiteral("Updated existing session in ") + config.configFilePath()
+                                    : QStringLiteral("Created new session in ") + config.configFilePath();
+                                loadSavedSessionsToSidebar();
+                            } else {
+                                sessionSaveMessage = saveError;
+                            }
                         }
                     }
                 }
@@ -1180,7 +1328,11 @@ void MainWindow::showConnectDialog()
                 if (sessionSaveAttempted) {
                     output += QStringLiteral("Session save result:\n");
 
-                    if (sessionSaved) {
+                    if (sessionSaveCancelled) {
+                        output += QStringLiteral("Status: CANCELLED\n");
+                    } else if (sessionSavedAsCopy) {
+                        output += QStringLiteral("Status: CREATED COPY\n");
+                    } else if (sessionSaved) {
                         output += sessionUpdatedExisting
                             ? QStringLiteral("Status: UPDATED EXISTING SESSION\n")
                             : QStringLiteral("Status: CREATED NEW SESSION\n");
@@ -1239,12 +1391,18 @@ void MainWindow::showConnectDialog()
     m_tabs->setCurrentIndex(tabIndex);
 
     if (handshake.success && knownHostAllowed && authAttempted && authSuccessful) {
-        if (sessionSaveAttempted && sessionSaved) {
-            statusBar()->showMessage(
-                sessionUpdatedExisting
-                    ? QStringLiteral("SSH authentication successful and session updated for ") + tabTitle
-                    : QStringLiteral("SSH authentication successful and session created for ") + tabTitle
-            );
+        if (sessionSaveAttempted && sessionSaveCancelled) {
+            statusBar()->showMessage("SSH authentication successful; session save cancelled for " + tabTitle);
+        } else if (sessionSaveAttempted && sessionSaved) {
+            if (sessionSavedAsCopy) {
+                statusBar()->showMessage("SSH authentication successful and session copy created for " + tabTitle);
+            } else {
+                statusBar()->showMessage(
+                    sessionUpdatedExisting
+                        ? QStringLiteral("SSH authentication successful and session updated for ") + tabTitle
+                        : QStringLiteral("SSH authentication successful and session created for ") + tabTitle
+                );
+            }
         } else if (sessionSaveAttempted) {
             statusBar()->showMessage("SSH authentication successful, but session save failed for " + tabTitle);
         } else {

@@ -284,6 +284,103 @@ QList<SessionProfile> ConfigManager::loadSessions(QString *errorMessage) const
     return sessions;
 }
 
+QList<SessionProfile> ConfigManager::findSessionsByTarget(
+    const QString &host,
+    int port,
+    const QString &username,
+    const QString &excludedSessionId,
+    QString *errorMessage
+) const
+{
+    QList<SessionProfile> matches;
+
+    const QString normalizedHost = host.trimmed();
+    const QString normalizedUsername = username.trimmed();
+    const QString normalizedExcludedSessionId = excludedSessionId.trimmed();
+
+    if (normalizedHost.isEmpty() || normalizedUsername.isEmpty() || port <= 0) {
+        return matches;
+    }
+
+    const QList<SessionProfile> sessions = loadSessions(errorMessage);
+
+    if (errorMessage != nullptr && !errorMessage->isEmpty()) {
+        return matches;
+    }
+
+    for (const SessionProfile &session : sessions) {
+        if (!normalizedExcludedSessionId.isEmpty() && session.id == normalizedExcludedSessionId) {
+            continue;
+        }
+
+        if (session.port != port) {
+            continue;
+        }
+
+        if (session.host.trimmed().compare(normalizedHost, Qt::CaseInsensitive) != 0) {
+            continue;
+        }
+
+        if (session.username.trimmed() != normalizedUsername) {
+            continue;
+        }
+
+        matches.append(session);
+    }
+
+    return matches;
+}
+
+QString ConfigManager::makeUniqueSessionId(
+    const QString &desiredSessionId,
+    const QString &excludedSessionId,
+    QString *errorMessage
+) const
+{
+    QString baseId = desiredSessionId.trimmed();
+
+    if (baseId.isEmpty()) {
+        baseId = QStringLiteral("session");
+    }
+
+    QSet<QString> existingIds;
+    const QList<SessionProfile> sessions = loadSessions(errorMessage);
+
+    if (errorMessage != nullptr && !errorMessage->isEmpty()) {
+        return baseId;
+    }
+
+    const QString normalizedExcludedSessionId = excludedSessionId.trimmed();
+
+    for (const SessionProfile &session : sessions) {
+        if (!normalizedExcludedSessionId.isEmpty() && session.id == normalizedExcludedSessionId) {
+            continue;
+        }
+
+        existingIds.insert(session.id);
+    }
+
+    if (!existingIds.contains(baseId)) {
+        return baseId;
+    }
+
+    QString candidate = baseId + QStringLiteral("-copy");
+
+    if (!existingIds.contains(candidate)) {
+        return candidate;
+    }
+
+    for (int i = 2; i < 10000; ++i) {
+        candidate = baseId + QStringLiteral("-copy-") + QString::number(i);
+
+        if (!existingIds.contains(candidate)) {
+            return candidate;
+        }
+    }
+
+    return baseId + QStringLiteral("-copy-") + QString::number(QDateTime::currentSecsSinceEpoch());
+}
+
 bool ConfigManager::loadSessionById(
     const QString &sessionId,
     SessionProfile *session,
