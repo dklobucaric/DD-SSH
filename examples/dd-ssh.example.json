@@ -1,0 +1,21 @@
+{
+  "app": {
+    "name": "DD-SSH",
+    "config_version": 1
+  },
+  "settings": {
+    "terminal": {
+      "font_family": "monospace",
+      "font_size": 11,
+      "theme": "dark"
+    }
+  },
+  "groups": [],
+  "sessions": [],
+  "known_hosts": {},
+  "secrets": {
+    "mode": "plain-dev-only",
+    "items": {}
+  },
+  "metadata": {}
+}
