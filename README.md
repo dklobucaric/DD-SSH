@@ -20,7 +20,7 @@ Early versions intentionally do **not** include SFTP, split-screen, cloud accoun
 
 ## Project status
 
-Development checkpoint: `dev 0.1.2.0`.
+Development checkpoint: `dev 0.1.2.1`.
 
 Current working foundation:
 
@@ -59,4 +59,4 @@ Start here:
 
 ## Current shell limitation
 
-`dev 0.1.2.0` adds an experimental basic shell channel using libssh PTY + shell. It is a milestone for proving the persistent SSH channel path. It is **not** the final terminal emulator yet, so full-screen interactive programs like `htop`, `nano`, `vim`, `mc`, and `tmux` are not expected to behave correctly until the xterm.js terminal frontend is added.
+`dev 0.1.2.0` added an experimental basic shell channel using libssh PTY + shell. `dev 0.1.2.1` cleans up that temporary tab before the xterm.js milestone: common ANSI escape sequences are hidden from the basic text view, the input field is clearer, and quick actions such as Send Ctrl+C and Clear output are available. It is **not** the final terminal emulator yet, so full-screen interactive programs like `htop`, `nano`, `vim`, `mc`, and `tmux` are not expected to behave correctly until the xterm.js terminal frontend is added.

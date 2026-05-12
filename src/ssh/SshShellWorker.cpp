@@ -236,7 +236,7 @@ void SshShellWorker::start()
     ssh_set_blocking(session, 0);
 
     emit stateChanged(QStringLiteral("Connected. Basic shell channel is open."));
-    emit outputReceived(QStringLiteral("\n[DD-SSH] Basic shell channel open. Type a command below and press Enter.\n\n"));
+    emit outputReceived(QStringLiteral("\n[DD-SSH] Basic shell channel open. Use the temporary command input below and press Enter.\n\n"));
 
     char buffer[4096];
 

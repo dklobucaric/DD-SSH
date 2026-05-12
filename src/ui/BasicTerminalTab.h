@@ -3,6 +3,7 @@
 #include "core/SessionProfile.h"
 #include "ssh/SshSession.h"
 
+#include <QString>
 #include <QWidget>
 
 class QLabel;
@@ -27,6 +28,8 @@ public:
 
 private slots:
     void sendCurrentInput();
+    void sendInterrupt();
+    void clearOutput();
     void appendOutput(const QString &output);
     void updateState(const QString &state);
     void showWorkerError(const QString &error);
@@ -34,6 +37,8 @@ private slots:
     void disconnectShell();
 
 private:
+    QString cleanTerminalOutput(const QString &output) const;
+
     SessionProfile m_session;
     QString m_secretValue;
 
@@ -41,6 +46,8 @@ private:
     QPlainTextEdit *m_output = nullptr;
     QLineEdit *m_input = nullptr;
     QPushButton *m_sendButton = nullptr;
+    QPushButton *m_interruptButton = nullptr;
+    QPushButton *m_clearButton = nullptr;
     QPushButton *m_disconnectButton = nullptr;
 
     QThread *m_thread = nullptr;

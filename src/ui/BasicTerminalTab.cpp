@@ -7,9 +7,11 @@
 #include <QLineEdit>
 #include <QPlainTextEdit>
 #include <QPushButton>
+#include <QRegularExpression>
 #include <QScrollBar>
 #include <QTextCursor>
 #include <QThread>
+#include <QTimer>
 #include <QVBoxLayout>
 
 BasicTerminalTab::BasicTerminalTab(
@@ -42,11 +44,19 @@ BasicTerminalTab::BasicTerminalTab(
     auto *inputLayout = new QHBoxLayout();
 
     m_input = new QLineEdit(this);
-    m_input->setPlaceholderText(QStringLiteral("Type command and press Enter. This is a basic channel test, not the final terminal emulator."));
+    m_input->setPlaceholderText(QStringLiteral("Temporary input: type a command and press Enter. Real in-terminal typing comes with xterm.js."));
     inputLayout->addWidget(m_input, 1);
 
     m_sendButton = new QPushButton(QStringLiteral("Send"), this);
     inputLayout->addWidget(m_sendButton);
+
+    m_interruptButton = new QPushButton(QStringLiteral("Ctrl+C"), this);
+    m_interruptButton->setToolTip(QStringLiteral("Send Ctrl+C to the remote shell."));
+    inputLayout->addWidget(m_interruptButton);
+
+    m_clearButton = new QPushButton(QStringLiteral("Clear"), this);
+    m_clearButton->setToolTip(QStringLiteral("Clear local output view only. This does not run the remote clear command."));
+    inputLayout->addWidget(m_clearButton);
 
     m_disconnectButton = new QPushButton(QStringLiteral("Disconnect"), this);
     inputLayout->addWidget(m_disconnectButton);
@@ -55,6 +65,8 @@ BasicTerminalTab::BasicTerminalTab(
 
     connect(m_input, &QLineEdit::returnPressed, this, &BasicTerminalTab::sendCurrentInput);
     connect(m_sendButton, &QPushButton::clicked, this, &BasicTerminalTab::sendCurrentInput);
+    connect(m_interruptButton, &QPushButton::clicked, this, &BasicTerminalTab::sendInterrupt);
+    connect(m_clearButton, &QPushButton::clicked, this, &BasicTerminalTab::clearOutput);
     connect(m_disconnectButton, &QPushButton::clicked, this, &BasicTerminalTab::disconnectShell);
 
     const SshAuthMethod authMethod = m_session.authType == SessionProfile::AuthType::PrivateKey
@@ -87,9 +99,16 @@ BasicTerminalTab::BasicTerminalTab(
     m_output->appendPlainText(QStringLiteral("Session: ") + m_session.name);
     m_output->appendPlainText(QStringLiteral("Target: ") + target);
     m_output->appendPlainText(QStringLiteral("\nThis is an early channel milestone."));
-    m_output->appendPlainText(QStringLiteral("It is not xterm.js yet, so full-screen programs like htop/nano/vim are not expected to behave correctly.\n"));
+    m_output->appendPlainText(QStringLiteral("It is not xterm.js yet, so full-screen programs like htop/nano/vim are not expected to behave correctly."));
+    m_output->appendPlainText(QStringLiteral("Common ANSI escape sequences are hidden in this temporary view to keep the output readable.\n"));
 
     m_thread->start();
+
+    QTimer::singleShot(0, m_input, [this]() {
+        if (m_input != nullptr) {
+            m_input->setFocus();
+        }
+    });
 }
 
 BasicTerminalTab::~BasicTerminalTab()
@@ -102,6 +121,22 @@ BasicTerminalTab::~BasicTerminalTab()
     }
 }
 
+QString BasicTerminalTab::cleanTerminalOutput(const QString &output) const
+{
+    QString cleaned = output;
+
+    // OSC sequences, for example: ESC ] 0 ; title BEL
+    cleaned.remove(QRegularExpression(QStringLiteral("\x1B\\][^\x07]*(?:\x07|\x1B\\\\)")));
+
+    // CSI sequences, for example colors, cursor moves, bracketed paste on/off.
+    cleaned.remove(QRegularExpression(QStringLiteral("\x1B\\[[0-?]*[ -/]*[@-~]")));
+
+    // Simple one-character ESC sequences.
+    cleaned.remove(QRegularExpression(QStringLiteral("\x1B[@-Z\\\\-_]")));
+
+    return cleaned;
+}
+
 void BasicTerminalTab::sendCurrentInput()
 {
     if (m_worker == nullptr || m_input == nullptr) {
@@ -112,11 +147,38 @@ void BasicTerminalTab::sendCurrentInput()
 
     if (command.isEmpty()) {
         m_worker->sendInput(QStringLiteral("\n"));
+        m_input->setFocus();
         return;
     }
 
     m_worker->sendInput(command + QStringLiteral("\n"));
     m_input->clear();
+    m_input->setFocus();
+}
+
+void BasicTerminalTab::sendInterrupt()
+{
+    if (m_worker == nullptr) {
+        return;
+    }
+
+    m_worker->sendInput(QString(QChar(0x03)));
+    appendOutput(QStringLiteral("\n[DD-SSH] Sent Ctrl+C to remote shell.\n"));
+
+    if (m_input != nullptr) {
+        m_input->setFocus();
+    }
+}
+
+void BasicTerminalTab::clearOutput()
+{
+    if (m_output != nullptr) {
+        m_output->clear();
+    }
+
+    if (m_input != nullptr) {
+        m_input->setFocus();
+    }
 }
 
 void BasicTerminalTab::appendOutput(const QString &output)
@@ -125,8 +187,14 @@ void BasicTerminalTab::appendOutput(const QString &output)
         return;
     }
 
+    const QString displayOutput = cleanTerminalOutput(output);
+
+    if (displayOutput.isEmpty()) {
+        return;
+    }
+
     m_output->moveCursor(QTextCursor::End);
-    m_output->insertPlainText(output);
+    m_output->insertPlainText(displayOutput);
     m_output->moveCursor(QTextCursor::End);
 
     if (m_output->verticalScrollBar() != nullptr) {
@@ -160,6 +228,10 @@ void BasicTerminalTab::handleWorkerFinished()
 
     if (m_sendButton != nullptr) {
         m_sendButton->setEnabled(false);
+    }
+
+    if (m_interruptButton != nullptr) {
+        m_interruptButton->setEnabled(false);
     }
 
     if (m_disconnectButton != nullptr) {
