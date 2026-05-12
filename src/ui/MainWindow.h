@@ -14,6 +14,7 @@ private:
     void setupMenus();
     void setupToolbar();
     void setupCentralLayout();
+    void loadSavedSessionsToSidebar();
     void addWelcomeTab();
     void showConnectDialog();
 

@@ -3,6 +3,7 @@
 #include <QDateTime>
 #include <QDir>
 #include <QFile>
+#include <QFileDevice>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSaveFile>
@@ -179,6 +180,11 @@ bool KnownHostsManager::trustHost(
 
         return false;
     }
+
+    QFile::setPermissions(
+        configFilePath(),
+        QFileDevice::ReadOwner | QFileDevice::WriteOwner
+    );
 
     return true;
 }

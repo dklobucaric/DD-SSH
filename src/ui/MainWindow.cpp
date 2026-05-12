@@ -1,15 +1,20 @@
 #include "MainWindow.h"
 #include "ConnectDialog.h"
+#include "core/ConfigManager.h"
 #include "core/KnownHostsManager.h"
+#include "core/SessionProfile.h"
 #include "ssh/SshSession.h"
 
 #include <QAbstractButton>
 #include <QAction>
 #include <QApplication>
+#include <QFile>
 #include <QFontDatabase>
 #include <QListWidget>
+#include <QListWidgetItem>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QDir>
 #include <QPushButton>
 #include <QSplitter>
 #include <QStatusBar>
@@ -120,10 +125,7 @@ void MainWindow::setupCentralLayout()
     m_sessionList->setMinimumWidth(240);
     m_sessionList->setMaximumWidth(360);
 
-    m_sessionList->addItem("DD-Lab / Nextcloud Backend");
-    m_sessionList->addItem("DD-Lab / Zabbix");
-    m_sessionList->addItem("Lab / Test VM");
-    m_sessionList->addItem("Local / Raspberry Pi");
+    loadSavedSessionsToSidebar();
 
     m_tabs = new QTabWidget(splitter);
     m_tabs->setTabsClosable(true);
@@ -145,13 +147,16 @@ void MainWindow::setupCentralLayout()
         terminalPlaceholder->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
 
         const QString output =
-            QStringLiteral("DD-SSH terminal placeholder\n\n")
+            QStringLiteral("DD-SSH saved session placeholder\n\n")
             + QStringLiteral("Selected session:\n")
             + item->text()
             + QStringLiteral("\n\n")
+            + QStringLiteral("Session id:\n")
+            + item->data(Qt::UserRole).toString()
+            + QStringLiteral("\n\n")
             + QStringLiteral("Next milestone:\n")
-            + QStringLiteral("- real session manager\n")
-            + QStringLiteral("- terminal frontend\n")
+            + QStringLiteral("- connect from saved session\n")
+            + QStringLiteral("- read plaintext secret from JSON\n")
             + QStringLiteral("- persistent SSH session object\n");
 
         terminalPlaceholder->setPlainText(output);
@@ -172,6 +177,52 @@ void MainWindow::setupCentralLayout()
     addWelcomeTab();
 }
 
+void MainWindow::loadSavedSessionsToSidebar()
+{
+    if (m_sessionList == nullptr) {
+        return;
+    }
+
+    m_sessionList->clear();
+
+    ConfigManager config;
+    QString loadError;
+    const QList<SessionProfile> sessions = config.loadSessions(&loadError);
+
+    if (!loadError.isEmpty()) {
+        auto *item = new QListWidgetItem("Could not load sessions");
+        item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
+        m_sessionList->addItem(item);
+        statusBar()->showMessage("Could not load saved sessions: " + loadError);
+        return;
+    }
+
+    if (sessions.isEmpty()) {
+        auto *item = new QListWidgetItem("No saved sessions yet");
+        item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
+        m_sessionList->addItem(item);
+        return;
+    }
+
+    for (const SessionProfile &session : sessions) {
+        const QString label = session.group.trimmed().isEmpty()
+            ? session.name
+            : session.group.trimmed() + QStringLiteral(" / ") + session.name;
+
+        auto *item = new QListWidgetItem(label);
+        item->setData(Qt::UserRole, session.id);
+        item->setToolTip(
+            session.username
+            + QStringLiteral("@")
+            + session.host
+            + QStringLiteral(":")
+            + QString::number(session.port)
+        );
+
+        m_sessionList->addItem(item);
+    }
+}
+
 void MainWindow::addWelcomeTab()
 {
     auto *welcome = new QTextEdit(this);
@@ -181,13 +232,14 @@ void MainWindow::addWelcomeTab()
     welcome->setPlainText(
         "DD-SSH\n\n"
         "UI layout skeleton is alive.\n\n"
-        "Left side: session list placeholder\n"
+        "Left side: saved sessions from dd-ssh.json\n"
         "Right side: terminal tabs placeholder\n\n"
-        "Double-click a session on the left to open a placeholder tab.\n\n"
+        "Double-click a saved session on the left to open a placeholder tab.\n\n"
         "Current milestone:\n"
-        "- SSH authentication test\n\n"
+        "- SSH authentication test\n"
+        "- save successful connection to JSON\n\n"
         "Next milestone:\n"
-        "- save successful connection to JSON\n"
+        "- connect from saved session\n"
         "- persistent SSH session object\n"
         "- real terminal channel\n"
     );
@@ -379,6 +431,9 @@ void MainWindow::showConnectDialog()
 
     bool authAttempted = false;
     bool authSuccessful = false;
+    bool sessionSaveAttempted = false;
+    bool sessionSaved = false;
+    QString sessionSaveMessage;
     SshAuthResult authResult;
 
     if (handshake.success) {
@@ -431,9 +486,84 @@ void MainWindow::showConnectDialog()
                 output += QStringLiteral("Message: ") + authResult.message + QStringLiteral("\n");
                 output += QStringLiteral("Auth return code: ") + QString::number(authResult.authReturnCode) + QStringLiteral("\n\n");
 
+                if (dialog.saveConnection()) {
+                    sessionSaveAttempted = true;
+
+                    ConfigManager config;
+                    SessionProfile session;
+                    session.name = dialog.sessionName();
+                    session.group = dialog.groupName();
+                    session.host = dialog.host();
+                    session.port = dialog.port();
+                    session.username = dialog.username();
+                    session.id = ConfigManager::makeSessionId(
+                        session.name,
+                        session.host,
+                        session.port,
+                        session.username
+                    );
+
+                    QString secretValue;
+
+                    if (dialog.authType() == ConnectDialog::AuthType::PrivateKey) {
+                        session.authType = SessionProfile::AuthType::PrivateKey;
+
+                        QString expandedKeyPath = dialog.keyPath();
+
+                        if (expandedKeyPath.startsWith(QStringLiteral("~/"))) {
+                            expandedKeyPath = QDir::homePath() + expandedKeyPath.mid(1);
+                        }
+
+                        QFile keyFile(expandedKeyPath);
+
+                        if (keyFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                            secretValue = QString::fromUtf8(keyFile.readAll());
+                            keyFile.close();
+                        } else {
+                            sessionSaveMessage = QStringLiteral("Could not read private key file for JSON save: ") + keyFile.errorString();
+                        }
+                    } else {
+                        session.authType = SessionProfile::AuthType::Password;
+                        secretValue = dialog.password();
+                    }
+
+                    if (sessionSaveMessage.isEmpty()) {
+                        QString saveError;
+
+                        sessionSaved = config.saveSessionWithPlainSecret(
+                            session,
+                            secretValue,
+                            &saveError
+                        );
+
+                        if (sessionSaved) {
+                            sessionSaveMessage = QStringLiteral("Saved to ") + config.configFilePath();
+                            loadSavedSessionsToSidebar();
+                        } else {
+                            sessionSaveMessage = saveError;
+                        }
+                    }
+                }
+
+                if (sessionSaveAttempted) {
+                    output += QStringLiteral("Session save result:\n");
+
+                    if (sessionSaved) {
+                        output += QStringLiteral("Status: SAVED\n");
+                    } else {
+                        output += QStringLiteral("Status: FAILED\n");
+                    }
+
+                    output += QStringLiteral("Message: ") + sessionSaveMessage + QStringLiteral("\n");
+                    output += QStringLiteral("Secrets mode: plain-v1 plaintext portable storage\n\n");
+                } else {
+                    output += QStringLiteral("Session save result:\n");
+                    output += QStringLiteral("Status: SKIPPED - Save this connection was not checked.\n\n");
+                }
+
                 output += QStringLiteral("Authentication works. Shell was NOT opened yet.\n\n");
                 output += QStringLiteral("Next milestone:\n");
-                output += QStringLiteral("- save successful connection to JSON\n");
+                output += QStringLiteral("- connect from saved session\n");
                 output += QStringLiteral("- persistent SSH session object\n");
                 output += QStringLiteral("- real terminal channel\n");
             } else {
@@ -476,7 +606,13 @@ void MainWindow::showConnectDialog()
     m_tabs->setCurrentIndex(tabIndex);
 
     if (handshake.success && knownHostAllowed && authAttempted && authSuccessful) {
-        statusBar()->showMessage("SSH authentication successful for " + tabTitle);
+        if (sessionSaveAttempted && sessionSaved) {
+            statusBar()->showMessage("SSH authentication successful and session saved for " + tabTitle);
+        } else if (sessionSaveAttempted) {
+            statusBar()->showMessage("SSH authentication successful, but session save failed for " + tabTitle);
+        } else {
+            statusBar()->showMessage("SSH authentication successful for " + tabTitle);
+        }
     } else if (handshake.success && knownHostAllowed && authAttempted) {
         statusBar()->showMessage("SSH authentication failed for " + tabTitle);
     } else if (handshake.success && knownHostAllowed) {

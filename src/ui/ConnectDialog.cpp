@@ -1,7 +1,9 @@
 #include "ConnectDialog.h"
 
+#include <QCheckBox>
 #include <QComboBox>
 #include <QDialogButtonBox>
+#include <QDir>
 #include <QFileDialog>
 #include <QFormLayout>
 #include <QHBoxLayout>
@@ -17,7 +19,7 @@ ConnectDialog::ConnectDialog(QWidget *parent)
 {
     setWindowTitle("Connect to SSH server");
     setModal(true);
-    resize(460, 260);
+    resize(520, 390);
 
     auto *mainLayout = new QVBoxLayout(this);
 
@@ -64,7 +66,27 @@ ConnectDialog::ConnectDialog(QWidget *parent)
 
     form->addRow("Private key:", keyPathRow);
 
+    m_saveConnectionCheck = new QCheckBox("Save this connection", this);
+    m_saveConnectionCheck->setChecked(true);
+    form->addRow("", m_saveConnectionCheck);
+
+    m_sessionNameEdit = new QLineEdit(this);
+    m_sessionNameEdit->setPlaceholderText("Example: Nextcloud Backend");
+    form->addRow("Session name:", m_sessionNameEdit);
+
+    m_groupEdit = new QLineEdit(this);
+    m_groupEdit->setPlaceholderText("Example: DD-Lab");
+    form->addRow("Group:", m_groupEdit);
+
     mainLayout->addLayout(form);
+
+    m_plainTextWarningLabel = new QLabel(
+        "Saved passwords/private keys are stored in plaintext inside dd-ssh.json in this early portable mode.",
+        this
+    );
+    m_plainTextWarningLabel->setWordWrap(true);
+    m_plainTextWarningLabel->setStyleSheet("color: #b36b00;");
+    mainLayout->addWidget(m_plainTextWarningLabel);
 
     auto *buttons = new QDialogButtonBox(
         QDialogButtonBox::Ok | QDialogButtonBox::Cancel,
@@ -75,6 +97,22 @@ ConnectDialog::ConnectDialog(QWidget *parent)
 
     connect(m_authTypeCombo, &QComboBox::currentTextChanged, this, [this]() {
         updateAuthFields();
+    });
+
+    connect(m_saveConnectionCheck, &QCheckBox::toggled, this, [this]() {
+        updateSaveFields();
+    });
+
+    connect(m_hostEdit, &QLineEdit::textChanged, this, [this]() {
+        refreshDefaultSessionName();
+    });
+
+    connect(m_usernameEdit, &QLineEdit::textChanged, this, [this]() {
+        refreshDefaultSessionName();
+    });
+
+    connect(m_portSpin, &QSpinBox::valueChanged, this, [this]() {
+        refreshDefaultSessionName();
     });
 
     connect(browseButton, &QPushButton::clicked, this, [this]() {
@@ -116,10 +154,18 @@ ConnectDialog::ConnectDialog(QWidget *parent)
             return;
         }
 
+        if (saveConnection() && sessionName().trimmed().isEmpty()) {
+            QMessageBox::warning(this, "Missing session name", "Please enter session name or disable saving.");
+            m_sessionNameEdit->setFocus();
+            return;
+        }
+
         accept();
     });
 
     updateAuthFields();
+    updateSaveFields();
+    refreshDefaultSessionName();
 }
 
 QString ConnectDialog::host() const
@@ -158,10 +204,53 @@ QString ConnectDialog::keyPath() const
     return m_keyPathEdit->text().trimmed();
 }
 
+bool ConnectDialog::saveConnection() const
+{
+    return m_saveConnectionCheck->isChecked();
+}
+
+QString ConnectDialog::sessionName() const
+{
+    return m_sessionNameEdit->text().trimmed();
+}
+
+QString ConnectDialog::groupName() const
+{
+    return m_groupEdit->text().trimmed();
+}
+
 void ConnectDialog::updateAuthFields()
 {
     const bool usePassword = authType() == AuthType::Password;
 
     m_passwordEdit->setEnabled(usePassword);
     m_keyPathEdit->setEnabled(!usePassword);
+}
+
+void ConnectDialog::updateSaveFields()
+{
+    const bool save = saveConnection();
+
+    m_sessionNameEdit->setEnabled(save);
+    m_groupEdit->setEnabled(save);
+    m_plainTextWarningLabel->setVisible(save);
+}
+
+void ConnectDialog::refreshDefaultSessionName()
+{
+    if (m_sessionNameEdit == nullptr || !m_sessionNameEdit->text().trimmed().isEmpty()) {
+        return;
+    }
+
+    if (host().isEmpty() || username().isEmpty()) {
+        return;
+    }
+
+    m_sessionNameEdit->setText(
+        username()
+        + QStringLiteral("@")
+        + host()
+        + QStringLiteral(":")
+        + QString::number(port())
+    );
 }
