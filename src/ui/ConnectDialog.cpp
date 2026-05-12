@@ -19,13 +19,13 @@ ConnectDialog::ConnectDialog(QWidget *parent)
 {
     setWindowTitle("Connect to SSH server");
     setModal(true);
-    resize(520, 390);
+    resize(520, 430);
 
     auto *mainLayout = new QVBoxLayout(this);
 
-    auto *title = new QLabel("Create a manual SSH connection", this);
-    title->setStyleSheet("font-weight: bold;");
-    mainLayout->addWidget(title);
+    m_titleLabel = new QLabel("Create a manual SSH connection", this);
+    m_titleLabel->setStyleSheet("font-weight: bold;");
+    mainLayout->addWidget(m_titleLabel);
 
     auto *form = new QFormLayout();
 
@@ -142,13 +142,13 @@ ConnectDialog::ConnectDialog(QWidget *parent)
             return;
         }
 
-        if (authType() == AuthType::Password && password().isEmpty()) {
+        if (authType() == AuthType::Password && password().isEmpty() && !m_editMode) {
             QMessageBox::warning(this, "Missing password", "Please enter password.");
             m_passwordEdit->setFocus();
             return;
         }
 
-        if (authType() == AuthType::PrivateKey && keyPath().trimmed().isEmpty()) {
+        if (authType() == AuthType::PrivateKey && keyPath().trimmed().isEmpty() && !m_editMode) {
             QMessageBox::warning(this, "Missing private key", "Please select private key path.");
             m_keyPathEdit->setFocus();
             return;
@@ -219,6 +219,74 @@ QString ConnectDialog::groupName() const
     return m_groupEdit->text().trimmed();
 }
 
+void ConnectDialog::setEditMode(bool editMode)
+{
+    m_editMode = editMode;
+
+    if (m_editMode) {
+        setWindowTitle("Edit saved SSH session");
+        m_titleLabel->setText("Edit saved SSH session");
+        m_saveConnectionCheck->setChecked(true);
+        m_saveConnectionCheck->setEnabled(false);
+        m_passwordEdit->setPlaceholderText("Leave empty to keep the saved password");
+        m_keyPathEdit->setPlaceholderText("Leave empty to keep the saved private key, or browse a new key file");
+        m_plainTextWarningLabel->setText(
+            "Editing a saved session keeps the existing plaintext secret if password/private key is left empty. "
+            "Entering a new password or key replaces the saved secret in dd-ssh.json."
+        );
+    } else {
+        setWindowTitle("Connect to SSH server");
+        m_titleLabel->setText("Create a manual SSH connection");
+        m_saveConnectionCheck->setEnabled(true);
+        m_passwordEdit->setPlaceholderText("Password");
+        m_keyPathEdit->setPlaceholderText("~/.ssh/id_ed25519");
+        m_plainTextWarningLabel->setText(
+            "Saved passwords/private keys are stored in plaintext inside dd-ssh.json in this early portable mode."
+        );
+    }
+
+    updateSaveFields();
+    updateAuthFields();
+}
+
+bool ConnectDialog::isEditMode() const
+{
+    return m_editMode;
+}
+
+void ConnectDialog::setConnectionFields(
+    const QString &host,
+    int port,
+    const QString &username,
+    AuthType authType
+)
+{
+    m_hostEdit->setText(host.trimmed());
+    m_portSpin->setValue(port > 0 ? port : 22);
+    m_usernameEdit->setText(username.trimmed());
+
+    const int authIndex = m_authTypeCombo->findData(
+        authType == AuthType::PrivateKey
+            ? QStringLiteral("key")
+            : QStringLiteral("password")
+    );
+
+    if (authIndex >= 0) {
+        m_authTypeCombo->setCurrentIndex(authIndex);
+    }
+
+    updateAuthFields();
+}
+
+void ConnectDialog::setSessionFields(
+    const QString &sessionName,
+    const QString &groupName
+)
+{
+    m_sessionNameEdit->setText(sessionName.trimmed());
+    m_groupEdit->setText(groupName.trimmed());
+}
+
 void ConnectDialog::updateAuthFields()
 {
     const bool usePassword = authType() == AuthType::Password;
@@ -233,11 +301,15 @@ void ConnectDialog::updateSaveFields()
 
     m_sessionNameEdit->setEnabled(save);
     m_groupEdit->setEnabled(save);
-    m_plainTextWarningLabel->setVisible(save);
+    m_plainTextWarningLabel->setVisible(save || m_editMode);
 }
 
 void ConnectDialog::refreshDefaultSessionName()
 {
+    if (m_editMode) {
+        return;
+    }
+
     if (m_sessionNameEdit == nullptr || !m_sessionNameEdit->text().trimmed().isEmpty()) {
         return;
     }

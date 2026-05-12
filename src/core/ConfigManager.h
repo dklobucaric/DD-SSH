@@ -35,6 +35,15 @@ public:
         bool *updatedExistingSession = nullptr
     ) const;
 
+    bool updateSessionWithOptionalPlainSecret(
+        const QString &originalSessionId,
+        const SessionProfile &session,
+        const QString &secretValue,
+        bool replaceSecret,
+        QString *errorMessage = nullptr,
+        bool *changedSessionId = nullptr
+    ) const;
+
     bool deleteSession(
         const QString &sessionId,
         QString *errorMessage = nullptr,

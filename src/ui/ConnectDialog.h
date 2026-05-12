@@ -31,11 +31,27 @@ public:
     QString sessionName() const;
     QString groupName() const;
 
+    void setEditMode(bool editMode);
+    bool isEditMode() const;
+    void setConnectionFields(
+        const QString &host,
+        int port,
+        const QString &username,
+        AuthType authType
+    );
+    void setSessionFields(
+        const QString &sessionName,
+        const QString &groupName
+    );
+
 private:
     void updateAuthFields();
     void updateSaveFields();
     void refreshDefaultSessionName();
 
+    bool m_editMode = false;
+
+    QLabel *m_titleLabel = nullptr;
     QLineEdit *m_hostEdit = nullptr;
     QSpinBox *m_portSpin = nullptr;
     QLineEdit *m_usernameEdit = nullptr;

@@ -77,7 +77,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: Saved session delete cleanup.\n\n")
+            + QStringLiteral("Current phase: Saved session edit/delete cleanup.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n\n")
@@ -235,9 +235,10 @@ void MainWindow::addWelcomeTab()
         "- save successful connection to JSON\n"
         "- connect from saved session\n"
         "- config/session safety cleanup\n"
-        "- delete saved sessions from sidebar context menu\n\n"
+        "- delete saved sessions from sidebar context menu\n"
+        "- edit/modify saved sessions from sidebar context menu\n\n"
         "Next milestone:\n"
-        "- edit/modify saved sessions\n"
+        "- duplicate host/user warning polish\n"
         "- persistent SSH session object\n"
         "- real terminal channel\n"
     );
@@ -267,17 +268,151 @@ void MainWindow::showSessionContextMenu(const QPoint &position)
     QMenu menu(this);
     QAction *connectAction = menu.addAction("Connect");
     menu.addSeparator();
-    QAction *editAction = menu.addAction("Edit session (coming soon)");
-    editAction->setEnabled(false);
+    QAction *editAction = menu.addAction("Edit session");
     QAction *deleteAction = menu.addAction("Delete session");
 
     QAction *selectedAction = menu.exec(m_sessionList->viewport()->mapToGlobal(position));
 
     if (selectedAction == connectAction) {
         testSavedSession(sessionId);
+    } else if (selectedAction == editAction) {
+        editSavedSession(sessionId);
     } else if (selectedAction == deleteAction) {
         deleteSavedSession(sessionId);
     }
+}
+
+void MainWindow::editSavedSession(const QString &sessionId)
+{
+    ConfigManager config;
+    SessionProfile existingSession;
+    QString loadError;
+
+    if (!config.loadSessionById(sessionId, &existingSession, &loadError)) {
+        QMessageBox::warning(
+            this,
+            "Could not load saved session",
+            loadError
+        );
+        statusBar()->showMessage("Could not load saved session for editing: " + sessionId);
+        loadSavedSessionsToSidebar();
+        return;
+    }
+
+    ConnectDialog dialog(this);
+    dialog.setEditMode(true);
+    dialog.setConnectionFields(
+        existingSession.host,
+        existingSession.port,
+        existingSession.username,
+        existingSession.authType == SessionProfile::AuthType::PrivateKey
+            ? ConnectDialog::AuthType::PrivateKey
+            : ConnectDialog::AuthType::Password
+    );
+    dialog.setSessionFields(existingSession.name, existingSession.group);
+
+    if (dialog.exec() != QDialog::Accepted) {
+        statusBar()->showMessage("Edit session cancelled");
+        return;
+    }
+
+    SessionProfile updatedSession;
+    updatedSession.name = dialog.sessionName();
+    updatedSession.group = dialog.groupName();
+    updatedSession.host = dialog.host();
+    updatedSession.port = dialog.port();
+    updatedSession.username = dialog.username();
+    updatedSession.id = ConfigManager::makeSessionId(
+        updatedSession.name,
+        updatedSession.host,
+        updatedSession.port,
+        updatedSession.username
+    );
+    updatedSession.authType = dialog.authType() == ConnectDialog::AuthType::PrivateKey
+        ? SessionProfile::AuthType::PrivateKey
+        : SessionProfile::AuthType::Password;
+
+    QString replacementSecret;
+    bool replaceSecret = false;
+
+    if (updatedSession.authType == SessionProfile::AuthType::Password) {
+        if (!dialog.password().isEmpty()) {
+            replacementSecret = dialog.password();
+            replaceSecret = true;
+        }
+    } else {
+        if (!dialog.keyPath().trimmed().isEmpty()) {
+            QString expandedKeyPath = dialog.keyPath();
+
+            if (expandedKeyPath.startsWith(QStringLiteral("~/"))) {
+                expandedKeyPath = QDir::homePath() + expandedKeyPath.mid(1);
+            }
+
+            QFile keyFile(expandedKeyPath);
+
+            if (!keyFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                QMessageBox::warning(
+                    this,
+                    "Could not read private key",
+                    "Could not read private key file for JSON save: " + keyFile.errorString()
+                );
+                statusBar()->showMessage("Could not read replacement private key");
+                return;
+            }
+
+            replacementSecret = QString::fromUtf8(keyFile.readAll());
+            keyFile.close();
+            replaceSecret = true;
+        }
+    }
+
+    const bool authTypeChanged = updatedSession.authType != existingSession.authType;
+
+    if (authTypeChanged && !replaceSecret) {
+        QMessageBox::warning(
+            this,
+            "New secret required",
+            "Authentication type was changed. Please enter a new password or choose a new private key file."
+        );
+        statusBar()->showMessage("Edit session requires a new secret when auth type changes");
+        return;
+    }
+
+    QString updateError;
+    bool changedSessionId = false;
+
+    if (!config.updateSessionWithOptionalPlainSecret(
+            existingSession.id,
+            updatedSession,
+            replacementSecret,
+            replaceSecret,
+            &updateError,
+            &changedSessionId
+        )) {
+        QMessageBox::warning(
+            this,
+            "Could not update saved session",
+            updateError
+        );
+        statusBar()->showMessage("Could not update saved session: " + existingSession.name);
+        return;
+    }
+
+    loadSavedSessionsToSidebar();
+
+    QString message = "Updated saved session: " + updatedSession.name;
+
+    if (changedSessionId) {
+        message += " (session id changed)";
+    }
+
+    if (replaceSecret) {
+        message += " and replaced plaintext secret";
+    } else {
+        message += " and kept existing plaintext secret";
+    }
+
+    statusBar()->showMessage(message);
 }
 
 void MainWindow::deleteSavedSession(const QString &sessionId)

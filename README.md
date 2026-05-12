@@ -20,7 +20,21 @@ Early versions intentionally do **not** include SFTP, split-screen, cloud accoun
 
 ## Project status
 
-Planning / foundation phase.
+Development checkpoint: `dev 0.1.1.5`.
+
+Current working foundation:
+
+- Qt GUI skeleton with sidebar, tabs, toolbar, and About dialog
+- Manual SSH connection dialog
+- libssh handshake and password/private-key authentication tests
+- known-host trust flow stored in `dd-ssh.json`
+- Saved sessions loaded from `dd-ssh.json` into the sidebar
+- Portable plaintext `secrets.mode = "plain-v1"` for early v1.0.x development
+- Connect/auth test from saved sessions
+- Delete saved sessions while preserving known-host trust records
+- Edit saved sessions while keeping or replacing the saved plaintext secret
+
+Saved session management is a real DD-SSH feature direction, not just a test helper. The long-term goal is full session CRUD: create/save, load/connect, edit/update, delete, and later import/export from one portable JSON file.
 
 ## Technology direction
 

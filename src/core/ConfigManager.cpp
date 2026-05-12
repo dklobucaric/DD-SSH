@@ -537,6 +537,281 @@ bool ConfigManager::saveSessionWithPlainSecret(
     return writeRootObject(root, errorMessage);
 }
 
+
+bool ConfigManager::updateSessionWithOptionalPlainSecret(
+    const QString &originalSessionId,
+    const SessionProfile &session,
+    const QString &secretValue,
+    bool replaceSecret,
+    QString *errorMessage,
+    bool *changedSessionId
+) const
+{
+    if (errorMessage != nullptr) {
+        *errorMessage = QString();
+    }
+
+    if (changedSessionId != nullptr) {
+        *changedSessionId = false;
+    }
+
+    const QString trimmedOriginalSessionId = originalSessionId.trimmed();
+    const QString trimmedNewSessionId = session.id.trimmed();
+
+    if (trimmedOriginalSessionId.isEmpty()) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Original session id is empty.");
+        }
+
+        return false;
+    }
+
+    if (trimmedNewSessionId.isEmpty()) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("New session id is empty.");
+        }
+
+        return false;
+    }
+
+    QJsonObject root;
+
+    if (!readRootObject(&root, errorMessage)) {
+        return false;
+    }
+
+    ensureBaseObjects(&root);
+
+    QJsonArray sessions = root.value(QStringLiteral("sessions")).toArray();
+    int originalIndex = -1;
+    QJsonObject originalSessionObject;
+
+    for (int i = 0; i < sessions.size(); ++i) {
+        if (!sessions.at(i).isObject()) {
+            continue;
+        }
+
+        const QJsonObject candidate = sessions.at(i).toObject();
+        const QString candidateId = candidate.value(QStringLiteral("id")).toString();
+
+        if (candidateId == trimmedOriginalSessionId) {
+            originalIndex = i;
+            originalSessionObject = candidate;
+            break;
+        }
+    }
+
+    if (originalIndex < 0) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Saved session not found: ") + trimmedOriginalSessionId;
+        }
+
+        return false;
+    }
+
+    for (int i = 0; i < sessions.size(); ++i) {
+        if (i == originalIndex || !sessions.at(i).isObject()) {
+            continue;
+        }
+
+        const QJsonObject candidate = sessions.at(i).toObject();
+
+        if (candidate.value(QStringLiteral("id")).toString() == trimmedNewSessionId) {
+            if (errorMessage != nullptr) {
+                *errorMessage = QStringLiteral("Another saved session already uses id: ") + trimmedNewSessionId;
+            }
+
+            return false;
+        }
+    }
+
+    const QJsonObject originalAuth = originalSessionObject.value(QStringLiteral("auth")).toObject();
+    const QString originalAuthType = originalAuth.value(QStringLiteral("type")).toString(QStringLiteral("password"));
+    const QString originalSecretId = originalAuthType == QStringLiteral("key")
+        ? originalAuth.value(QStringLiteral("key_ref")).toString().trimmed()
+        : originalAuth.value(QStringLiteral("secret_ref")).toString().trimmed();
+
+    const QString newAuthType = session.authType == SessionProfile::AuthType::PrivateKey
+        ? QStringLiteral("key")
+        : QStringLiteral("password");
+
+    QString newSecretId;
+
+    if (replaceSecret) {
+        if (secretValue.isEmpty()) {
+            if (errorMessage != nullptr) {
+                *errorMessage = QStringLiteral("Replacement secret is empty.");
+            }
+
+            return false;
+        }
+
+        newSecretId = session.authType == SessionProfile::AuthType::PrivateKey
+            ? QStringLiteral("secret-") + trimmedNewSessionId + QStringLiteral("-key")
+            : QStringLiteral("secret-") + trimmedNewSessionId + QStringLiteral("-password");
+    } else {
+        if (newAuthType != originalAuthType) {
+            if (errorMessage != nullptr) {
+                *errorMessage = QStringLiteral("Authentication type was changed, so a new password/private key must be provided.");
+            }
+
+            return false;
+        }
+
+        if (originalSecretId.isEmpty()) {
+            if (errorMessage != nullptr) {
+                *errorMessage = QStringLiteral("Existing session has no secret reference to preserve.");
+            }
+
+            return false;
+        }
+
+        const QJsonObject secrets = root.value(QStringLiteral("secrets")).toObject();
+        const QJsonObject items = secrets.value(QStringLiteral("items")).toObject();
+
+        if (!items.contains(originalSecretId)) {
+            if (errorMessage != nullptr) {
+                *errorMessage = QStringLiteral("Existing secret is missing from dd-ssh.json: ") + originalSecretId;
+            }
+
+            return false;
+        }
+
+        newSecretId = originalSecretId;
+    }
+
+    const QString nowUtc = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
+
+    QJsonArray groups = root.value(QStringLiteral("groups")).toArray();
+    const QString groupName = session.group.trimmed();
+
+    if (!groupName.isEmpty()) {
+        bool groupExists = false;
+
+        for (const QJsonValue &value : groups) {
+            const QJsonObject group = value.toObject();
+
+            if (group.value(QStringLiteral("name")).toString().compare(groupName, Qt::CaseInsensitive) == 0) {
+                groupExists = true;
+                break;
+            }
+        }
+
+        if (!groupExists) {
+            QString groupId = groupName.toLower();
+            groupId.replace(QRegularExpression(QStringLiteral("[^a-z0-9]+")), QStringLiteral("-"));
+            groupId.replace(QRegularExpression(QStringLiteral("^-+|-+$")), QString());
+
+            if (groupId.isEmpty()) {
+                groupId = QStringLiteral("default");
+            }
+
+            QJsonObject groupObject;
+            groupObject.insert(QStringLiteral("id"), groupId);
+            groupObject.insert(QStringLiteral("name"), groupName);
+            groups.append(groupObject);
+        }
+    }
+
+    root.insert(QStringLiteral("groups"), groups);
+
+    QJsonObject authObject;
+
+    if (session.authType == SessionProfile::AuthType::PrivateKey) {
+        authObject.insert(QStringLiteral("type"), QStringLiteral("key"));
+        authObject.insert(QStringLiteral("key_ref"), newSecretId);
+    } else {
+        authObject.insert(QStringLiteral("type"), QStringLiteral("password"));
+        authObject.insert(QStringLiteral("secret_ref"), newSecretId);
+    }
+
+    QJsonObject sessionObject;
+    sessionObject.insert(QStringLiteral("id"), trimmedNewSessionId);
+    sessionObject.insert(QStringLiteral("name"), session.name.trimmed());
+    sessionObject.insert(QStringLiteral("group"), groupName);
+    sessionObject.insert(QStringLiteral("host"), session.host.trimmed());
+    sessionObject.insert(QStringLiteral("port"), session.port);
+    sessionObject.insert(QStringLiteral("username"), session.username.trimmed());
+    sessionObject.insert(QStringLiteral("auth"), authObject);
+    sessionObject.insert(
+        QStringLiteral("created_at"),
+        originalSessionObject.value(QStringLiteral("created_at")).toString(nowUtc)
+    );
+    sessionObject.insert(
+        QStringLiteral("last_successful_auth"),
+        originalSessionObject.value(QStringLiteral("last_successful_auth")).toString()
+    );
+    sessionObject.insert(QStringLiteral("last_edited"), nowUtc);
+
+    sessions.replace(originalIndex, sessionObject);
+    root.insert(QStringLiteral("sessions"), sessions);
+
+    if (replaceSecret) {
+        QJsonObject secrets = root.value(QStringLiteral("secrets")).toObject();
+        secrets.insert(QStringLiteral("mode"), QStringLiteral("plain-v1"));
+
+        QJsonObject items = secrets.value(QStringLiteral("items")).toObject();
+
+        QJsonObject secretObject;
+        secretObject.insert(
+            QStringLiteral("type"),
+            session.authType == SessionProfile::AuthType::PrivateKey
+                ? QStringLiteral("private_key")
+                : QStringLiteral("password")
+        );
+        secretObject.insert(QStringLiteral("value"), secretValue);
+        secretObject.insert(QStringLiteral("updated_at"), nowUtc);
+
+        items.insert(newSecretId, secretObject);
+        secrets.insert(QStringLiteral("items"), items);
+        root.insert(QStringLiteral("secrets"), secrets);
+    }
+
+    if (!originalSecretId.isEmpty() && originalSecretId != newSecretId) {
+        QSet<QString> referencedSecrets;
+        const QJsonArray updatedSessions = root.value(QStringLiteral("sessions")).toArray();
+
+        for (const QJsonValue &value : updatedSessions) {
+            if (!value.isObject()) {
+                continue;
+            }
+
+            const QJsonObject sessionObjectForRef = value.toObject();
+            const QJsonObject authObjectForRef = sessionObjectForRef.value(QStringLiteral("auth")).toObject();
+            const QString passwordRef = authObjectForRef.value(QStringLiteral("secret_ref")).toString().trimmed();
+            const QString keyRef = authObjectForRef.value(QStringLiteral("key_ref")).toString().trimmed();
+
+            if (!passwordRef.isEmpty()) {
+                referencedSecrets.insert(passwordRef);
+            }
+
+            if (!keyRef.isEmpty()) {
+                referencedSecrets.insert(keyRef);
+            }
+        }
+
+        if (!referencedSecrets.contains(originalSecretId)) {
+            QJsonObject secrets = root.value(QStringLiteral("secrets")).toObject();
+            QJsonObject items = secrets.value(QStringLiteral("items")).toObject();
+            items.remove(originalSecretId);
+            secrets.insert(QStringLiteral("items"), items);
+            root.insert(QStringLiteral("secrets"), secrets);
+        }
+    }
+
+    QJsonObject metadata = root.value(QStringLiteral("metadata")).toObject();
+    metadata.insert(QStringLiteral("created_by"), QStringLiteral("DD-SSH"));
+    metadata.insert(QStringLiteral("last_modified"), nowUtc);
+    root.insert(QStringLiteral("metadata"), metadata);
+
+    if (changedSessionId != nullptr) {
+        *changedSessionId = trimmedOriginalSessionId != trimmedNewSessionId;
+    }
+
+    return writeRootObject(root, errorMessage);
+}
+
+
 bool ConfigManager::deleteSession(
     const QString &sessionId,
     QString *errorMessage,

@@ -21,6 +21,7 @@ private:
     void showConnectDialog();
     void testSavedSession(const QString &sessionId);
     void showSessionContextMenu(const QPoint &position);
+    void editSavedSession(const QString &sessionId);
     void deleteSavedSession(const QString &sessionId);
 
     QListWidget *m_sessionList = nullptr;
