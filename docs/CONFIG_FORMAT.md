@@ -39,3 +39,7 @@ Deleting a saved session should not automatically delete `known_hosts`. Known-ho
 
 When saving a new session, DD-SSH should warn if another session already uses the same `username + host + port` target. The user should be able to update the existing session, create a copy, or cancel.
 
+
+## Saved session shell channel
+
+`dev 0.1.2.0` can open an experimental shell channel from a saved session. The session still resolves authentication through `auth.secret_ref` or `auth.key_ref` and loads the plaintext value from `secrets.items` when `secrets.mode` is `plain-v1`.

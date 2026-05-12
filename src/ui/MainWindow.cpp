@@ -1,5 +1,6 @@
 #include "MainWindow.h"
 #include "ConnectDialog.h"
+#include "BasicTerminalTab.h"
 #include "core/ConfigManager.h"
 #include "core/KnownHostsManager.h"
 #include "core/SessionProfile.h"
@@ -77,7 +78,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: Duplicate saved-session warning polish.\n\n")
+            + QStringLiteral("Current phase: Basic saved-session shell channel.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n\n")
@@ -237,10 +238,11 @@ void MainWindow::addWelcomeTab()
         "- config/session safety cleanup\n"
         "- delete saved sessions from sidebar context menu\n"
         "- edit/modify saved sessions from sidebar context menu\n"
-        "- duplicate host/user warning polish for manual saves\n\n"
+        "- duplicate host/user warning polish for manual saves\n"
+        "- basic saved-session SSH shell channel\n\n"
         "Next milestone:\n"
-        "- persistent SSH session object\n"
-        "- real terminal channel\n"
+        "- terminal frontend polish / xterm.js preparation\n"
+        "- stronger persistent session lifecycle handling\n"
     );
 
     m_tabs->addTab(welcome, "Welcome");
@@ -266,7 +268,8 @@ void MainWindow::showSessionContextMenu(const QPoint &position)
     }
 
     QMenu menu(this);
-    QAction *connectAction = menu.addAction("Connect");
+    QAction *connectAction = menu.addAction("Connect / auth test");
+    QAction *openShellAction = menu.addAction("Open basic shell");
     menu.addSeparator();
     QAction *editAction = menu.addAction("Edit session");
     QAction *deleteAction = menu.addAction("Delete session");
@@ -275,6 +278,8 @@ void MainWindow::showSessionContextMenu(const QPoint &position)
 
     if (selectedAction == connectAction) {
         testSavedSession(sessionId);
+    } else if (selectedAction == openShellAction) {
+        openSavedSessionShell(sessionId);
     } else if (selectedAction == editAction) {
         editSavedSession(sessionId);
     } else if (selectedAction == deleteAction) {
@@ -485,6 +490,178 @@ void MainWindow::deleteSavedSession(const QString &sessionId)
     }
 
     statusBar()->showMessage(message);
+}
+
+
+void MainWindow::openSavedSessionShell(const QString &sessionId)
+{
+    ConfigManager config;
+    SessionProfile session;
+    QString loadError;
+
+    if (!config.loadSessionById(sessionId, &session, &loadError)) {
+        QMessageBox::warning(
+            this,
+            "Could not load saved session",
+            loadError
+        );
+        statusBar()->showMessage("Could not load saved session for shell: " + sessionId);
+        return;
+    }
+
+    const QString tabTitle =
+        session.username
+        + QStringLiteral("@")
+        + session.host
+        + QStringLiteral(":")
+        + QString::number(session.port);
+
+    const QString secretRef = session.authType == SessionProfile::AuthType::Password
+        ? session.secretRef
+        : session.keyRef;
+
+    QString secretValue;
+    QString secretType;
+    QString secretError;
+
+    if (!config.loadPlainSecret(secretRef, &secretValue, &secretType, &secretError)) {
+        QMessageBox::warning(
+            this,
+            "Could not load saved secret",
+            secretError
+        );
+        statusBar()->showMessage("Could not load plaintext secret for shell: " + tabTitle);
+        return;
+    }
+
+    const QString expectedSecretType = session.authType == SessionProfile::AuthType::Password
+        ? QStringLiteral("password")
+        : QStringLiteral("private_key");
+
+    if (secretType != expectedSecretType) {
+        QMessageBox::warning(
+            this,
+            "Saved secret type mismatch",
+            "Expected secret type: " + expectedSecretType + "\n"
+            "Actual secret type: " + secretType
+        );
+        statusBar()->showMessage("Saved secret type mismatch for shell: " + tabTitle);
+        return;
+    }
+
+    statusBar()->showMessage("Checking known-host trust before opening shell for " + tabTitle + "...");
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    QApplication::processEvents();
+
+    const SshHandshakeResult handshake = SshSession::testHandshake(
+        session.host,
+        session.port,
+        session.username
+    );
+
+    QApplication::restoreOverrideCursor();
+
+    if (!handshake.success) {
+        QMessageBox::warning(
+            this,
+            "SSH handshake failed",
+            "Could not connect before opening shell.\n\n"
+            "Message: " + handshake.message + "\n"
+            "Error: " + handshake.error
+        );
+        statusBar()->showMessage("Shell handshake failed for " + tabTitle);
+        return;
+    }
+
+    KnownHostsManager knownHosts;
+    const KnownHostsManager::CheckResult check = knownHosts.checkHost(
+        session.host,
+        session.port,
+        handshake.hostKeyType,
+        handshake.hostKeyFingerprint
+    );
+
+    bool knownHostAllowed = false;
+
+    if (check.status == KnownHostsManager::HostStatus::Trusted) {
+        knownHostAllowed = true;
+
+        QString saveError;
+        knownHosts.trustHost(
+            session.host,
+            session.port,
+            handshake.hostKeyType,
+            handshake.hostKeyFingerprint,
+            &saveError
+        );
+
+        if (!saveError.isEmpty()) {
+            statusBar()->showMessage("Shell known-host trusted, but last_seen update warning: " + saveError);
+        }
+    } else if (check.status == KnownHostsManager::HostStatus::Unknown) {
+        QMessageBox messageBox(this);
+        messageBox.setIcon(QMessageBox::Warning);
+        messageBox.setWindowTitle("Unknown SSH host");
+        messageBox.setText("This SSH host is not trusted yet.");
+        messageBox.setInformativeText(
+            "Host: " + session.host + ":" + QString::number(session.port) + "\n"
+            "Key type: " + handshake.hostKeyType + "\n"
+            "Fingerprint: " + handshake.hostKeyFingerprint + "\n\n"
+            "Do you want to trust this host before opening a shell?"
+        );
+
+        QAbstractButton *trustOnceButton = messageBox.addButton("Trust once", QMessageBox::AcceptRole);
+        QAbstractButton *trustPermanentlyButton = messageBox.addButton("Trust permanently", QMessageBox::AcceptRole);
+        QAbstractButton *cancelButton = messageBox.addButton("Cancel", QMessageBox::RejectRole);
+
+        messageBox.setDefaultButton(qobject_cast<QPushButton *>(cancelButton));
+        messageBox.exec();
+
+        if (messageBox.clickedButton() == trustOnceButton) {
+            knownHostAllowed = true;
+        } else if (messageBox.clickedButton() == trustPermanentlyButton) {
+            QString saveError;
+
+            if (knownHosts.trustHost(
+                    session.host,
+                    session.port,
+                    handshake.hostKeyType,
+                    handshake.hostKeyFingerprint,
+                    &saveError
+                )) {
+                knownHostAllowed = true;
+            } else {
+                QMessageBox::warning(
+                    this,
+                    "Could not save known host",
+                    saveError
+                );
+            }
+        }
+    } else {
+        QMessageBox::critical(
+            this,
+            "SSH host key changed",
+            "WARNING: the SSH host key changed.\n\n"
+            "Host: " + session.host + ":" + QString::number(session.port) + "\n\n"
+            "Stored key type: " + check.storedKeyType + "\n"
+            "Stored fingerprint: " + check.storedFingerprint + "\n\n"
+            "Current key type: " + handshake.hostKeyType + "\n"
+            "Current fingerprint: " + handshake.hostKeyFingerprint + "\n\n"
+            "Shell was NOT opened."
+        );
+    }
+
+    if (!knownHostAllowed) {
+        statusBar()->showMessage("Shell open cancelled by known-host decision for " + tabTitle);
+        return;
+    }
+
+    auto *terminal = new BasicTerminalTab(session, secretValue, this);
+    const int tabIndex = m_tabs->addTab(terminal, session.name + QStringLiteral(" shell"));
+    m_tabs->setCurrentIndex(tabIndex);
+
+    statusBar()->showMessage("Opening basic shell for " + tabTitle);
 }
 
 void MainWindow::testSavedSession(const QString &sessionId)

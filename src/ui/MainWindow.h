@@ -20,6 +20,7 @@ private:
     void addWelcomeTab();
     void showConnectDialog();
     void testSavedSession(const QString &sessionId);
+    void openSavedSessionShell(const QString &sessionId);
     void showSessionContextMenu(const QPoint &position);
     void editSavedSession(const QString &sessionId);
     void deleteSavedSession(const QString &sessionId);

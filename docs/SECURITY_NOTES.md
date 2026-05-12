@@ -10,3 +10,7 @@ Initial notes:
 - Sessions reference secrets via `secret_ref` / `key_ref`; the actual values live under top-level `secrets.items`.
 - Deleting a saved session must not automatically delete `known_hosts`; host trust is managed separately.
 - Future encrypted storage should preserve the session reference structure and only change the `secrets` backend.
+
+## Basic shell channel milestone
+
+Before opening a saved-session shell, DD-SSH must still run the known-host check. Unknown hosts require user trust confirmation, trusted hosts may update `last_seen`, and changed host keys must block shell opening by default.

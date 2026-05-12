@@ -20,7 +20,7 @@ Early versions intentionally do **not** include SFTP, split-screen, cloud accoun
 
 ## Project status
 
-Development checkpoint: `dev 0.1.1.6`.
+Development checkpoint: `dev 0.1.2.0`.
 
 Current working foundation:
 
@@ -34,6 +34,7 @@ Current working foundation:
 - Delete saved sessions while preserving known-host trust records
 - Edit saved sessions while keeping or replacing the saved plaintext secret
 - Duplicate target warning when saving `username@host:port` that already exists
+- Experimental basic saved-session SSH shell channel from the sidebar context menu
 
 Saved session management is a real DD-SSH feature direction, not just a test helper. The long-term goal is full session CRUD: create/save, load/connect, edit/update, delete, and later import/export from one portable JSON file.
 
@@ -55,3 +56,7 @@ Start here:
 - [Architecture](docs/ARCHITECTURE.md)
 - [Config Format](docs/CONFIG_FORMAT.md)
 - [Building](docs/BUILDING.md)
+
+## Current shell limitation
+
+`dev 0.1.2.0` adds an experimental basic shell channel using libssh PTY + shell. It is a milestone for proving the persistent SSH channel path. It is **not** the final terminal emulator yet, so full-screen interactive programs like `htop`, `nano`, `vim`, `mc`, and `tmux` are not expected to behave correctly until the xterm.js terminal frontend is added.
