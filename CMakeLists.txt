@@ -24,6 +24,9 @@ qt_add_executable(dd-ssh
     src/ui/ConnectDialog.h
     src/ui/ConnectDialog.cpp
 
+    src/core/KnownHostsManager.h
+    src/core/KnownHostsManager.cpp
+
     src/ssh/SshSession.h
     src/ssh/SshSession.cpp
 )
