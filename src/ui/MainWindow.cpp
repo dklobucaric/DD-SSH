@@ -60,13 +60,17 @@ void MainWindow::setupMenus()
 
     auto *aboutAction = helpMenu->addAction("About DD-SSH");
     connect(aboutAction, &QAction::triggered, this, [this]() {
+        const QString aboutText =
+            QStringLiteral("DD-SSH\n\n")
+            + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
+            + QStringLiteral("Current phase: host key fingerprint display.\n\n")
+            + QStringLiteral("libssh version: ")
+            + SshSession::libsshVersion();
+
         QMessageBox::about(
             this,
             "About DD-SSH",
-            "DD-SSH\n\n"
-            "A clean cross-platform SSH client and session manager.\n\n"
-            "Current phase: first SSH handshake skeleton.\n\n"
-            "libssh version: " + SshSession::libsshVersion()
+            aboutText
         );
     });
 }
@@ -132,14 +136,18 @@ void MainWindow::setupCentralLayout()
         auto *terminalPlaceholder = new QTextEdit(this);
         terminalPlaceholder->setReadOnly(true);
         terminalPlaceholder->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
-        terminalPlaceholder->setPlainText(
-            "DD-SSH terminal placeholder\n\n"
-            "Selected session:\n" + item->text() + "\n\n"
-            "Next milestone:\n"
-            "- real session manager\n"
-            "- libssh authentication\n"
-            "- terminal frontend\n"
-        );
+
+        const QString output =
+            QStringLiteral("DD-SSH terminal placeholder\n\n")
+            + QStringLiteral("Selected session:\n")
+            + item->text()
+            + QStringLiteral("\n\n")
+            + QStringLiteral("Next milestone:\n")
+            + QStringLiteral("- real session manager\n")
+            + QStringLiteral("- libssh authentication\n")
+            + QStringLiteral("- terminal frontend\n");
+
+        terminalPlaceholder->setPlainText(output);
 
         const int tabIndex = m_tabs->addTab(terminalPlaceholder, item->text());
         m_tabs->setCurrentIndex(tabIndex);
@@ -162,6 +170,7 @@ void MainWindow::addWelcomeTab()
     auto *welcome = new QTextEdit(this);
     welcome->setReadOnly(true);
     welcome->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+
     welcome->setPlainText(
         "DD-SSH\n\n"
         "UI layout skeleton is alive.\n\n"
@@ -169,10 +178,10 @@ void MainWindow::addWelcomeTab()
         "Right side: terminal tabs placeholder\n\n"
         "Double-click a session on the left to open a placeholder tab.\n\n"
         "Current milestone:\n"
-        "- first SSH handshake skeleton\n\n"
+        "- host key fingerprint display\n\n"
         "Next milestone:\n"
-        "- host key fingerprint\n"
-        "- password/private-key auth\n"
+        "- known-host decision flow\n"
+        "- password/private-key authentication\n"
         "- real terminal channel\n"
     );
 
@@ -189,7 +198,11 @@ void MainWindow::showConnectDialog()
     }
 
     const QString tabTitle =
-        dialog.username() + "@" + dialog.host() + ":" + QString::number(dialog.port());
+        dialog.username()
+        + QStringLiteral("@")
+        + dialog.host()
+        + QStringLiteral(":")
+        + QString::number(dialog.port());
 
     statusBar()->showMessage("Testing SSH handshake with " + tabTitle + "...");
     QApplication::setOverrideCursor(Qt::WaitCursor);
@@ -205,44 +218,46 @@ void MainWindow::showConnectDialog()
 
     const QString authLabel =
         dialog.authType() == ConnectDialog::AuthType::Password
-            ? "Password"
-            : "Private key";
+            ? QStringLiteral("Password")
+            : QStringLiteral("Private key");
 
     const QString secretInfo =
         dialog.authType() == ConnectDialog::AuthType::Password
-            ? "Password: entered, hidden from display"
-            : "Private key: " + dialog.keyPath();
+            ? QStringLiteral("Password: entered, hidden from display")
+            : QStringLiteral("Private key: ") + dialog.keyPath();
 
     QString output;
 
-    output += "DD-SSH manual connection test\n\n";
-    output += "Host: " + dialog.host() + "\n";
-    output += "Port: " + QString::number(dialog.port()) + "\n";
-    output += "Username: " + dialog.username() + "\n";
-    output += "Auth type: " + authLabel + "\n";
-    output += secretInfo + "\n\n";
+    output += QStringLiteral("DD-SSH manual connection test\n\n");
+    output += QStringLiteral("Host: ") + dialog.host() + QStringLiteral("\n");
+    output += QStringLiteral("Port: ") + QString::number(dialog.port()) + QStringLiteral("\n");
+    output += QStringLiteral("Username: ") + dialog.username() + QStringLiteral("\n");
+    output += QStringLiteral("Auth type: ") + authLabel + QStringLiteral("\n");
+    output += secretInfo + QStringLiteral("\n\n");
 
-    output += "SSH handshake result:\n";
+    output += QStringLiteral("SSH handshake result:\n");
 
     if (handshake.success) {
-        output += "Status: SUCCESS\n";
-        output += "Message: " + handshake.message + "\n";
-        output += "Server banner: " + handshake.serverBanner + "\n\n";
-        output += "Authentication was NOT attempted yet.\n\n";
-        output += "Next milestone:\n";
-        output += "- host key fingerprint\n";
-        output += "- known-host decision flow\n";
-        output += "- password/private-key authentication\n";
+        output += QStringLiteral("Status: SUCCESS\n");
+        output += QStringLiteral("Message: ") + handshake.message + QStringLiteral("\n");
+        output += QStringLiteral("Server banner: ") + handshake.serverBanner + QStringLiteral("\n");
+        output += QStringLiteral("Host key type: ") + handshake.hostKeyType + QStringLiteral("\n");
+        output += QStringLiteral("Host key fingerprint: ") + handshake.hostKeyFingerprint + QStringLiteral("\n\n");
+        output += QStringLiteral("Authentication was NOT attempted yet.\n\n");
+        output += QStringLiteral("Next milestone:\n");
+        output += QStringLiteral("- known-host decision flow\n");
+        output += QStringLiteral("- password/private-key authentication\n");
+        output += QStringLiteral("- real terminal channel\n");
     } else {
-        output += "Status: FAILED\n";
-        output += "Message: " + handshake.message + "\n";
-        output += "libssh error code: " + QString::number(handshake.sshErrorCode) + "\n";
-        output += "Error: " + handshake.error + "\n\n";
-        output += "Check:\n";
-        output += "- host/IP is correct\n";
-        output += "- port is correct\n";
-        output += "- SSH server is reachable\n";
-        output += "- firewall allows connection\n";
+        output += QStringLiteral("Status: FAILED\n");
+        output += QStringLiteral("Message: ") + handshake.message + QStringLiteral("\n");
+        output += QStringLiteral("libssh error code: ") + QString::number(handshake.sshErrorCode) + QStringLiteral("\n");
+        output += QStringLiteral("Error: ") + handshake.error + QStringLiteral("\n\n");
+        output += QStringLiteral("Check:\n");
+        output += QStringLiteral("- host/IP is correct\n");
+        output += QStringLiteral("- port is correct\n");
+        output += QStringLiteral("- SSH server is reachable\n");
+        output += QStringLiteral("- firewall allows connection\n");
     }
 
     auto *terminalPlaceholder = new QTextEdit(this);

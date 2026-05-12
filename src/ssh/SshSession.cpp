@@ -66,6 +66,53 @@ SshHandshakeResult SshSession::testHandshake(
         result.serverBanner = QStringLiteral("(server banner unavailable)");
     }
 
+    ssh_key serverPublicKey = nullptr;
+    const int keyRc = ssh_get_server_publickey(session, &serverPublicKey);
+
+    if (keyRc == SSH_OK && serverPublicKey != nullptr) {
+        const char *keyType = ssh_key_type_to_char(ssh_key_type(serverPublicKey));
+
+        if (keyType != nullptr) {
+            result.hostKeyType = QString::fromUtf8(keyType);
+        } else {
+            result.hostKeyType = QStringLiteral("unknown");
+        }
+
+        unsigned char *hash = nullptr;
+        size_t hashLength = 0;
+
+        const int hashRc = ssh_get_publickey_hash(
+            serverPublicKey,
+            SSH_PUBLICKEY_HASH_SHA256,
+            &hash,
+            &hashLength
+        );
+
+        if (hashRc == SSH_OK && hash != nullptr) {
+            char *fingerprint = ssh_get_fingerprint_hash(
+                SSH_PUBLICKEY_HASH_SHA256,
+                hash,
+                hashLength
+            );
+
+            if (fingerprint != nullptr) {
+                result.hostKeyFingerprint = QString::fromUtf8(fingerprint);
+                ssh_string_free_char(fingerprint);
+            } else {
+                result.hostKeyFingerprint = QStringLiteral("(fingerprint unavailable)");
+            }
+
+            ssh_clean_pubkey_hash(&hash);
+        } else {
+            result.hostKeyFingerprint = QStringLiteral("(public key hash unavailable)");
+        }
+
+        ssh_key_free(serverPublicKey);
+    } else {
+        result.hostKeyType = QStringLiteral("(host key unavailable)");
+        result.hostKeyFingerprint = QStringLiteral("(fingerprint unavailable)");
+    }
+
     ssh_disconnect(session);
     ssh_free(session);
 

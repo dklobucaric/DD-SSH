@@ -7,6 +7,8 @@ struct SshHandshakeResult
     bool success = false;
     QString message;
     QString serverBanner;
+    QString hostKeyType;
+    QString hostKeyFingerprint;
     QString error;
     int sshErrorCode = 0;
 };
