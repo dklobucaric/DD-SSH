@@ -1,4 +1,5 @@
 #include "MainWindow.h"
+#include "ConnectDialog.h"
 
 #include <QAction>
 #include <QFontDatabase>
@@ -31,7 +32,7 @@ void MainWindow::setupMenus()
 
     auto *newSessionAction = fileMenu->addAction("New Session");
     connect(newSessionAction, &QAction::triggered, this, [this]() {
-        statusBar()->showMessage("New Session placeholder clicked");
+        showConnectDialog();
     });
 
     fileMenu->addSeparator();
@@ -41,9 +42,9 @@ void MainWindow::setupMenus()
 
     auto *sessionMenu = menuBar()->addMenu("&Session");
 
-    auto *connectAction = sessionMenu->addAction("Connect Selected");
+    auto *connectAction = sessionMenu->addAction("Connect");
     connect(connectAction, &QAction::triggered, this, [this]() {
-        statusBar()->showMessage("Connect Selected placeholder clicked");
+        showConnectDialog();
     });
 
     auto *toolsMenu = menuBar()->addMenu("&Tools");
@@ -62,7 +63,7 @@ void MainWindow::setupMenus()
             "About DD-SSH",
             "DD-SSH\n\n"
             "A clean cross-platform SSH client and session manager.\n\n"
-            "Current phase: UI layout skeleton."
+            "Current phase: ConnectDialog skeleton."
         );
     });
 }
@@ -74,12 +75,12 @@ void MainWindow::setupToolbar()
 
     auto *newSessionAction = toolbar->addAction("New Session");
     connect(newSessionAction, &QAction::triggered, this, [this]() {
-        statusBar()->showMessage("New Session placeholder clicked");
+        showConnectDialog();
     });
 
     auto *connectAction = toolbar->addAction("Connect");
     connect(connectAction, &QAction::triggered, this, [this]() {
-        statusBar()->showMessage("Connect placeholder clicked");
+        showConnectDialog();
     });
 
     toolbar->addSeparator();
@@ -171,4 +172,50 @@ void MainWindow::addWelcomeTab()
     );
 
     m_tabs->addTab(welcome, "Welcome");
+}
+
+void MainWindow::showConnectDialog()
+{
+    ConnectDialog dialog(this);
+
+    if (dialog.exec() != QDialog::Accepted) {
+        statusBar()->showMessage("Connection dialog cancelled");
+        return;
+    }
+
+    const QString authLabel =
+        dialog.authType() == ConnectDialog::AuthType::Password
+            ? "Password"
+            : "Private key";
+
+    const QString secretInfo =
+        dialog.authType() == ConnectDialog::AuthType::Password
+            ? "Password: entered, hidden from display"
+            : "Private key: " + dialog.keyPath();
+
+    auto *terminalPlaceholder = new QTextEdit(this);
+    terminalPlaceholder->setReadOnly(true);
+    terminalPlaceholder->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+
+    terminalPlaceholder->setPlainText(
+        "DD-SSH manual connection placeholder\n\n"
+        "Host: " + dialog.host() + "\n"
+        "Port: " + QString::number(dialog.port()) + "\n"
+        "Username: " + dialog.username() + "\n"
+        "Auth type: " + authLabel + "\n"
+        + secretInfo + "\n\n"
+        "No real SSH connection yet.\n\n"
+        "Next milestone:\n"
+        "- add libssh to CMake\n"
+        "- create SshSession skeleton\n"
+        "- test TCP/SSH handshake\n"
+    );
+
+    const QString tabTitle =
+        dialog.username() + "@" + dialog.host() + ":" + QString::number(dialog.port());
+
+    const int tabIndex = m_tabs->addTab(terminalPlaceholder, tabTitle);
+    m_tabs->setCurrentIndex(tabIndex);
+
+    statusBar()->showMessage("Prepared manual connection placeholder for " + tabTitle);
 }

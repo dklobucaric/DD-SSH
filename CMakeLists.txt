@@ -18,6 +18,8 @@ qt_add_executable(dd-ssh
     src/main.cpp
     src/ui/MainWindow.h
     src/ui/MainWindow.cpp
+    src/ui/ConnectDialog.h
+    src/ui/ConnectDialog.cpp
 )
 
 target_include_directories(dd-ssh

@@ -15,6 +15,7 @@ private:
     void setupToolbar();
     void setupCentralLayout();
     void addWelcomeTab();
+    void showConnectDialog();
 
     QListWidget *m_sessionList = nullptr;
     QTabWidget *m_tabs = nullptr;
