@@ -16,6 +16,13 @@ qt_standard_project_setup()
 
 qt_add_executable(dd-ssh
     src/main.cpp
+    src/ui/MainWindow.h
+    src/ui/MainWindow.cpp
+)
+
+target_include_directories(dd-ssh
+    PRIVATE
+        src
 )
 
 target_link_libraries(dd-ssh
