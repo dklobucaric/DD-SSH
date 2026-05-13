@@ -41,7 +41,7 @@ WebTerminalTab::WebTerminalTab(
 
     m_view = new QWebEngineView(this);
     m_view->setFocusPolicy(Qt::StrongFocus);
-    m_view->settings()->setAttribute(QWebEngineSettings::LocalContentCanAccessRemoteUrls, true);
+    m_view->settings()->setAttribute(QWebEngineSettings::LocalContentCanAccessRemoteUrls, false);
     m_view->settings()->setAttribute(QWebEngineSettings::JavascriptEnabled, true);
     layout->addWidget(m_view, 1);
 
@@ -128,9 +128,9 @@ QString WebTerminalTab::terminalHtml() const
 <meta charset="utf-8">
 <title>DD-SSH xterm.js Terminal</title>
 <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.css">
-<script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.js"></script>
+<link rel="stylesheet" href="qrc:///xterm/xterm.css">
+<script src="qrc:///xterm/xterm.js"></script>
+<script src="qrc:///xterm/addon-fit.js"></script>
 <style>
     :root {
         color-scheme: dark;
@@ -196,7 +196,7 @@ QString WebTerminalTab::terminalHtml() const
 </head>
 <body>
     <div id="header">
-        DD-SSH xterm.js terminal for __TARGET__ · fit + PTY resize dev · fallback used if xterm.js is unavailable
+        DD-SSH xterm.js terminal for __TARGET__ · loading local renderer · fit + PTY resize
     </div>
     <div id="terminalHost"></div>
     <div id="fallbackTerminal" tabindex="0" spellcheck="false"></div>
@@ -212,6 +212,13 @@ QString WebTerminalTab::terminalHtml() const
     let lastReportedCols = 0;
     let lastReportedRows = 0;
     let fitTimer = null;
+
+    function setRendererStatus(status) {
+        const header = document.getElementById('header');
+        if (header) {
+            header.textContent = 'DD-SSH xterm.js terminal for __TARGET__ · ' + status + ' · fit + PTY resize';
+        }
+    }
 
     function reportTerminalSize(columns, rows) {
         if (!bridge || !columns || !rows) {
@@ -383,15 +390,17 @@ QString WebTerminalTab::terminalHtml() const
 
     function setupXterm() {
         if (typeof Terminal === 'undefined') {
+            setRendererStatus('FALLBACK ACTIVE - local xterm resource was not loaded');
             setupFallbackInput();
             fallbackAppend('DD-SSH xterm.js terminal channel test\n', false);
             fallbackAppend('Target: __TARGET__\n\n', false);
-            fallbackAppend('xterm.js could not be loaded from the CDN, so DD-SSH is using the fallback renderer.\n', false);
-            fallbackAppend('Network access may be blocked. Local bundled xterm.js assets are planned next.\n\n', false);
+            fallbackAppend('Bundled xterm.js assets could not be loaded, so DD-SSH is using the fallback renderer.\n', false);
+            fallbackAppend('This usually means the Qt resource bundle did not include resources/xterm assets correctly.\n\n', false);
             return;
         }
 
         usingXterm = true;
+        setRendererStatus('xterm.js ACTIVE - local bundled renderer');
         fallbackTerminal.style.display = 'none';
         terminalHost.style.display = 'block';
 
@@ -421,7 +430,7 @@ QString WebTerminalTab::terminalHtml() const
         term.writeln('DD-SSH xterm.js terminal channel test');
         term.writeln('Target: __TARGET__');
         term.writeln('');
-        term.writeln('This milestone adds xterm.js FitAddon and SSH PTY resize sync.');
+        term.writeln('This milestone uses local bundled xterm.js assets loaded from Qt resources with FitAddon and SSH PTY resize sync.');
         term.writeln('The terminal should fill the available area and report cols/rows to the remote shell.');
         term.writeln('Full-screen app testing starts here, but more polish may still be needed.');
         term.writeln('');

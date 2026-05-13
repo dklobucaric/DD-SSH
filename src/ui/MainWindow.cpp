@@ -79,7 +79,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: xterm.js fit and SSH PTY resize.\n\n")
+            + QStringLiteral("Current phase: Local bundled xterm.js asset path fix.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n\n")

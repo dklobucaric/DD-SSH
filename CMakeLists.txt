@@ -6,7 +6,7 @@ project(DD_SSH
     LANGUAGES CXX
 )
 
-set(DD_SSH_VERSION_STRING "dev 0.1.3.1")
+set(DD_SSH_VERSION_STRING "dev 0.1.3.2.2")
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -42,6 +42,18 @@ qt_add_executable(dd-ssh
     src/ssh/SshSession.cpp
     src/ssh/SshShellWorker.h
     src/ssh/SshShellWorker.cpp
+)
+
+qt_add_resources(dd-ssh "xterm_assets"
+    PREFIX "/xterm"
+    BASE "resources/xterm"
+    FILES
+        resources/xterm/xterm.js
+        resources/xterm/xterm.css
+        resources/xterm/addon-fit.js
+        resources/xterm/LICENSE.xterm.txt
+        resources/xterm/LICENSE.addon-fit.txt
+        resources/xterm/THIRD_PARTY_NOTICES.md
 )
 
 target_include_directories(dd-ssh

@@ -20,7 +20,7 @@ Early versions intentionally do **not** include SFTP, split-screen, cloud accoun
 
 ## Project status
 
-Development checkpoint: `dev 0.1.3.1`.
+Development checkpoint: `dev 0.1.3.2.2`.
 
 Current working foundation:
 
@@ -60,4 +60,4 @@ Start here:
 
 ## Current shell limitation
 
-`dev 0.1.2.0` added an experimental basic shell channel using libssh PTY + shell. `dev 0.1.2.1` cleaned up that temporary tab. `dev 0.1.2.3` added the first Qt WebEngine terminal tab with Ctrl+V/Paste button support. `dev 0.1.2.4` fixed the web terminal input dispatch path. `dev 0.1.2.5` added focus polish. `dev 0.1.3.0` introduced the first xterm.js-based renderer through Qt WebEngine. `dev 0.1.3.1` adds xterm.js FitAddon support and reports terminal columns/rows back to the SSH worker so libssh can request/change the remote PTY size. xterm.js and FitAddon are still loaded from a CDN for this development checkpoint, with the previous fallback renderer used if assets cannot be loaded. Local bundled xterm.js assets are planned next. Full-screen apps like `htop`, `nano`, `vim`, `mc`, and `tmux` can now be tested, but may still need keyboard/input polish before they are considered supported.
+`dev 0.1.2.0` added an experimental basic shell channel using libssh PTY + shell. `dev 0.1.2.1` cleaned up that temporary tab. `dev 0.1.2.3` added the first Qt WebEngine terminal tab with Ctrl+V/Paste button support. `dev 0.1.2.4` fixed the web terminal input dispatch path. `dev 0.1.2.5` added focus polish. `dev 0.1.3.0` introduced the first xterm.js-based renderer through Qt WebEngine. `dev 0.1.3.1` adds xterm.js FitAddon support and reports terminal columns/rows back to the SSH worker so libssh can request/change the remote PTY size. `dev 0.1.3.2.2` fixes the local bundled xterm.js/FitAddon Qt resource paths, so the terminal renderer no longer depends on a CDN at runtime. Full-screen apps like `htop`, `nano`, `vim`, `mc`, and `tmux` can now be tested, but may still need keyboard/input polish before they are considered supported.
