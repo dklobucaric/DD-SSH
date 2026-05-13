@@ -28,6 +28,7 @@ public slots:
     void start();
     void stop();
     void sendInput(const QString &input);
+    void resizePty(int columns, int rows);
 
 signals:
     void outputReceived(const QString &output);
@@ -37,6 +38,7 @@ signals:
 
 private:
     QString takePendingInput();
+    bool takePendingResize(int &columns, int &rows);
     void requestStop();
 
     QString m_host;
@@ -47,5 +49,9 @@ private:
 
     QMutex m_inputMutex;
     QStringList m_pendingInput;
+
+    QMutex m_resizeMutex;
+    int m_pendingColumns = 0;
+    int m_pendingRows = 0;
     std::atomic_bool m_stopRequested { false };
 };

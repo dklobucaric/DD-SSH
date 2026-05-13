@@ -40,6 +40,7 @@ private:
     void focusTerminal();
     void disconnectShell();
     void handleWorkerFinished();
+    void requestPtyResize(int columns, int rows);
 
     SessionProfile m_session;
     QString m_secretValue;
@@ -56,5 +57,7 @@ private:
 
     QThread *m_thread = nullptr;
     SshShellWorker *m_worker = nullptr;
+    int m_lastTerminalColumns = 0;
+    int m_lastTerminalRows = 0;
     bool m_shellStarted = false;
 };

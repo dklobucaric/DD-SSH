@@ -75,6 +75,7 @@ WebTerminalTab::WebTerminalTab(
     m_view->page()->setWebChannel(m_channel);
 
     connect(m_bridge, &TerminalBridge::ready, this, &WebTerminalTab::startShell);
+    connect(m_bridge, &TerminalBridge::resizeRequested, this, &WebTerminalTab::requestPtyResize);
     connect(m_bridge, &TerminalBridge::inputReceived, this, [this](const QString &input) {
         sendToWorker(input);
     });
@@ -129,6 +130,7 @@ QString WebTerminalTab::terminalHtml() const
 <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.css">
 <script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.js"></script>
 <style>
     :root {
         color-scheme: dark;
@@ -194,7 +196,7 @@ QString WebTerminalTab::terminalHtml() const
 </head>
 <body>
     <div id="header">
-        DD-SSH xterm.js terminal for __TARGET__ · CDN dev renderer · fallback renderer used if xterm.js is unavailable
+        DD-SSH xterm.js terminal for __TARGET__ · fit + PTY resize dev · fallback used if xterm.js is unavailable
     </div>
     <div id="terminalHost"></div>
     <div id="fallbackTerminal" tabindex="0" spellcheck="false"></div>
@@ -205,7 +207,50 @@ QString WebTerminalTab::terminalHtml() const
     const fallbackTerminal = document.getElementById('fallbackTerminal');
     let bridge = null;
     let term = null;
+    let fitAddon = null;
     let usingXterm = false;
+    let lastReportedCols = 0;
+    let lastReportedRows = 0;
+    let fitTimer = null;
+
+    function reportTerminalSize(columns, rows) {
+        if (!bridge || !columns || !rows) {
+            return;
+        }
+
+        if (columns === lastReportedCols && rows === lastReportedRows) {
+            return;
+        }
+
+        lastReportedCols = columns;
+        lastReportedRows = rows;
+        bridge.terminalResized(columns, rows);
+    }
+
+    function fitAndReport() {
+        if (!usingXterm || !term || !fitAddon) {
+            return;
+        }
+
+        try {
+            fitAddon.fit();
+            reportTerminalSize(term.cols, term.rows);
+        } catch (error) {
+            // Fit can fail briefly while Qt WebEngine is still laying out the page.
+            // A later resize/focus event will retry.
+        }
+    }
+
+    function scheduleFitAndReport(delayMs = 50) {
+        if (fitTimer) {
+            clearTimeout(fitTimer);
+        }
+
+        fitTimer = setTimeout(function () {
+            fitTimer = null;
+            fitAndReport();
+        }, delayMs);
+    }
 
     function stripAnsi(text) {
         if (!text) {
@@ -268,6 +313,7 @@ QString WebTerminalTab::terminalHtml() const
     function setupFallbackInput() {
         terminalHost.style.display = 'none';
         fallbackTerminal.style.display = 'block';
+        reportTerminalSize(80, 24);
 
         fallbackTerminal.addEventListener('keydown', function (event) {
             let input = null;
@@ -363,15 +409,21 @@ QString WebTerminalTab::terminalHtml() const
             }
         });
 
+        if (typeof FitAddon !== 'undefined' && FitAddon.FitAddon) {
+            fitAddon = new FitAddon.FitAddon();
+            term.loadAddon(fitAddon);
+        }
+
         term.open(terminalHost);
+        fitAndReport();
         term.focus();
 
         term.writeln('DD-SSH xterm.js terminal channel test');
         term.writeln('Target: __TARGET__');
         term.writeln('');
-        term.writeln('This is the first real xterm.js renderer milestone.');
-        term.writeln('ANSI colors and escape sequences should now render much better than the fallback view.');
-        term.writeln('PTY resize/full-screen app polish comes next.');
+        term.writeln('This milestone adds xterm.js FitAddon and SSH PTY resize sync.');
+        term.writeln('The terminal should fill the available area and report cols/rows to the remote shell.');
+        term.writeln('Full-screen app testing starts here, but more polish may still be needed.');
         term.writeln('');
 
         term.onData(function (data) {
@@ -381,12 +433,29 @@ QString WebTerminalTab::terminalHtml() const
         terminalHost.addEventListener('mousedown', function () {
             if (term) {
                 term.focus();
+                scheduleFitAndReport(10);
             }
         });
+
+        window.addEventListener('resize', function () {
+            scheduleFitAndReport(50);
+        });
+
+        if (typeof ResizeObserver !== 'undefined') {
+            const observer = new ResizeObserver(function () {
+                scheduleFitAndReport(50);
+            });
+            observer.observe(terminalHost);
+        }
+
+        setTimeout(function () { fitAndReport(); }, 50);
+        setTimeout(function () { fitAndReport(); }, 250);
+        setTimeout(function () { fitAndReport(); }, 750);
     }
 
     window.ddsshFocusTerminal = function () {
         if (usingXterm && term) {
+            scheduleFitAndReport(10);
             term.focus();
             return;
         }
@@ -397,6 +466,7 @@ QString WebTerminalTab::terminalHtml() const
     window.ddsshClearTerminal = function () {
         if (usingXterm && term) {
             term.clear();
+            scheduleFitAndReport(10);
             term.focus();
             return;
         }
@@ -425,6 +495,7 @@ QString WebTerminalTab::terminalHtml() const
         });
 
         setupXterm();
+        fitAndReport();
         bridge.terminalReady();
         window.ddsshFocusTerminal();
         setTimeout(function () { window.ddsshFocusTerminal(); }, 50);
@@ -458,6 +529,10 @@ void WebTerminalTab::startShell()
         m_secretValue
     );
 
+    if (m_lastTerminalColumns > 0 && m_lastTerminalRows > 0) {
+        m_worker->resizePty(m_lastTerminalColumns, m_lastTerminalRows);
+    }
+
     m_worker->moveToThread(m_thread);
 
     connect(m_thread, &QThread::started, m_worker, &SshShellWorker::start);
@@ -480,6 +555,20 @@ void WebTerminalTab::startShell()
     });
 
     m_thread->start();
+}
+
+void WebTerminalTab::requestPtyResize(int columns, int rows)
+{
+    if (columns <= 0 || rows <= 0) {
+        return;
+    }
+
+    m_lastTerminalColumns = columns;
+    m_lastTerminalRows = rows;
+
+    if (m_worker != nullptr) {
+        m_worker->resizePty(columns, rows);
+    }
 }
 
 void WebTerminalTab::sendToWorker(const QString &input)

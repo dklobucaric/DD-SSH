@@ -20,6 +20,11 @@ void TerminalBridge::terminalReady()
     emit ready();
 }
 
+void TerminalBridge::terminalResized(int columns, int rows)
+{
+    emit resizeRequested(columns, rows);
+}
+
 void TerminalBridge::emitOutput(const QString &output)
 {
     emit outputReceived(output);

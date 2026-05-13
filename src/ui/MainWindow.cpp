@@ -79,7 +79,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: First xterm.js terminal renderer.\n\n")
+            + QStringLiteral("Current phase: xterm.js fit and SSH PTY resize.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n\n")
@@ -243,11 +243,11 @@ void MainWindow::addWelcomeTab()
         "- basic saved-session SSH shell channel\n\n"
         "Current terminal options:\n"
         "- Open basic shell: temporary QWidget input/output view\n"
-        "- Open xterm.js terminal: first real web terminal renderer with fallback if CDN assets are unavailable\n"
+        "- Open xterm.js terminal: real web terminal renderer with FitAddon + SSH PTY resize sync\n"
         "- Open basic shell: temporary QWidget input/output fallback\n\n"
         "Next milestone:\n"
         "- bundle local xterm.js assets for offline builds\n"
-        "- PTY resize / terminal resize handling\n"
+        "- nano/vim/htop compatibility polish\n"
         "- stronger persistent session lifecycle handling\n"
     );
 

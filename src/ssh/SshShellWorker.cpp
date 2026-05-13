@@ -51,6 +51,20 @@ void SshShellWorker::sendInput(const QString &input)
     m_pendingInput.append(input);
 }
 
+void SshShellWorker::resizePty(int columns, int rows)
+{
+    if (columns <= 0 || rows <= 0) {
+        return;
+    }
+
+    // This method is intentionally thread-safe. It may be called directly from
+    // the GUI thread while the worker thread is running the libssh loop. The
+    // latest size wins; the loop applies it when the channel is available.
+    QMutexLocker locker(&m_resizeMutex);
+    m_pendingColumns = columns;
+    m_pendingRows = rows;
+}
+
 QString SshShellWorker::takePendingInput()
 {
     QMutexLocker locker(&m_inputMutex);
@@ -62,6 +76,21 @@ QString SshShellWorker::takePendingInput()
     const QString input = m_pendingInput.join(QString());
     m_pendingInput.clear();
     return input;
+}
+
+bool SshShellWorker::takePendingResize(int &columns, int &rows)
+{
+    QMutexLocker locker(&m_resizeMutex);
+
+    if (m_pendingColumns <= 0 || m_pendingRows <= 0) {
+        return false;
+    }
+
+    columns = m_pendingColumns;
+    rows = m_pendingRows;
+    m_pendingColumns = 0;
+    m_pendingRows = 0;
+    return true;
 }
 
 void SshShellWorker::start()
@@ -203,7 +232,13 @@ void SshShellWorker::start()
         return;
     }
 
-    const int ptyRc = ssh_channel_request_pty(channel);
+    int requestedColumns = 0;
+    int requestedRows = 0;
+    const bool hasInitialSize = takePendingResize(requestedColumns, requestedRows);
+
+    const int ptyRc = hasInitialSize
+        ? ssh_channel_request_pty_size(channel, "xterm-256color", requestedColumns, requestedRows)
+        : ssh_channel_request_pty(channel);
 
     if (ptyRc != SSH_OK) {
         emit errorOccurred(
@@ -217,6 +252,9 @@ void SshShellWorker::start()
         emit finished();
         return;
     }
+
+    int currentColumns = hasInitialSize ? requestedColumns : 80;
+    int currentRows = hasInitialSize ? requestedRows : 24;
 
     const int shellRc = ssh_channel_request_shell(channel);
 
@@ -253,6 +291,24 @@ void SshShellWorker::start()
                     + QString::fromUtf8(ssh_get_error(session))
                 );
                 break;
+            }
+        }
+
+        int pendingColumns = 0;
+        int pendingRows = 0;
+        if (takePendingResize(pendingColumns, pendingRows)) {
+            if (pendingColumns != currentColumns || pendingRows != currentRows) {
+                const int resizeRc = ssh_channel_change_pty_size(channel, pendingColumns, pendingRows);
+
+                if (resizeRc == SSH_OK) {
+                    currentColumns = pendingColumns;
+                    currentRows = pendingRows;
+                } else {
+                    emit errorOccurred(
+                        QStringLiteral("Could not resize SSH PTY: ")
+                        + QString::fromUtf8(ssh_get_error(session))
+                    );
+                }
             }
         }
 

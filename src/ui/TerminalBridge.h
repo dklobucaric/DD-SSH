@@ -18,11 +18,13 @@ public slots:
     void sendInput(const QString &input);
     void requestPaste();
     void terminalReady();
+    void terminalResized(int columns, int rows);
 
 signals:
     void inputReceived(const QString &input);
     void pasteRequested();
     void ready();
+    void resizeRequested(int columns, int rows);
     void outputReceived(const QString &output);
     void statusChanged(const QString &status);
     void errorReceived(const QString &error);
