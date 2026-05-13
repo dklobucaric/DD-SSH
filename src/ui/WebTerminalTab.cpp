@@ -111,6 +111,29 @@ WebTerminalTab::~WebTerminalTab()
     }
 }
 
+bool WebTerminalTab::hasActiveShell() const
+{
+    return m_shellActive && m_worker != nullptr;
+}
+
+QString WebTerminalTab::displayName() const
+{
+    if (!m_session.name.trimmed().isEmpty()) {
+        return m_session.name.trimmed();
+    }
+
+    return m_session.username
+        + QStringLiteral("@")
+        + m_session.host
+        + QStringLiteral(":")
+        + QString::number(m_session.port);
+}
+
+void WebTerminalTab::requestDisconnect()
+{
+    disconnectShell();
+}
+
 void WebTerminalTab::showEvent(QShowEvent *event)
 {
     QWidget::showEvent(event);
@@ -214,6 +237,7 @@ QString WebTerminalTab::terminalHtml() const
     let term = null;
     let fitAddon = null;
     let usingXterm = false;
+    let terminalInputEnabled = true;
     let lastReportedCols = 0;
     let lastReportedRows = 0;
     let fitTimer = null;
@@ -301,7 +325,7 @@ QString WebTerminalTab::terminalHtml() const
     }
 
     function sendInput(text) {
-        if (!bridge || !text) {
+        if (!bridge || !text || !terminalInputEnabled) {
             return;
         }
 
@@ -467,6 +491,14 @@ QString WebTerminalTab::terminalHtml() const
         setTimeout(function () { fitAndReport(); }, 750);
     }
 
+    window.ddsshSetTerminalInputEnabled = function (enabled) {
+        terminalInputEnabled = !!enabled;
+
+        if (!terminalInputEnabled) {
+            setRendererStatus('xterm.js ACTIVE - disconnected');
+        }
+    };
+
     window.ddsshFocusTerminal = function () {
         if (usingXterm && term) {
             scheduleFitAndReport(10);
@@ -541,6 +573,11 @@ void WebTerminalTab::startShell()
     }
 
     m_shellStarted = true;
+    m_shellActive = true;
+    m_disconnectRequested = false;
+    setTerminalInputEnabled(true);
+    emit tabTitleChanged(displayName() + QStringLiteral(" ●"));
+    emit lifecycleStatusChanged(QStringLiteral("Connecting ") + displayName());
 
     const SshAuthMethod authMethod = m_session.authType == SessionProfile::AuthType::PrivateKey
         ? SshAuthMethod::PrivateKey
@@ -567,6 +604,12 @@ void WebTerminalTab::startShell()
         if (m_statusLabel != nullptr) {
             m_statusLabel->setText(state);
         }
+
+        if (state.contains(QStringLiteral("Connected"), Qt::CaseInsensitive)) {
+            emit tabTitleChanged(displayName() + QStringLiteral(" ●"));
+        }
+
+        emit lifecycleStatusChanged(state);
 
         if (m_bridge != nullptr) {
             m_bridge->emitStatus(state);
@@ -599,7 +642,7 @@ void WebTerminalTab::requestPtyResize(int columns, int rows)
 
 void WebTerminalTab::sendToWorker(const QString &input)
 {
-    if (m_worker == nullptr || input.isEmpty()) {
+    if (!m_shellActive || m_worker == nullptr || input.isEmpty()) {
         return;
     }
 
@@ -613,7 +656,7 @@ void WebTerminalTab::sendToWorker(const QString &input)
 
 void WebTerminalTab::sendInterrupt()
 {
-    if (m_worker == nullptr) {
+    if (!m_shellActive || m_worker == nullptr) {
         return;
     }
 
@@ -628,7 +671,7 @@ void WebTerminalTab::sendInterrupt()
 
 void WebTerminalTab::pasteClipboard()
 {
-    if (m_worker == nullptr) {
+    if (!m_shellActive || m_worker == nullptr) {
         return;
     }
 
@@ -709,12 +752,44 @@ void WebTerminalTab::focusTerminal()
 void WebTerminalTab::disconnectShell()
 {
     if (m_worker != nullptr) {
+        if (!m_disconnectRequested) {
+            m_disconnectRequested = true;
+
+            if (m_bridge != nullptr) {
+                m_bridge->emitStatus(QStringLiteral("Disconnect requested."));
+            }
+
+            if (m_statusLabel != nullptr) {
+                m_statusLabel->setText(QStringLiteral("Disconnect requested..."));
+            }
+
+            emit lifecycleStatusChanged(QStringLiteral("Disconnect requested for ") + displayName());
+        }
+
         m_worker->stop();
     }
 }
 
+void WebTerminalTab::setTerminalInputEnabled(bool enabled)
+{
+    if (m_view == nullptr) {
+        return;
+    }
+
+    m_view->page()->runJavaScript(
+        enabled
+            ? QStringLiteral("window.ddsshSetTerminalInputEnabled && window.ddsshSetTerminalInputEnabled(true);")
+            : QStringLiteral("window.ddsshSetTerminalInputEnabled && window.ddsshSetTerminalInputEnabled(false);")
+    );
+}
+
 void WebTerminalTab::handleWorkerFinished()
 {
+    m_shellActive = false;
+    setTerminalInputEnabled(false);
+    emit tabTitleChanged(displayName() + QStringLiteral(" ×"));
+    emit lifecycleStatusChanged(QStringLiteral("Disconnected: ") + displayName());
+
     if (m_interruptButton != nullptr) {
         m_interruptButton->setEnabled(false);
     }
@@ -727,19 +802,12 @@ void WebTerminalTab::handleWorkerFinished()
         m_pasteButton->setEnabled(false);
     }
 
-    if (m_focusButton != nullptr) {
-        m_focusButton->setEnabled(false);
-    }
-
-    if (m_resetButton != nullptr) {
-        m_resetButton->setEnabled(false);
-    }
 
     if (m_bridge != nullptr) {
-        m_bridge->emitStatus(QStringLiteral("Shell worker finished."));
+        m_bridge->emitStatus(QStringLiteral("Shell worker finished. Terminal is disconnected."));
     }
 
     if (m_statusLabel != nullptr) {
-        m_statusLabel->setText(QStringLiteral("Shell finished."));
+        m_statusLabel->setText(QStringLiteral("Disconnected."));
     }
 }

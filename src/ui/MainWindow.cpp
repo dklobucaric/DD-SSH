@@ -87,7 +87,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: Welcome and changelog polish.\n\n")
+            + QStringLiteral("Current phase: Terminal lifecycle polish.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n")
@@ -161,6 +161,49 @@ void MainWindow::setupCentralLayout()
 
     connect(m_tabs, &QTabWidget::tabCloseRequested, this, [this](int index) {
         QWidget *widget = m_tabs->widget(index);
+
+        if (widget == nullptr) {
+            return;
+        }
+
+        if (auto *webTerminal = dynamic_cast<WebTerminalTab *>(widget)) {
+            if (webTerminal->hasActiveShell()) {
+                const QMessageBox::StandardButton decision = QMessageBox::question(
+                    this,
+                    QStringLiteral("Close active SSH terminal?"),
+                    QStringLiteral("The SSH terminal '%1' is still connected.\n\nDisconnect and close this tab?")
+                        .arg(webTerminal->displayName()),
+                    QMessageBox::Yes | QMessageBox::No,
+                    QMessageBox::No
+                );
+
+                if (decision != QMessageBox::Yes) {
+                    statusBar()->showMessage(QStringLiteral("Close tab cancelled: ") + webTerminal->displayName());
+                    return;
+                }
+
+                webTerminal->requestDisconnect();
+            }
+        } else if (auto *basicTerminal = dynamic_cast<BasicTerminalTab *>(widget)) {
+            if (basicTerminal->hasActiveShell()) {
+                const QMessageBox::StandardButton decision = QMessageBox::question(
+                    this,
+                    QStringLiteral("Close active SSH shell?"),
+                    QStringLiteral("The basic SSH shell '%1' is still connected.\n\nDisconnect and close this tab?")
+                        .arg(basicTerminal->displayName()),
+                    QMessageBox::Yes | QMessageBox::No,
+                    QMessageBox::No
+                );
+
+                if (decision != QMessageBox::Yes) {
+                    statusBar()->showMessage(QStringLiteral("Close tab cancelled: ") + basicTerminal->displayName());
+                    return;
+                }
+
+                basicTerminal->requestDisconnect();
+            }
+        }
+
         m_tabs->removeTab(index);
         widget->deleteLater();
 
@@ -265,12 +308,15 @@ void MainWindow::addWelcomeTab()
         "- Double-click session: open xterm.js terminal\n"
         "- Right-click session: open terminal, run auth test, edit, delete\n"
         "- Basic shell fallback is still available for debugging\n\n"
+        "Current lifecycle polish:\n"
+        "- closing an active SSH tab asks before disconnecting\n"
+        "- terminal tabs mark connected/disconnected state\n"
+        "- disconnect disables remote input actions after the worker finishes\n"
+        "- remote disconnect/reboot should surface as a terminal status/error\n\n"
         "Next milestone:\n"
-        "- terminal lifecycle polish\n"
-        "- safer tab close/disconnect handling\n"
-        "- stronger persistent session lifecycle\n"
         "- reconnect behavior\n"
-        "- terminal settings polish\n\n"
+        "- terminal settings polish\n"
+        "- MF 0.2 stabilization pass\n\n"
         "Codename roadmap:\n"
         "- 0.1.x — Launchpad\n"
         "- 0.2.x — Andromeda\n"
@@ -719,6 +765,30 @@ void MainWindow::openSavedSessionShellInternal(const QString &sessionId, bool us
 
     const int tabIndex = m_tabs->addTab(terminal, session.name + titleSuffix);
     m_tabs->setCurrentIndex(tabIndex);
+
+    if (auto *webTerminal = dynamic_cast<WebTerminalTab *>(terminal)) {
+        connect(webTerminal, &WebTerminalTab::tabTitleChanged, this, [this, webTerminal](const QString &title) {
+            const int index = m_tabs->indexOf(webTerminal);
+
+            if (index >= 0) {
+                m_tabs->setTabText(index, title);
+            }
+        });
+        connect(webTerminal, &WebTerminalTab::lifecycleStatusChanged, this, [this](const QString &status) {
+            statusBar()->showMessage(status);
+        });
+    } else if (auto *basicTerminal = dynamic_cast<BasicTerminalTab *>(terminal)) {
+        connect(basicTerminal, &BasicTerminalTab::tabTitleChanged, this, [this, basicTerminal](const QString &title) {
+            const int index = m_tabs->indexOf(basicTerminal);
+
+            if (index >= 0) {
+                m_tabs->setTabText(index, title);
+            }
+        });
+        connect(basicTerminal, &BasicTerminalTab::lifecycleStatusChanged, this, [this](const QString &status) {
+            statusBar()->showMessage(status);
+        });
+    }
 
     statusBar()->showMessage(
         useWebTerminal

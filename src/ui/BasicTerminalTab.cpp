@@ -82,6 +82,11 @@ BasicTerminalTab::BasicTerminalTab(
         m_secretValue
     );
 
+    m_shellActive = true;
+    m_disconnectRequested = false;
+    emit tabTitleChanged(displayName() + QStringLiteral(" ●"));
+    emit lifecycleStatusChanged(QStringLiteral("Connecting ") + displayName());
+
     m_worker->moveToThread(m_thread);
 
     connect(m_thread, &QThread::started, m_worker, &SshShellWorker::start);
@@ -121,6 +126,29 @@ BasicTerminalTab::~BasicTerminalTab()
     }
 }
 
+bool BasicTerminalTab::hasActiveShell() const
+{
+    return m_shellActive && m_worker != nullptr;
+}
+
+QString BasicTerminalTab::displayName() const
+{
+    if (!m_session.name.trimmed().isEmpty()) {
+        return m_session.name.trimmed();
+    }
+
+    return m_session.username
+        + QStringLiteral("@")
+        + m_session.host
+        + QStringLiteral(":")
+        + QString::number(m_session.port);
+}
+
+void BasicTerminalTab::requestDisconnect()
+{
+    disconnectShell();
+}
+
 QString BasicTerminalTab::cleanTerminalOutput(const QString &output) const
 {
     QString cleaned = output;
@@ -139,7 +167,7 @@ QString BasicTerminalTab::cleanTerminalOutput(const QString &output) const
 
 void BasicTerminalTab::sendCurrentInput()
 {
-    if (m_worker == nullptr || m_input == nullptr) {
+    if (!m_shellActive || m_worker == nullptr || m_input == nullptr) {
         return;
     }
 
@@ -158,7 +186,7 @@ void BasicTerminalTab::sendCurrentInput()
 
 void BasicTerminalTab::sendInterrupt()
 {
-    if (m_worker == nullptr) {
+    if (!m_shellActive || m_worker == nullptr) {
         return;
     }
 
@@ -208,11 +236,17 @@ void BasicTerminalTab::updateState(const QString &state)
         m_statusLabel->setText(state);
     }
 
+    if (state.contains(QStringLiteral("Connected"), Qt::CaseInsensitive)) {
+        emit tabTitleChanged(displayName() + QStringLiteral(" ●"));
+    }
+
+    emit lifecycleStatusChanged(state);
     appendOutput(QStringLiteral("\n[DD-SSH] ") + state + QStringLiteral("\n"));
 }
 
 void BasicTerminalTab::showWorkerError(const QString &error)
 {
+    emit lifecycleStatusChanged(QStringLiteral("Shell error: ") + error);
     appendOutput(QStringLiteral("\n[DD-SSH ERROR] ") + error + QStringLiteral("\n"));
 
     if (m_statusLabel != nullptr) {
@@ -222,6 +256,10 @@ void BasicTerminalTab::showWorkerError(const QString &error)
 
 void BasicTerminalTab::handleWorkerFinished()
 {
+    m_shellActive = false;
+    emit tabTitleChanged(displayName() + QStringLiteral(" ×"));
+    emit lifecycleStatusChanged(QStringLiteral("Disconnected: ") + displayName());
+
     if (m_input != nullptr) {
         m_input->setEnabled(false);
     }
@@ -244,6 +282,17 @@ void BasicTerminalTab::handleWorkerFinished()
 void BasicTerminalTab::disconnectShell()
 {
     if (m_worker != nullptr) {
+        if (!m_disconnectRequested) {
+            m_disconnectRequested = true;
+            appendOutput(QStringLiteral("\n[DD-SSH] Disconnect requested.\n"));
+
+            if (m_statusLabel != nullptr) {
+                m_statusLabel->setText(QStringLiteral("Disconnect requested..."));
+            }
+
+            emit lifecycleStatusChanged(QStringLiteral("Disconnect requested for ") + displayName());
+        }
+
         m_worker->stop();
     }
 }

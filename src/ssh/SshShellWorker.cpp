@@ -277,8 +277,16 @@ void SshShellWorker::start()
     emit outputReceived(QStringLiteral("\n[DD-SSH] SSH shell channel is open.\n\n"));
 
     char buffer[4096];
+    bool connectionLost = false;
+    bool remoteClosed = false;
 
     while (!m_stopRequested.load()) {
+        if (ssh_is_connected(session) == 0) {
+            connectionLost = true;
+            emit errorOccurred(QStringLiteral("SSH transport disconnected. The remote host may have closed the connection or rebooted."));
+            break;
+        }
+
         const QString pendingInput = takePendingInput();
 
         if (!pendingInput.isEmpty()) {
@@ -286,8 +294,9 @@ void SshShellWorker::start()
             const int writeRc = ssh_channel_write(channel, inputUtf8.constData(), inputUtf8.size());
 
             if (writeRc == SSH_ERROR) {
+                connectionLost = true;
                 emit errorOccurred(
-                    QStringLiteral("Could not write to SSH channel: ")
+                    QStringLiteral("Could not write to SSH channel. Connection may be closed: ")
                     + QString::fromUtf8(ssh_get_error(session))
                 );
                 break;
@@ -312,6 +321,8 @@ void SshShellWorker::start()
             }
         }
 
+        bool readError = false;
+
         while (true) {
             const int bytesRead = ssh_channel_read_nonblocking(
                 channel,
@@ -326,12 +337,18 @@ void SshShellWorker::start()
             }
 
             if (bytesRead == SSH_ERROR) {
+                readError = true;
                 emit errorOccurred(
-                    QStringLiteral("Could not read from SSH channel: ")
+                    QStringLiteral("Could not read from SSH channel. Connection may be closed: ")
                     + QString::fromUtf8(ssh_get_error(session))
                 );
             }
 
+            break;
+        }
+
+        if (readError) {
+            connectionLost = true;
             break;
         }
 
@@ -349,8 +366,9 @@ void SshShellWorker::start()
             }
 
             if (bytesRead == SSH_ERROR) {
+                readError = true;
                 emit errorOccurred(
-                    QStringLiteral("Could not read stderr from SSH channel: ")
+                    QStringLiteral("Could not read stderr from SSH channel. Connection may be closed: ")
                     + QString::fromUtf8(ssh_get_error(session))
                 );
             }
@@ -358,7 +376,13 @@ void SshShellWorker::start()
             break;
         }
 
+        if (readError) {
+            connectionLost = true;
+            break;
+        }
+
         if (ssh_channel_is_closed(channel) || ssh_channel_is_eof(channel)) {
+            remoteClosed = true;
             emit stateChanged(QStringLiteral("Remote shell channel closed."));
             break;
         }
@@ -366,7 +390,15 @@ void SshShellWorker::start()
         QThread::msleep(20);
     }
 
-    emit stateChanged(QStringLiteral("Disconnecting SSH shell..."));
+    if (m_stopRequested.load()) {
+        emit stateChanged(QStringLiteral("Disconnecting SSH shell..."));
+    } else if (connectionLost) {
+        emit stateChanged(QStringLiteral("SSH connection lost. Cleaning up shell session..."));
+    } else if (remoteClosed) {
+        emit stateChanged(QStringLiteral("Remote shell closed. Cleaning up shell session..."));
+    } else {
+        emit stateChanged(QStringLiteral("Cleaning up SSH shell session..."));
+    }
 
     if (channel != nullptr) {
         ssh_channel_send_eof(channel);

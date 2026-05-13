@@ -15,6 +15,17 @@ The Welcome screen is intentionally kept as a short current-state dashboard. Det
 1.0.x — Apollo
 ```
 
+## dev 0.1.3.6 — Andromeda
+
+**Focus:** Terminal lifecycle polish.
+
+- Closing an active SSH terminal tab now asks before disconnecting and closing.
+- Terminal tabs mark connected/disconnected state with simple title suffixes.
+- Disconnect requests now surface in the terminal/status flow.
+- xterm input is disabled after the SSH worker finishes.
+- SSH read/write failures now break out of the worker loop instead of silently spinning.
+- Remote reboot/disconnect testing should now show clearer connection-lost status messages.
+
 ## dev 0.1.3.5 — Andromeda
 
 **Focus:** Welcome and changelog polish.

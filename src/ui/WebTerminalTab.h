@@ -27,6 +27,14 @@ public:
 
     ~WebTerminalTab() override;
 
+    bool hasActiveShell() const;
+    QString displayName() const;
+    void requestDisconnect();
+
+signals:
+    void tabTitleChanged(const QString &title);
+    void lifecycleStatusChanged(const QString &status);
+
 protected:
     void showEvent(QShowEvent *event) override;
 
@@ -40,6 +48,7 @@ private:
     void resetTerminal();
     void focusTerminal();
     void disconnectShell();
+    void setTerminalInputEnabled(bool enabled);
     void handleWorkerFinished();
     void requestPtyResize(int columns, int rows);
 
@@ -62,4 +71,6 @@ private:
     int m_lastTerminalColumns = 0;
     int m_lastTerminalRows = 0;
     bool m_shellStarted = false;
+    bool m_shellActive = false;
+    bool m_disconnectRequested = false;
 };

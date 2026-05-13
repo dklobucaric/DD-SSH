@@ -26,6 +26,14 @@ public:
 
     ~BasicTerminalTab() override;
 
+    bool hasActiveShell() const;
+    QString displayName() const;
+    void requestDisconnect();
+
+signals:
+    void tabTitleChanged(const QString &title);
+    void lifecycleStatusChanged(const QString &status);
+
 private slots:
     void sendCurrentInput();
     void sendInterrupt();
@@ -52,4 +60,6 @@ private:
 
     QThread *m_thread = nullptr;
     SshShellWorker *m_worker = nullptr;
+    bool m_shellActive = false;
+    bool m_disconnectRequested = false;
 };
