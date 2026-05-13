@@ -6,7 +6,9 @@ project(DD_SSH
     LANGUAGES CXX
 )
 
-set(DD_SSH_VERSION_STRING "dev 0.1.3.2.2")
+set(DD_SSH_VERSION_STRING "dev 0.1.3.4")
+set(DD_SSH_CODENAME_STRING "Andromeda")
+set(DD_SSH_MILESTONE_STRING "MF 0.2 candidate")
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -64,6 +66,8 @@ target_include_directories(dd-ssh
 target_compile_definitions(dd-ssh
     PRIVATE
         DD_SSH_VERSION_STRING="${DD_SSH_VERSION_STRING}"
+        DD_SSH_CODENAME_STRING="${DD_SSH_CODENAME_STRING}"
+        DD_SSH_MILESTONE_STRING="${DD_SSH_MILESTONE_STRING}"
 )
 
 target_link_libraries(dd-ssh

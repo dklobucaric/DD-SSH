@@ -28,6 +28,14 @@
 #include <QTextEdit>
 #include <QToolBar>
 
+#ifndef DD_SSH_CODENAME_STRING
+#define DD_SSH_CODENAME_STRING "unnamed"
+#endif
+
+#ifndef DD_SSH_MILESTONE_STRING
+#define DD_SSH_MILESTONE_STRING "development"
+#endif
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
@@ -37,7 +45,7 @@ MainWindow::MainWindow(QWidget *parent)
     setupToolbar();
     setupCentralLayout();
 
-    statusBar()->showMessage("DD-SSH launch pad ready");
+    statusBar()->showMessage("DD-SSH Andromeda ready");
 
     resize(1100, 700);
 }
@@ -79,9 +87,15 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: Local bundled xterm.js asset path fix.\n\n")
+            + QStringLiteral("Current phase: Saved session double-click opens xterm.js terminal.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
+            + QStringLiteral("\n")
+            + QStringLiteral("Codename: ")
+            + QStringLiteral(DD_SSH_CODENAME_STRING)
+            + QStringLiteral("\n")
+            + QStringLiteral("Milestone: ")
+            + QStringLiteral(DD_SSH_MILESTONE_STRING)
             + QStringLiteral("\n\n")
             + QStringLiteral("libssh version: ")
             + SshSession::libsshVersion()
@@ -162,7 +176,7 @@ void MainWindow::setupCentralLayout()
             return;
         }
 
-        testSavedSession(sessionId);
+        openSavedSessionWebTerminal(sessionId);
     });
 
     splitter->addWidget(m_sessionList);
@@ -232,7 +246,7 @@ void MainWindow::addWelcomeTab()
         "UI layout skeleton is alive.\n\n"
         "Left side: saved sessions from dd-ssh.json\n"
         "Right side: terminal tabs placeholder\n\n"
-        "Double-click a saved session on the left to run the saved authentication test.\n\n"
+        "Double-click a saved session on the left to open the xterm.js terminal.\n\n"
         "Current milestone:\n"
         "- save successful connection to JSON\n"
         "- connect from saved session\n"
@@ -242,12 +256,12 @@ void MainWindow::addWelcomeTab()
         "- duplicate host/user warning polish for manual saves\n"
         "- basic saved-session SSH shell channel\n\n"
         "Current terminal options:\n"
-        "- Open basic shell: temporary QWidget input/output view\n"
-        "- Open xterm.js terminal: real web terminal renderer with FitAddon + SSH PTY resize sync\n"
+        "- Double-click saved session: open xterm.js terminal by default\n"
+        "- Open xterm.js terminal: local bundled renderer + FitAddon + SSH PTY resize sync\n"
+        "- Run auth test: available from the sidebar context menu\n"
         "- Open basic shell: temporary QWidget input/output fallback\n\n"
         "Next milestone:\n"
-        "- bundle local xterm.js assets for offline builds\n"
-        "- nano/vim/htop compatibility polish\n"
+        "- terminal lifecycle polish\n"
         "- stronger persistent session lifecycle handling\n"
     );
 
@@ -274,8 +288,8 @@ void MainWindow::showSessionContextMenu(const QPoint &position)
     }
 
     QMenu menu(this);
-    QAction *connectAction = menu.addAction("Connect / auth test");
-    QAction *openWebTerminalAction = menu.addAction("Open xterm.js terminal (dev)");
+    QAction *openWebTerminalAction = menu.addAction("Open xterm.js terminal");
+    QAction *connectAction = menu.addAction("Run auth test");
     QAction *openShellAction = menu.addAction("Open basic shell (fallback)");
     menu.addSeparator();
     QAction *editAction = menu.addAction("Edit session");

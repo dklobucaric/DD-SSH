@@ -59,6 +59,10 @@ WebTerminalTab::WebTerminalTab(
     m_clearButton->setToolTip(QStringLiteral("Clear the local web terminal view only."));
     buttonLayout->addWidget(m_clearButton);
 
+    m_resetButton = new QPushButton(QStringLiteral("Reset local terminal"), this);
+    m_resetButton->setToolTip(QStringLiteral("Reset the local xterm.js state if a full-screen app leaves the terminal visually confused."));
+    buttonLayout->addWidget(m_resetButton);
+
     m_focusButton = new QPushButton(QStringLiteral("Focus terminal"), this);
     m_focusButton->setToolTip(QStringLiteral("Return keyboard focus to the web terminal area."));
     buttonLayout->addWidget(m_focusButton);
@@ -84,6 +88,7 @@ WebTerminalTab::WebTerminalTab(
     connect(m_pasteButton, &QPushButton::clicked, this, &WebTerminalTab::pasteClipboard);
     connect(m_bridge, &TerminalBridge::pasteRequested, this, &WebTerminalTab::pasteClipboard);
     connect(m_clearButton, &QPushButton::clicked, this, &WebTerminalTab::clearTerminal);
+    connect(m_resetButton, &QPushButton::clicked, this, &WebTerminalTab::resetTerminal);
     connect(m_focusButton, &QPushButton::clicked, this, &WebTerminalTab::focusTerminal);
     connect(m_disconnectButton, &QPushButton::clicked, this, &WebTerminalTab::disconnectShell);
 
@@ -196,7 +201,7 @@ QString WebTerminalTab::terminalHtml() const
 </head>
 <body>
     <div id="header">
-        DD-SSH xterm.js terminal for __TARGET__ · loading local renderer · fit + PTY resize
+        DD-SSH Andromeda terminal for __TARGET__ · loading local renderer · fit + PTY resize
     </div>
     <div id="terminalHost"></div>
     <div id="fallbackTerminal" tabindex="0" spellcheck="false"></div>
@@ -216,7 +221,7 @@ QString WebTerminalTab::terminalHtml() const
     function setRendererStatus(status) {
         const header = document.getElementById('header');
         if (header) {
-            header.textContent = 'DD-SSH xterm.js terminal for __TARGET__ · ' + status + ' · fit + PTY resize';
+            header.textContent = 'DD-SSH Andromeda terminal for __TARGET__ · ' + status + ' · fit + PTY resize';
         }
     }
 
@@ -427,12 +432,12 @@ QString WebTerminalTab::terminalHtml() const
         fitAndReport();
         term.focus();
 
-        term.writeln('DD-SSH xterm.js terminal channel test');
+        term.writeln('DD-SSH Andromeda terminal compatibility test');
         term.writeln('Target: __TARGET__');
         term.writeln('');
-        term.writeln('This milestone uses local bundled xterm.js assets loaded from Qt resources with FitAddon and SSH PTY resize sync.');
-        term.writeln('The terminal should fill the available area and report cols/rows to the remote shell.');
-        term.writeln('Full-screen app testing starts here, but more polish may still be needed.');
+        term.writeln('Local bundled xterm.js assets are active with FitAddon and SSH PTY resize sync.');
+        term.writeln('Fullscreen apps such as htop, nano, vim, top and mc can now be tested.');
+        term.writeln('Use Reset local terminal only if a fullscreen app leaves the local renderer visually confused.');
         term.writeln('');
 
         term.onData(function (data) {
@@ -475,6 +480,18 @@ QString WebTerminalTab::terminalHtml() const
     window.ddsshClearTerminal = function () {
         if (usingXterm && term) {
             term.clear();
+            scheduleFitAndReport(10);
+            term.focus();
+            return;
+        }
+
+        fallbackTerminal.textContent = '';
+        fallbackTerminal.focus();
+    };
+
+    window.ddsshResetTerminal = function () {
+        if (usingXterm && term) {
+            term.reset();
             scheduleFitAndReport(10);
             term.focus();
             return;
@@ -666,6 +683,19 @@ void WebTerminalTab::clearTerminal()
     focusTerminal();
 }
 
+void WebTerminalTab::resetTerminal()
+{
+    if (m_view != nullptr) {
+        m_view->page()->runJavaScript(QStringLiteral("window.ddsshResetTerminal && window.ddsshResetTerminal();"));
+    }
+
+    if (m_bridge != nullptr) {
+        m_bridge->emitStatus(QStringLiteral("Reset local terminal renderer state."));
+    }
+
+    focusTerminal();
+}
+
 void WebTerminalTab::focusTerminal()
 {
     if (m_view == nullptr) {
@@ -699,6 +729,10 @@ void WebTerminalTab::handleWorkerFinished()
 
     if (m_focusButton != nullptr) {
         m_focusButton->setEnabled(false);
+    }
+
+    if (m_resetButton != nullptr) {
+        m_resetButton->setEnabled(false);
     }
 
     if (m_bridge != nullptr) {

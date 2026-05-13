@@ -37,6 +37,7 @@ private:
     void sendInterrupt();
     void pasteClipboard();
     void clearTerminal();
+    void resetTerminal();
     void focusTerminal();
     void disconnectShell();
     void handleWorkerFinished();
@@ -53,6 +54,7 @@ private:
     QPushButton *m_pasteButton = nullptr;
     QPushButton *m_clearButton = nullptr;
     QPushButton *m_focusButton = nullptr;
+    QPushButton *m_resetButton = nullptr;
     QPushButton *m_disconnectButton = nullptr;
 
     QThread *m_thread = nullptr;
