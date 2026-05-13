@@ -67,6 +67,11 @@ WebTerminalTab::WebTerminalTab(
     m_focusButton->setToolTip(QStringLiteral("Return keyboard focus to the web terminal area."));
     buttonLayout->addWidget(m_focusButton);
 
+    m_reconnectButton = new QPushButton(QStringLiteral("Reconnect"), this);
+    m_reconnectButton->setToolTip(QStringLiteral("Reconnect this terminal using the same saved session."));
+    m_reconnectButton->setEnabled(false);
+    buttonLayout->addWidget(m_reconnectButton);
+
     m_disconnectButton = new QPushButton(QStringLiteral("Disconnect"), this);
     buttonLayout->addWidget(m_disconnectButton);
 
@@ -90,6 +95,7 @@ WebTerminalTab::WebTerminalTab(
     connect(m_clearButton, &QPushButton::clicked, this, &WebTerminalTab::clearTerminal);
     connect(m_resetButton, &QPushButton::clicked, this, &WebTerminalTab::resetTerminal);
     connect(m_focusButton, &QPushButton::clicked, this, &WebTerminalTab::focusTerminal);
+    connect(m_reconnectButton, &QPushButton::clicked, this, &WebTerminalTab::reconnectShell);
     connect(m_disconnectButton, &QPushButton::clicked, this, &WebTerminalTab::disconnectShell);
 
     connect(m_view, &QWebEngineView::loadFinished, this, [this](bool ok) {
@@ -494,7 +500,13 @@ QString WebTerminalTab::terminalHtml() const
     window.ddsshSetTerminalInputEnabled = function (enabled) {
         terminalInputEnabled = !!enabled;
 
-        if (!terminalInputEnabled) {
+        if (terminalInputEnabled) {
+            if (usingXterm && term) {
+                setRendererStatus('xterm.js ACTIVE - local bundled renderer');
+            } else {
+                setRendererStatus('FALLBACK ACTIVE - local xterm resource was not loaded');
+            }
+        } else {
             setRendererStatus('xterm.js ACTIVE - disconnected');
         }
     };
@@ -576,6 +588,23 @@ void WebTerminalTab::startShell()
     m_shellActive = true;
     m_disconnectRequested = false;
     setTerminalInputEnabled(true);
+
+    if (m_interruptButton != nullptr) {
+        m_interruptButton->setEnabled(true);
+    }
+
+    if (m_pasteButton != nullptr) {
+        m_pasteButton->setEnabled(true);
+    }
+
+    if (m_disconnectButton != nullptr) {
+        m_disconnectButton->setEnabled(true);
+    }
+
+    if (m_reconnectButton != nullptr) {
+        m_reconnectButton->setEnabled(false);
+    }
+
     emit tabTitleChanged(displayName() + QStringLiteral(" ●"));
     emit lifecycleStatusChanged(QStringLiteral("Connecting ") + displayName());
 
@@ -616,11 +645,22 @@ void WebTerminalTab::startShell()
         }
     });
     connect(m_worker, &SshShellWorker::errorOccurred, m_bridge, &TerminalBridge::emitError);
+    QThread *threadForThisRun = m_thread;
+    SshShellWorker *workerForThisRun = m_worker;
+
     connect(m_worker, &SshShellWorker::finished, this, &WebTerminalTab::handleWorkerFinished);
     connect(m_worker, &SshShellWorker::finished, m_thread, &QThread::quit);
-    connect(m_thread, &QThread::finished, m_worker, &QObject::deleteLater);
-    connect(m_thread, &QThread::finished, this, [this]() {
-        m_worker = nullptr;
+    connect(m_thread, &QThread::finished, workerForThisRun, &QObject::deleteLater);
+    connect(m_thread, &QThread::finished, threadForThisRun, &QObject::deleteLater);
+    connect(m_thread, &QThread::finished, this, [this, threadForThisRun]() {
+        if (m_thread == threadForThisRun) {
+            m_thread = nullptr;
+            m_worker = nullptr;
+
+            if (!m_shellActive && m_reconnectButton != nullptr) {
+                m_reconnectButton->setEnabled(true);
+            }
+        }
     });
 
     m_thread->start();
@@ -770,6 +810,44 @@ void WebTerminalTab::disconnectShell()
     }
 }
 
+void WebTerminalTab::reconnectShell()
+{
+    if (m_shellActive) {
+        if (m_bridge != nullptr) {
+            m_bridge->emitStatus(QStringLiteral("Reconnect ignored because the SSH terminal is already connected."));
+        }
+
+        focusTerminal();
+        return;
+    }
+
+    if (m_worker != nullptr || (m_thread != nullptr && m_thread->isRunning())) {
+        if (m_bridge != nullptr) {
+            m_bridge->emitStatus(QStringLiteral("Waiting for the previous SSH worker to finish before reconnecting."));
+        }
+
+        focusTerminal();
+        return;
+    }
+
+    if (m_bridge != nullptr) {
+        m_bridge->emitStatus(QStringLiteral("Reconnect requested. Starting a new SSH shell session..."));
+    }
+
+    if (m_statusLabel != nullptr) {
+        m_statusLabel->setText(QStringLiteral("Reconnecting..."));
+    }
+
+    if (m_reconnectButton != nullptr) {
+        m_reconnectButton->setEnabled(false);
+    }
+
+    m_disconnectRequested = false;
+    m_shellStarted = false;
+    startShell();
+    focusTerminal();
+}
+
 void WebTerminalTab::setTerminalInputEnabled(bool enabled)
 {
     if (m_view == nullptr) {
@@ -786,6 +864,7 @@ void WebTerminalTab::setTerminalInputEnabled(bool enabled)
 void WebTerminalTab::handleWorkerFinished()
 {
     m_shellActive = false;
+    m_shellStarted = false;
     setTerminalInputEnabled(false);
     emit tabTitleChanged(displayName() + QStringLiteral(" ×"));
     emit lifecycleStatusChanged(QStringLiteral("Disconnected: ") + displayName());
@@ -801,7 +880,6 @@ void WebTerminalTab::handleWorkerFinished()
     if (m_pasteButton != nullptr) {
         m_pasteButton->setEnabled(false);
     }
-
 
     if (m_bridge != nullptr) {
         m_bridge->emitStatus(QStringLiteral("Shell worker finished. Terminal is disconnected."));

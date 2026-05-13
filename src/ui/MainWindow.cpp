@@ -87,7 +87,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: Terminal lifecycle polish.\n\n")
+            + QStringLiteral("Current phase: Reconnect disconnected terminal.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n")
@@ -313,10 +313,14 @@ void MainWindow::addWelcomeTab()
         "- terminal tabs mark connected/disconnected state\n"
         "- disconnect disables remote input actions after the worker finishes\n"
         "- remote disconnect/reboot should surface as a terminal status/error\n\n"
+        "Current reconnect polish:\n"
+        "- disconnected xterm.js terminal tabs expose a Reconnect action\n"
+        "- reconnect uses the same saved session and plaintext secret\n"
+        "- reconnect reuses the existing terminal tab and restores connected controls\n\n"
         "Next milestone:\n"
-        "- reconnect behavior\n"
         "- terminal settings polish\n"
-        "- MF 0.2 stabilization pass\n\n"
+        "- MF 0.2 stabilization pass\n"
+        "- Andromeda test matrix documentation\n\n"
         "Codename roadmap:\n"
         "- 0.1.x — Launchpad\n"
         "- 0.2.x — Andromeda\n"

@@ -15,6 +15,15 @@ The Welcome screen is intentionally kept as a short current-state dashboard. Det
 1.0.x — Apollo
 ```
 
+## dev 0.1.3.7 — Andromeda
+
+**Focus:** Reconnect disconnected terminal.
+
+- Added a Reconnect action to xterm.js terminal tabs after disconnect.
+- Reconnect uses the same saved session and plaintext secret.
+- Connected controls are restored after reconnect and remote input controls remain disabled while disconnected.
+- This follows the remote-reboot lifecycle test from `dev 0.1.3.6`: DD-SSH can now fall down cleanly and stand back up from the same tab.
+
 ## dev 0.1.3.6 — Andromeda
 
 **Focus:** Terminal lifecycle polish.

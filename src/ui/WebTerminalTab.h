@@ -48,6 +48,7 @@ private:
     void resetTerminal();
     void focusTerminal();
     void disconnectShell();
+    void reconnectShell();
     void setTerminalInputEnabled(bool enabled);
     void handleWorkerFinished();
     void requestPtyResize(int columns, int rows);
@@ -64,6 +65,7 @@ private:
     QPushButton *m_clearButton = nullptr;
     QPushButton *m_focusButton = nullptr;
     QPushButton *m_resetButton = nullptr;
+    QPushButton *m_reconnectButton = nullptr;
     QPushButton *m_disconnectButton = nullptr;
 
     QThread *m_thread = nullptr;
