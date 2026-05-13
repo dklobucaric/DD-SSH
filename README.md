@@ -67,3 +67,10 @@ Start here:
 ## dev 0.1.3.4
 
 Double-click a saved session opens the xterm.js terminal by default. The saved-session auth test remains available from the session context menu.
+
+
+## Current development status
+
+DD-SSH is currently in the **Andromeda / MF 0.2 candidate** development line. The current focus is the Real Terminal Foundation: local bundled xterm.js renderer, SSH PTY resize, saved sessions, password/private-key login, and terminal app compatibility.
+
+See [`docs/CHANGELOG.md`](docs/CHANGELOG.md) for detailed checkpoint history.

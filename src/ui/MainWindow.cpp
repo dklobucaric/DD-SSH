@@ -87,7 +87,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: Saved session double-click opens xterm.js terminal.\n\n")
+            + QStringLiteral("Current phase: Welcome and changelog polish.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n")
@@ -242,27 +242,43 @@ void MainWindow::addWelcomeTab()
     welcome->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
 
     welcome->setPlainText(
-        "DD-SSH\n\n"
-        "UI layout skeleton is alive.\n\n"
+        "DD-SSH — Andromeda\n\n"
+        "A clean cross-platform SSH client and session manager.\n\n"
         "Left side: saved sessions from dd-ssh.json\n"
-        "Right side: terminal tabs placeholder\n\n"
+        "Right side: terminal tabs\n\n"
         "Double-click a saved session on the left to open the xterm.js terminal.\n\n"
         "Current milestone:\n"
-        "- save successful connection to JSON\n"
-        "- connect from saved session\n"
-        "- config/session safety cleanup\n"
-        "- delete saved sessions from sidebar context menu\n"
-        "- edit/modify saved sessions from sidebar context menu\n"
-        "- duplicate host/user warning polish for manual saves\n"
-        "- basic saved-session SSH shell channel\n\n"
+        "MF 0.2 candidate — Real Terminal Foundation\n\n"
+        "Working now:\n"
+        "- saved sessions loaded from dd-ssh.json\n"
+        "- portable plaintext secrets in dd-ssh.json\n"
+        "- password authentication\n"
+        "- private-key authentication\n"
+        "- known_hosts trust handling\n"
+        "- create/edit/delete saved sessions\n"
+        "- duplicate saved-session warning\n"
+        "- xterm.js terminal renderer\n"
+        "- local bundled xterm.js assets\n"
+        "- SSH PTY resize sync\n"
+        "- tested terminal apps: htop, nano, vim, top, clear\n\n"
         "Current terminal options:\n"
-        "- Double-click saved session: open xterm.js terminal by default\n"
-        "- Open xterm.js terminal: local bundled renderer + FitAddon + SSH PTY resize sync\n"
-        "- Run auth test: available from the sidebar context menu\n"
-        "- Open basic shell: temporary QWidget input/output fallback\n\n"
+        "- Double-click session: open xterm.js terminal\n"
+        "- Right-click session: open terminal, run auth test, edit, delete\n"
+        "- Basic shell fallback is still available for debugging\n\n"
         "Next milestone:\n"
         "- terminal lifecycle polish\n"
-        "- stronger persistent session lifecycle handling\n"
+        "- safer tab close/disconnect handling\n"
+        "- stronger persistent session lifecycle\n"
+        "- reconnect behavior\n"
+        "- terminal settings polish\n\n"
+        "Codename roadmap:\n"
+        "- 0.1.x — Launchpad\n"
+        "- 0.2.x — Andromeda\n"
+        "- 0.3.x — Orion\n"
+        "- 0.4.x — Vega\n"
+        "- 0.5.x — Cassiopeia\n"
+        "- 1.0.x — Apollo\n\n"
+        "Detailed version history lives in docs/CHANGELOG.md.\n"
     );
 
     m_tabs->addTab(welcome, "Welcome");
