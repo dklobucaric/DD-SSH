@@ -79,7 +79,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: Web terminal direct input/paste dispatch fix.\n\n")
+            + QStringLiteral("Current phase: Web terminal focus polish before xterm.js.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n\n")
@@ -243,7 +243,7 @@ void MainWindow::addWelcomeTab()
         "- basic saved-session SSH shell channel\n\n"
         "Current terminal options:\n"
         "- Open basic shell: temporary QWidget input/output view\n"
-        "- Open web terminal: keyboard input directly inside terminal area, xterm.js-ready fallback renderer\n\n"
+        "- Open web terminal: keyboard input directly inside terminal area, paste, focus helper, xterm.js-ready fallback renderer\n\n"
         "Next milestone:\n"
         "- bundle real xterm.js renderer\n"
         "- stronger persistent session lifecycle handling\n"

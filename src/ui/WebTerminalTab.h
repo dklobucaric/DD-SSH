@@ -4,6 +4,8 @@
 
 #include <QWidget>
 
+class QShowEvent;
+
 class QLabel;
 class QPushButton;
 class QThread;
@@ -25,6 +27,9 @@ public:
 
     ~WebTerminalTab() override;
 
+protected:
+    void showEvent(QShowEvent *event) override;
+
 private:
     QString terminalHtml() const;
     void startShell();
@@ -32,6 +37,7 @@ private:
     void sendInterrupt();
     void pasteClipboard();
     void clearTerminal();
+    void focusTerminal();
     void disconnectShell();
     void handleWorkerFinished();
 
@@ -45,6 +51,7 @@ private:
     QPushButton *m_interruptButton = nullptr;
     QPushButton *m_pasteButton = nullptr;
     QPushButton *m_clearButton = nullptr;
+    QPushButton *m_focusButton = nullptr;
     QPushButton *m_disconnectButton = nullptr;
 
     QThread *m_thread = nullptr;

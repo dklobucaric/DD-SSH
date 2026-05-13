@@ -8,6 +8,8 @@
 #include <QLabel>
 #include <QMetaObject>
 #include <QPushButton>
+#include <QShowEvent>
+#include <QTimer>
 #include <QThread>
 #include <QVBoxLayout>
 #include <QUrl>
@@ -37,6 +39,7 @@ WebTerminalTab::WebTerminalTab(
     layout->addWidget(m_statusLabel);
 
     m_view = new QWebEngineView(this);
+    m_view->setFocusPolicy(Qt::StrongFocus);
     layout->addWidget(m_view, 1);
 
     auto *buttonLayout = new QHBoxLayout();
@@ -52,6 +55,10 @@ WebTerminalTab::WebTerminalTab(
     m_clearButton = new QPushButton(QStringLiteral("Clear local view"), this);
     m_clearButton->setToolTip(QStringLiteral("Clear the local web terminal view only."));
     buttonLayout->addWidget(m_clearButton);
+
+    m_focusButton = new QPushButton(QStringLiteral("Focus terminal"), this);
+    m_focusButton->setToolTip(QStringLiteral("Return keyboard focus to the web terminal area."));
+    buttonLayout->addWidget(m_focusButton);
 
     m_disconnectButton = new QPushButton(QStringLiteral("Disconnect"), this);
     buttonLayout->addWidget(m_disconnectButton);
@@ -73,7 +80,14 @@ WebTerminalTab::WebTerminalTab(
     connect(m_pasteButton, &QPushButton::clicked, this, &WebTerminalTab::pasteClipboard);
     connect(m_bridge, &TerminalBridge::pasteRequested, this, &WebTerminalTab::pasteClipboard);
     connect(m_clearButton, &QPushButton::clicked, this, &WebTerminalTab::clearTerminal);
+    connect(m_focusButton, &QPushButton::clicked, this, &WebTerminalTab::focusTerminal);
     connect(m_disconnectButton, &QPushButton::clicked, this, &WebTerminalTab::disconnectShell);
+
+    connect(m_view, &QWebEngineView::loadFinished, this, [this](bool ok) {
+        if (ok) {
+            QTimer::singleShot(100, this, &WebTerminalTab::focusTerminal);
+        }
+    });
 
     m_view->setHtml(terminalHtml(), QUrl(QStringLiteral("qrc:///")));
 }
@@ -86,6 +100,12 @@ WebTerminalTab::~WebTerminalTab()
         m_thread->quit();
         m_thread->wait(3000);
     }
+}
+
+void WebTerminalTab::showEvent(QShowEvent *event)
+{
+    QWidget::showEvent(event);
+    QTimer::singleShot(50, this, &WebTerminalTab::focusTerminal);
 }
 
 QString WebTerminalTab::terminalHtml() const
@@ -155,7 +175,7 @@ QString WebTerminalTab::terminalHtml() const
 </head>
 <body>
     <div id="header">
-        DD-SSH Web Terminal fallback for __TARGET__ · direct input/paste dispatch fixed · xterm.js renderer comes next
+        DD-SSH Web Terminal fallback for __TARGET__ · focus polish · type directly or use Paste · xterm.js renderer comes next
     </div>
     <div id="terminal" tabindex="0" spellcheck="false"></div>
 
@@ -190,6 +210,10 @@ QString WebTerminalTab::terminalHtml() const
         terminal.appendChild(document.createTextNode(out));
         terminal.scrollTop = terminal.scrollHeight;
     }
+
+    window.ddsshFocusTerminal = function () {
+        terminal.focus();
+    };
 
     window.ddsshClearTerminal = function () {
         terminal.textContent = '';
@@ -266,7 +290,7 @@ QString WebTerminalTab::terminalHtml() const
     terminal.addEventListener('paste', function (event) {
         event.preventDefault();
 
-        const text = event.clipboardData ? event.clipboardData.getData('text') : '';
+        let text = event.clipboardData ? event.clipboardData.getData('text') : '';
 
         if (text) {
             text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
@@ -283,10 +307,15 @@ QString WebTerminalTab::terminalHtml() const
         terminal.focus();
     });
 
+    document.body.addEventListener('mousedown', function () {
+        terminal.focus();
+    });
+
     appendOutput('DD-SSH web terminal channel test\n', false);
     appendOutput('Target: __TARGET__\n\n', false);
     appendOutput('This web terminal milestone captures keyboard input directly inside the terminal area.\n', false);
-    appendOutput('Paste works with Ctrl+V or the Paste button. Multiline paste is sent directly to the remote shell.\n', false);
+    appendOutput('Paste works with Ctrl+V or the Paste button. Click the terminal or use Focus terminal if keyboard focus is lost.\n', false);
+    appendOutput('Multiline paste is sent directly to the remote shell.\n', false);
     appendOutput('It is still using a fallback renderer, not bundled xterm.js yet, so full-screen apps are not expected to be correct.\n\n', false);
 
     new QWebChannel(qt.webChannelTransport, function (channel) {
@@ -306,6 +335,8 @@ QString WebTerminalTab::terminalHtml() const
 
         bridge.terminalReady();
         terminal.focus();
+        setTimeout(function () { terminal.focus(); }, 50);
+        setTimeout(function () { terminal.focus(); }, 250);
     });
 }());
 </script>
@@ -385,9 +416,7 @@ void WebTerminalTab::sendInterrupt()
         m_bridge->emitStatus(QStringLiteral("Sent Ctrl+C to remote shell."));
     }
 
-    if (m_view != nullptr) {
-        m_view->setFocus();
-    }
+    focusTerminal();
 }
 
 void WebTerminalTab::pasteClipboard()
@@ -407,9 +436,7 @@ void WebTerminalTab::pasteClipboard()
             m_bridge->emitStatus(QStringLiteral("Clipboard is empty. Nothing pasted."));
         }
 
-        if (m_view != nullptr) {
-            m_view->setFocus();
-        }
+        focusTerminal();
 
         return;
     }
@@ -437,17 +464,26 @@ void WebTerminalTab::pasteClipboard()
         );
     }
 
-    if (m_view != nullptr) {
-        m_view->setFocus();
-    }
+    focusTerminal();
 }
 
 void WebTerminalTab::clearTerminal()
 {
     if (m_view != nullptr) {
         m_view->page()->runJavaScript(QStringLiteral("window.ddsshClearTerminal && window.ddsshClearTerminal();"));
-        m_view->setFocus();
     }
+
+    focusTerminal();
+}
+
+void WebTerminalTab::focusTerminal()
+{
+    if (m_view == nullptr) {
+        return;
+    }
+
+    m_view->setFocus(Qt::OtherFocusReason);
+    m_view->page()->runJavaScript(QStringLiteral("window.ddsshFocusTerminal && window.ddsshFocusTerminal();"));
 }
 
 void WebTerminalTab::disconnectShell()
@@ -469,6 +505,10 @@ void WebTerminalTab::handleWorkerFinished()
 
     if (m_pasteButton != nullptr) {
         m_pasteButton->setEnabled(false);
+    }
+
+    if (m_focusButton != nullptr) {
+        m_focusButton->setEnabled(false);
     }
 
     if (m_bridge != nullptr) {
