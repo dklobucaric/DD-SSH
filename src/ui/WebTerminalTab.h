@@ -40,6 +40,7 @@ protected:
 
 private:
     QString terminalHtml() const;
+    QString targetLabel() const;
     void startShell();
     void sendToWorker(const QString &input);
     void sendInterrupt();
@@ -50,6 +51,8 @@ private:
     void disconnectShell();
     void reconnectShell();
     void setTerminalInputEnabled(bool enabled);
+    void setConnectionUiState(const QString &state, bool remoteInputEnabled, bool reconnectAvailable);
+    void updateTerminalConnectionState(const QString &state);
     void handleWorkerFinished();
     void requestPtyResize(int columns, int rows);
 

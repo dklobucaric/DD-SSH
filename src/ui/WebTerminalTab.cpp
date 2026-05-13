@@ -5,6 +5,8 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QHBoxLayout>
+#include <QJsonArray>
+#include <QJsonDocument>
 #include <QLabel>
 #include <QMetaObject>
 #include <QPushButton>
@@ -17,6 +19,23 @@
 #include <QWebEnginePage>
 #include <QWebEngineSettings>
 #include <QWebEngineView>
+
+
+namespace {
+QString javaScriptStringLiteral(const QString &value)
+{
+    QJsonArray array;
+    array.append(value);
+
+    const QString json = QString::fromUtf8(QJsonDocument(array).toJson(QJsonDocument::Compact));
+
+    if (json.size() >= 2) {
+        return json.mid(1, json.size() - 2);
+    }
+
+    return QStringLiteral("\"\"");
+}
+}
 
 WebTerminalTab::WebTerminalTab(
     const SessionProfile &session,
@@ -36,7 +55,7 @@ WebTerminalTab::WebTerminalTab(
         + QStringLiteral(":")
         + QString::number(m_session.port);
 
-    m_statusLabel = new QLabel(QStringLiteral("Starting web terminal for ") + target, this);
+    m_statusLabel = new QLabel(QStringLiteral("State: starting | Target: ") + target, this);
     layout->addWidget(m_statusLabel);
 
     m_view = new QWebEngineView(this);
@@ -55,16 +74,16 @@ WebTerminalTab::WebTerminalTab(
     m_pasteButton->setToolTip(QStringLiteral("Paste clipboard text into the remote shell. Newlines are sent as Enter."));
     buttonLayout->addWidget(m_pasteButton);
 
-    m_clearButton = new QPushButton(QStringLiteral("Clear local view"), this);
-    m_clearButton->setToolTip(QStringLiteral("Clear the local web terminal view only."));
+    m_clearButton = new QPushButton(QStringLiteral("Clear"), this);
+    m_clearButton->setToolTip(QStringLiteral("Clear the local terminal view only. The remote shell is not affected."));
     buttonLayout->addWidget(m_clearButton);
 
-    m_resetButton = new QPushButton(QStringLiteral("Reset local terminal"), this);
-    m_resetButton->setToolTip(QStringLiteral("Reset the local xterm.js state if a full-screen app leaves the terminal visually confused."));
+    m_resetButton = new QPushButton(QStringLiteral("Reset"), this);
+    m_resetButton->setToolTip(QStringLiteral("Reset the local xterm.js renderer state if a full-screen app leaves the terminal visually confused."));
     buttonLayout->addWidget(m_resetButton);
 
-    m_focusButton = new QPushButton(QStringLiteral("Focus terminal"), this);
-    m_focusButton->setToolTip(QStringLiteral("Return keyboard focus to the web terminal area."));
+    m_focusButton = new QPushButton(QStringLiteral("Focus"), this);
+    m_focusButton->setToolTip(QStringLiteral("Return keyboard focus to the terminal area."));
     buttonLayout->addWidget(m_focusButton);
 
     m_reconnectButton = new QPushButton(QStringLiteral("Reconnect"), this);
@@ -73,6 +92,7 @@ WebTerminalTab::WebTerminalTab(
     buttonLayout->addWidget(m_reconnectButton);
 
     m_disconnectButton = new QPushButton(QStringLiteral("Disconnect"), this);
+    m_disconnectButton->setToolTip(QStringLiteral("Disconnect the active SSH shell session."));
     buttonLayout->addWidget(m_disconnectButton);
 
     buttonLayout->addStretch(1);
@@ -104,6 +124,8 @@ WebTerminalTab::WebTerminalTab(
         }
     });
 
+    setConnectionUiState(QStringLiteral("starting"), false, false);
+
     m_view->setHtml(terminalHtml(), QUrl(QStringLiteral("qrc:///")));
 }
 
@@ -133,6 +155,59 @@ QString WebTerminalTab::displayName() const
         + m_session.host
         + QStringLiteral(":")
         + QString::number(m_session.port);
+}
+
+QString WebTerminalTab::targetLabel() const
+{
+    return m_session.username
+        + QStringLiteral("@")
+        + m_session.host
+        + QStringLiteral(":")
+        + QString::number(m_session.port);
+}
+
+void WebTerminalTab::setConnectionUiState(const QString &state, bool remoteInputEnabled, bool reconnectAvailable)
+{
+    const QString normalizedState = state.trimmed().isEmpty()
+        ? QStringLiteral("unknown")
+        : state.trimmed();
+
+    if (m_statusLabel != nullptr) {
+        m_statusLabel->setText(
+            QStringLiteral("State: %1 | Target: %2")
+                .arg(normalizedState, targetLabel())
+        );
+    }
+
+    if (m_interruptButton != nullptr) {
+        m_interruptButton->setEnabled(remoteInputEnabled);
+    }
+
+    if (m_pasteButton != nullptr) {
+        m_pasteButton->setEnabled(remoteInputEnabled);
+    }
+
+    if (m_disconnectButton != nullptr) {
+        m_disconnectButton->setEnabled(remoteInputEnabled);
+    }
+
+    if (m_reconnectButton != nullptr) {
+        m_reconnectButton->setEnabled(reconnectAvailable);
+    }
+
+    updateTerminalConnectionState(normalizedState);
+}
+
+void WebTerminalTab::updateTerminalConnectionState(const QString &state)
+{
+    if (m_view == nullptr) {
+        return;
+    }
+
+    m_view->page()->runJavaScript(
+        QStringLiteral("window.ddsshSetTerminalConnectionState && window.ddsshSetTerminalConnectionState(%1);")
+            .arg(javaScriptStringLiteral(state))
+    );
 }
 
 void WebTerminalTab::requestDisconnect()
@@ -230,7 +305,7 @@ QString WebTerminalTab::terminalHtml() const
 </head>
 <body>
     <div id="header">
-        DD-SSH Andromeda terminal for __TARGET__ · loading local renderer · fit + PTY resize
+        DD-SSH Andromeda terminal for __TARGET__ · Renderer: loading · State: starting · PTY resize: on
     </div>
     <div id="terminalHost"></div>
     <div id="fallbackTerminal" tabindex="0" spellcheck="false"></div>
@@ -244,15 +319,27 @@ QString WebTerminalTab::terminalHtml() const
     let fitAddon = null;
     let usingXterm = false;
     let terminalInputEnabled = true;
+    let rendererStatus = 'loading';
+    let connectionState = 'starting';
     let lastReportedCols = 0;
     let lastReportedRows = 0;
     let fitTimer = null;
 
-    function setRendererStatus(status) {
+    function updateHeader() {
         const header = document.getElementById('header');
         if (header) {
-            header.textContent = 'DD-SSH Andromeda terminal for __TARGET__ · ' + status + ' · fit + PTY resize';
+            header.textContent = 'DD-SSH Andromeda terminal for __TARGET__ · Renderer: ' + rendererStatus + ' · State: ' + connectionState + ' · PTY resize: on';
         }
+    }
+
+    function setRendererStatus(status) {
+        rendererStatus = status || rendererStatus;
+        updateHeader();
+    }
+
+    function setConnectionState(state) {
+        connectionState = state || connectionState;
+        updateHeader();
     }
 
     function reportTerminalSize(columns, rows) {
@@ -425,7 +512,7 @@ QString WebTerminalTab::terminalHtml() const
 
     function setupXterm() {
         if (typeof Terminal === 'undefined') {
-            setRendererStatus('FALLBACK ACTIVE - local xterm resource was not loaded');
+            setRendererStatus('fallback - local resource missing');
             setupFallbackInput();
             fallbackAppend('DD-SSH xterm.js terminal channel test\n', false);
             fallbackAppend('Target: __TARGET__\n\n', false);
@@ -435,7 +522,7 @@ QString WebTerminalTab::terminalHtml() const
         }
 
         usingXterm = true;
-        setRendererStatus('xterm.js ACTIVE - local bundled renderer');
+        setRendererStatus('xterm.js local');
         fallbackTerminal.style.display = 'none';
         terminalHost.style.display = 'block';
 
@@ -462,12 +549,11 @@ QString WebTerminalTab::terminalHtml() const
         fitAndReport();
         term.focus();
 
-        term.writeln('DD-SSH Andromeda terminal compatibility test');
+        term.writeln('DD-SSH Andromeda terminal');
         term.writeln('Target: __TARGET__');
         term.writeln('');
-        term.writeln('Local bundled xterm.js assets are active with FitAddon and SSH PTY resize sync.');
-        term.writeln('Fullscreen apps such as htop, nano, vim, top and mc can now be tested.');
-        term.writeln('Use Reset local terminal only if a fullscreen app leaves the local renderer visually confused.');
+        term.writeln('Local xterm.js renderer, FitAddon and SSH PTY resize are active.');
+        term.writeln('Use Reset only if a fullscreen app leaves the local terminal visually confused.');
         term.writeln('');
 
         term.onData(function (data) {
@@ -500,15 +586,13 @@ QString WebTerminalTab::terminalHtml() const
     window.ddsshSetTerminalInputEnabled = function (enabled) {
         terminalInputEnabled = !!enabled;
 
-        if (terminalInputEnabled) {
-            if (usingXterm && term) {
-                setRendererStatus('xterm.js ACTIVE - local bundled renderer');
-            } else {
-                setRendererStatus('FALLBACK ACTIVE - local xterm resource was not loaded');
-            }
-        } else {
-            setRendererStatus('xterm.js ACTIVE - disconnected');
+        if (!terminalInputEnabled) {
+            setConnectionState('disconnected');
         }
+    };
+
+    window.ddsshSetTerminalConnectionState = function (state) {
+        setConnectionState(state || 'unknown');
     };
 
     window.ddsshFocusTerminal = function () {
@@ -587,23 +671,8 @@ void WebTerminalTab::startShell()
     m_shellStarted = true;
     m_shellActive = true;
     m_disconnectRequested = false;
-    setTerminalInputEnabled(true);
-
-    if (m_interruptButton != nullptr) {
-        m_interruptButton->setEnabled(true);
-    }
-
-    if (m_pasteButton != nullptr) {
-        m_pasteButton->setEnabled(true);
-    }
-
-    if (m_disconnectButton != nullptr) {
-        m_disconnectButton->setEnabled(true);
-    }
-
-    if (m_reconnectButton != nullptr) {
-        m_reconnectButton->setEnabled(false);
-    }
+    setTerminalInputEnabled(false);
+    setConnectionUiState(QStringLiteral("connecting"), false, false);
 
     emit tabTitleChanged(displayName() + QStringLiteral(" ●"));
     emit lifecycleStatusChanged(QStringLiteral("Connecting ") + displayName());
@@ -630,14 +699,31 @@ void WebTerminalTab::startShell()
     connect(m_thread, &QThread::started, m_worker, &SshShellWorker::start);
     connect(m_worker, &SshShellWorker::outputReceived, m_bridge, &TerminalBridge::emitOutput);
     connect(m_worker, &SshShellWorker::stateChanged, this, [this](const QString &state) {
-        if (m_statusLabel != nullptr) {
-            m_statusLabel->setText(state);
-        }
+        QString uiState = state.trimmed();
+        bool allowRemoteInput = false;
 
-        if (state.contains(QStringLiteral("Connected"), Qt::CaseInsensitive)) {
+        if (state.contains(QStringLiteral("Disconnected"), Qt::CaseInsensitive)) {
+            uiState = QStringLiteral("disconnected");
+        } else if (state.contains(QStringLiteral("Disconnecting"), Qt::CaseInsensitive)) {
+            uiState = QStringLiteral("disconnecting");
+        } else if (state.contains(QStringLiteral("connection lost"), Qt::CaseInsensitive)) {
+            uiState = QStringLiteral("connection lost");
+        } else if (state.contains(QStringLiteral("closed"), Qt::CaseInsensitive)) {
+            uiState = QStringLiteral("remote closed");
+        } else if (state.startsWith(QStringLiteral("Connected"), Qt::CaseInsensitive)) {
+            uiState = QStringLiteral("connected");
+            allowRemoteInput = true;
             emit tabTitleChanged(displayName() + QStringLiteral(" ●"));
+        } else if (state.contains(QStringLiteral("Authenticating"), Qt::CaseInsensitive)) {
+            uiState = QStringLiteral("authenticating");
+        } else if (state.contains(QStringLiteral("Connecting"), Qt::CaseInsensitive)) {
+            uiState = QStringLiteral("connecting");
+        } else if (state.contains(QStringLiteral("Opening"), Qt::CaseInsensitive)) {
+            uiState = QStringLiteral("opening shell");
         }
 
+        setConnectionUiState(uiState, allowRemoteInput, false);
+        setTerminalInputEnabled(allowRemoteInput);
         emit lifecycleStatusChanged(state);
 
         if (m_bridge != nullptr) {
@@ -657,8 +743,8 @@ void WebTerminalTab::startShell()
             m_thread = nullptr;
             m_worker = nullptr;
 
-            if (!m_shellActive && m_reconnectButton != nullptr) {
-                m_reconnectButton->setEnabled(true);
+            if (!m_shellActive) {
+                setConnectionUiState(QStringLiteral("disconnected"), false, true);
             }
         }
     });
@@ -799,9 +885,7 @@ void WebTerminalTab::disconnectShell()
                 m_bridge->emitStatus(QStringLiteral("Disconnect requested."));
             }
 
-            if (m_statusLabel != nullptr) {
-                m_statusLabel->setText(QStringLiteral("Disconnect requested..."));
-            }
+            setConnectionUiState(QStringLiteral("disconnecting"), false, false);
 
             emit lifecycleStatusChanged(QStringLiteral("Disconnect requested for ") + displayName());
         }
@@ -834,13 +918,7 @@ void WebTerminalTab::reconnectShell()
         m_bridge->emitStatus(QStringLiteral("Reconnect requested. Starting a new SSH shell session..."));
     }
 
-    if (m_statusLabel != nullptr) {
-        m_statusLabel->setText(QStringLiteral("Reconnecting..."));
-    }
-
-    if (m_reconnectButton != nullptr) {
-        m_reconnectButton->setEnabled(false);
-    }
+    setConnectionUiState(QStringLiteral("reconnecting"), false, false);
 
     m_disconnectRequested = false;
     m_shellStarted = false;
@@ -866,26 +944,13 @@ void WebTerminalTab::handleWorkerFinished()
     m_shellActive = false;
     m_shellStarted = false;
     setTerminalInputEnabled(false);
+    setConnectionUiState(QStringLiteral("disconnected"), false, false);
     emit tabTitleChanged(displayName() + QStringLiteral(" ×"));
     emit lifecycleStatusChanged(QStringLiteral("Disconnected: ") + displayName());
-
-    if (m_interruptButton != nullptr) {
-        m_interruptButton->setEnabled(false);
-    }
-
-    if (m_disconnectButton != nullptr) {
-        m_disconnectButton->setEnabled(false);
-    }
-
-    if (m_pasteButton != nullptr) {
-        m_pasteButton->setEnabled(false);
-    }
 
     if (m_bridge != nullptr) {
         m_bridge->emitStatus(QStringLiteral("Shell worker finished. Terminal is disconnected."));
     }
 
-    if (m_statusLabel != nullptr) {
-        m_statusLabel->setText(QStringLiteral("Disconnected."));
-    }
+
 }

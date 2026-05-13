@@ -45,7 +45,7 @@ MainWindow::MainWindow(QWidget *parent)
     setupToolbar();
     setupCentralLayout();
 
-    statusBar()->showMessage("DD-SSH Andromeda ready");
+    statusBar()->showMessage("DD-SSH Andromeda ready — terminal UI/status cleanup");
 
     resize(1100, 700);
 }
@@ -87,7 +87,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: Reconnect disconnected terminal.\n\n")
+            + QStringLiteral("Current phase: Terminal UI and status cleanup.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n")
@@ -317,10 +317,15 @@ void MainWindow::addWelcomeTab()
         "- disconnected xterm.js terminal tabs expose a Reconnect action\n"
         "- reconnect uses the same saved session and plaintext secret\n"
         "- reconnect reuses the existing terminal tab and restores connected controls\n\n"
+        "Current UI/status polish:\n"
+        "- terminal header shows renderer and connection state\n"
+        "- terminal tab controls use clearer labels/tooltips\n"
+        "- status bar mirrors terminal lifecycle events\n"
+        "- terminal tabs keep connected/disconnected markers\n\n"
         "Next milestone:\n"
+        "- Andromeda test matrix documentation\n"
         "- terminal settings polish\n"
-        "- MF 0.2 stabilization pass\n"
-        "- Andromeda test matrix documentation\n\n"
+        "- MF 0.2 stabilization pass\n\n"
         "Codename roadmap:\n"
         "- 0.1.x — Launchpad\n"
         "- 0.2.x — Andromeda\n"

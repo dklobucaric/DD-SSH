@@ -15,6 +15,16 @@ The Welcome screen is intentionally kept as a short current-state dashboard. Det
 1.0.x — Apollo
 ```
 
+
+## dev 0.1.3.8 — Andromeda
+
+**Focus:** Terminal UI and status cleanup.
+
+- Refined the xterm.js terminal header to show renderer, connection state, and PTY resize status more clearly.
+- Replaced long local-action button labels with shorter labels and clearer tooltips.
+- Added a consistent terminal status label showing state and target.
+- Kept the underlying SSH/xterm lifecycle behavior unchanged after the reconnect checkpoint.
+
 ## dev 0.1.3.7 — Andromeda
 
 **Focus:** Reconnect disconnected terminal.
