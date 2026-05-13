@@ -79,7 +79,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: Web terminal focus polish before xterm.js.\n\n")
+            + QStringLiteral("Current phase: First xterm.js terminal renderer.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n\n")
@@ -243,9 +243,11 @@ void MainWindow::addWelcomeTab()
         "- basic saved-session SSH shell channel\n\n"
         "Current terminal options:\n"
         "- Open basic shell: temporary QWidget input/output view\n"
-        "- Open web terminal: keyboard input directly inside terminal area, paste, focus helper, xterm.js-ready fallback renderer\n\n"
+        "- Open xterm.js terminal: first real web terminal renderer with fallback if CDN assets are unavailable\n"
+        "- Open basic shell: temporary QWidget input/output fallback\n\n"
         "Next milestone:\n"
-        "- bundle real xterm.js renderer\n"
+        "- bundle local xterm.js assets for offline builds\n"
+        "- PTY resize / terminal resize handling\n"
         "- stronger persistent session lifecycle handling\n"
     );
 
@@ -273,7 +275,7 @@ void MainWindow::showSessionContextMenu(const QPoint &position)
 
     QMenu menu(this);
     QAction *connectAction = menu.addAction("Connect / auth test");
-    QAction *openWebTerminalAction = menu.addAction("Open web terminal (xterm-ready)");
+    QAction *openWebTerminalAction = menu.addAction("Open xterm.js terminal (dev)");
     QAction *openShellAction = menu.addAction("Open basic shell (fallback)");
     menu.addSeparator();
     QAction *editAction = menu.addAction("Edit session");
@@ -679,7 +681,7 @@ void MainWindow::openSavedSessionShellInternal(const QString &sessionId, bool us
 
     if (useWebTerminal) {
         terminal = new WebTerminalTab(session, secretValue, this);
-        titleSuffix = QStringLiteral(" web");
+        titleSuffix = QStringLiteral(" xterm");
     } else {
         terminal = new BasicTerminalTab(session, secretValue, this);
         titleSuffix = QStringLiteral(" shell");
@@ -690,7 +692,7 @@ void MainWindow::openSavedSessionShellInternal(const QString &sessionId, bool us
 
     statusBar()->showMessage(
         useWebTerminal
-            ? "Opening web terminal for " + tabTitle
+            ? "Opening xterm.js terminal for " + tabTitle
             : "Opening basic shell for " + tabTitle
     );
 }

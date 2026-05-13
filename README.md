@@ -20,7 +20,7 @@ Early versions intentionally do **not** include SFTP, split-screen, cloud accoun
 
 ## Project status
 
-Development checkpoint: `dev 0.1.2.4`.
+Development checkpoint: `dev 0.1.3.0`.
 
 Current working foundation:
 
@@ -35,7 +35,7 @@ Current working foundation:
 - Edit saved sessions while keeping or replacing the saved plaintext secret
 - Duplicate target warning when saving `username@host:port` that already exists
 - Experimental basic saved-session SSH shell channel from the sidebar context menu
-- Experimental web terminal tab that captures keyboard input directly inside the terminal area
+- First xterm.js-based web terminal renderer, with fallback if CDN assets are unavailable
 
 Saved session management is a real DD-SSH feature direction, not just a test helper. The long-term goal is full session CRUD: create/save, load/connect, edit/update, delete, and later import/export from one portable JSON file.
 
@@ -60,4 +60,4 @@ Start here:
 
 ## Current shell limitation
 
-`dev 0.1.2.0` added an experimental basic shell channel using libssh PTY + shell. `dev 0.1.2.1` cleaned up that temporary tab. `dev 0.1.2.3` added the first Qt WebEngine terminal tab with Ctrl+V/Paste button support. `dev 0.1.2.4` fixes the web terminal input dispatch path so keyboard input and pasted text are sent directly into the SSH worker queue instead of relying on queued Qt slots while the worker thread is busy running the shell loop. `dev 0.1.2.5` adds focus polish for the web terminal fallback: the terminal is focused when opened, after paste/Ctrl+C/clear actions, and through an explicit Focus terminal button. This is an xterm.js preparation step with a fallback renderer; it is still **not** the final terminal emulator yet, so full-screen interactive programs like `htop`, `nano`, `vim`, `mc`, and `tmux` are not expected to behave correctly until the real xterm.js renderer is bundled and wired in.
+`dev 0.1.2.0` added an experimental basic shell channel using libssh PTY + shell. `dev 0.1.2.1` cleaned up that temporary tab. `dev 0.1.2.3` added the first Qt WebEngine terminal tab with Ctrl+V/Paste button support. `dev 0.1.2.4` fixed the web terminal input dispatch path. `dev 0.1.2.5` added focus polish. `dev 0.1.3.0` introduces the first xterm.js-based renderer through Qt WebEngine. For this development checkpoint, xterm.js is loaded from a CDN when network access is available and the previous fallback renderer is used if the assets cannot be loaded. Local bundled xterm.js assets are planned for the next polish step. Full-screen apps like `htop`, `nano`, `vim`, `mc`, and `tmux` may still need PTY resize and keyboard handling improvements before they are considered supported.

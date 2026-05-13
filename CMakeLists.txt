@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.24)
 
 project(DD_SSH
-    VERSION 0.1.2
+    VERSION 0.1.3
     DESCRIPTION "A clean cross-platform SSH client and session manager"
     LANGUAGES CXX
 )
 
-set(DD_SSH_VERSION_STRING "dev 0.1.2.5")
+set(DD_SSH_VERSION_STRING "dev 0.1.3.0")
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

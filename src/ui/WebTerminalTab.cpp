@@ -15,6 +15,7 @@
 #include <QUrl>
 #include <QWebChannel>
 #include <QWebEnginePage>
+#include <QWebEngineSettings>
 #include <QWebEngineView>
 
 WebTerminalTab::WebTerminalTab(
@@ -40,6 +41,8 @@ WebTerminalTab::WebTerminalTab(
 
     m_view = new QWebEngineView(this);
     m_view->setFocusPolicy(Qt::StrongFocus);
+    m_view->settings()->setAttribute(QWebEngineSettings::LocalContentCanAccessRemoteUrls, true);
+    m_view->settings()->setAttribute(QWebEngineSettings::JavascriptEnabled, true);
     layout->addWidget(m_view, 1);
 
     auto *buttonLayout = new QHBoxLayout();
@@ -122,8 +125,10 @@ QString WebTerminalTab::terminalHtml() const
 <html>
 <head>
 <meta charset="utf-8">
-<title>DD-SSH Web Terminal</title>
+<title>DD-SSH xterm.js Terminal</title>
 <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.css">
+<script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.js"></script>
 <style>
     :root {
         color-scheme: dark;
@@ -149,9 +154,20 @@ QString WebTerminalTab::terminalHtml() const
         color: #9fb3c8;
         font-size: 12px;
         user-select: none;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
-    #terminal {
+    #terminalHost {
+        box-sizing: border-box;
+        width: 100%;
+        height: calc(100% - 35px);
+        background: #0b0f14;
+        outline: none;
+    }
+
+    #fallbackTerminal {
         box-sizing: border-box;
         width: 100%;
         height: calc(100% - 35px);
@@ -162,27 +178,34 @@ QString WebTerminalTab::terminalHtml() const
         outline: none;
         caret-color: transparent;
         tab-size: 4;
+        display: none;
     }
 
-    #terminal:focus {
+    #fallbackTerminal:focus, #terminalHost:focus-within {
         box-shadow: inset 0 0 0 1px #2f6feb;
     }
 
-    .dim {
-        color: #75879b;
+    .xterm {
+        height: 100%;
+        padding: 8px;
+        box-sizing: border-box;
     }
 </style>
 </head>
 <body>
     <div id="header">
-        DD-SSH Web Terminal fallback for __TARGET__ · focus polish · type directly or use Paste · xterm.js renderer comes next
+        DD-SSH xterm.js terminal for __TARGET__ · CDN dev renderer · fallback renderer used if xterm.js is unavailable
     </div>
-    <div id="terminal" tabindex="0" spellcheck="false"></div>
+    <div id="terminalHost"></div>
+    <div id="fallbackTerminal" tabindex="0" spellcheck="false"></div>
 
 <script>
 (function () {
-    const terminal = document.getElementById('terminal');
+    const terminalHost = document.getElementById('terminalHost');
+    const fallbackTerminal = document.getElementById('fallbackTerminal');
     let bridge = null;
+    let term = null;
+    let usingXterm = false;
 
     function stripAnsi(text) {
         if (!text) {
@@ -190,35 +213,35 @@ QString WebTerminalTab::terminalHtml() const
         }
 
         return text
-            // OSC sequences: ESC ] ... BEL or ESC \\
             .replace(/\x1b\][\s\S]*?(?:\x07|\x1b\\)/g, '')
-            // CSI sequences: ESC [ ... final byte
             .replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, '')
-            // One-character ESC sequences
             .replace(/\x1b[@-Z\\-_]/g, '')
-            // Keep CR from overprinting the fallback display
             .replace(/\r/g, '');
     }
 
-    function appendOutput(text, clean = true) {
+    function fallbackAppend(text, clean = true) {
         const out = clean ? stripAnsi(text) : text;
 
         if (!out) {
             return;
         }
 
-        terminal.appendChild(document.createTextNode(out));
-        terminal.scrollTop = terminal.scrollHeight;
+        fallbackTerminal.appendChild(document.createTextNode(out));
+        fallbackTerminal.scrollTop = fallbackTerminal.scrollHeight;
     }
 
-    window.ddsshFocusTerminal = function () {
-        terminal.focus();
-    };
+    function writeTerminal(text, cleanFallback = true) {
+        if (!text) {
+            return;
+        }
 
-    window.ddsshClearTerminal = function () {
-        terminal.textContent = '';
-        terminal.focus();
-    };
+        if (usingXterm && term) {
+            term.write(text);
+            return;
+        }
+
+        fallbackAppend(text, cleanFallback);
+    }
 
     function sendInput(text) {
         if (!bridge || !text) {
@@ -242,101 +265,170 @@ QString WebTerminalTab::terminalHtml() const
         return String.fromCharCode(code - 64);
     }
 
-    terminal.addEventListener('keydown', function (event) {
-        let input = null;
+    function setupFallbackInput() {
+        terminalHost.style.display = 'none';
+        fallbackTerminal.style.display = 'block';
 
-        if (event.ctrlKey && !event.altKey && !event.metaKey) {
-            if (event.key && event.key.toLowerCase() === 'v') {
-                event.preventDefault();
+        fallbackTerminal.addEventListener('keydown', function (event) {
+            let input = null;
 
-                if (bridge) {
-                    bridge.requestPaste();
+            if (event.ctrlKey && !event.altKey && !event.metaKey) {
+                if (event.key && event.key.toLowerCase() === 'v') {
+                    event.preventDefault();
+
+                    if (bridge) {
+                        bridge.requestPaste();
+                    }
+
+                    return;
                 }
 
-                return;
+                input = ctrlChar(event.key);
+            } else if (!event.altKey && !event.metaKey) {
+                switch (event.key) {
+                    case 'Enter': input = '\n'; break;
+                    case 'Backspace': input = '\x7f'; break;
+                    case 'Tab': input = '\t'; break;
+                    case 'Escape': input = '\x1b'; break;
+                    case 'ArrowUp': input = '\x1b[A'; break;
+                    case 'ArrowDown': input = '\x1b[B'; break;
+                    case 'ArrowRight': input = '\x1b[C'; break;
+                    case 'ArrowLeft': input = '\x1b[D'; break;
+                    case 'Home': input = '\x1b[H'; break;
+                    case 'End': input = '\x1b[F'; break;
+                    case 'Delete': input = '\x1b[3~'; break;
+                    case 'Insert': input = '\x1b[2~'; break;
+                    case 'PageUp': input = '\x1b[5~'; break;
+                    case 'PageDown': input = '\x1b[6~'; break;
+                    default:
+                        if (event.key.length === 1) {
+                            input = event.key;
+                        }
+                        break;
+                }
             }
 
-            input = ctrlChar(event.key);
-        } else if (!event.altKey && !event.metaKey) {
-            switch (event.key) {
-                case 'Enter': input = '\n'; break;
-                case 'Backspace': input = '\x7f'; break;
-                case 'Tab': input = '\t'; break;
-                case 'Escape': input = '\x1b'; break;
-                case 'ArrowUp': input = '\x1b[A'; break;
-                case 'ArrowDown': input = '\x1b[B'; break;
-                case 'ArrowRight': input = '\x1b[C'; break;
-                case 'ArrowLeft': input = '\x1b[D'; break;
-                case 'Home': input = '\x1b[H'; break;
-                case 'End': input = '\x1b[F'; break;
-                case 'Delete': input = '\x1b[3~'; break;
-                case 'Insert': input = '\x1b[2~'; break;
-                case 'PageUp': input = '\x1b[5~'; break;
-                case 'PageDown': input = '\x1b[6~'; break;
-                default:
-                    if (event.key.length === 1) {
-                        input = event.key;
-                    }
-                    break;
+            if (input !== null) {
+                event.preventDefault();
+                sendInput(input);
             }
-        }
+        });
 
-        if (input !== null) {
+        fallbackTerminal.addEventListener('paste', function (event) {
             event.preventDefault();
-            sendInput(input);
-        }
-    });
 
-    terminal.addEventListener('paste', function (event) {
-        event.preventDefault();
+            let text = event.clipboardData ? event.clipboardData.getData('text') : '';
 
-        let text = event.clipboardData ? event.clipboardData.getData('text') : '';
+            if (text) {
+                text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
-        if (text) {
-            text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+                if (text.indexOf('\n') !== -1 && !text.endsWith('\n')) {
+                    text += '\n';
+                }
 
-            if (text.indexOf('\n') !== -1 && !text.endsWith('\n')) {
-                text += '\n';
+                sendInput(text);
             }
+        });
 
-            sendInput(text);
+        fallbackTerminal.addEventListener('mousedown', function () {
+            fallbackTerminal.focus();
+        });
+    }
+
+    function setupXterm() {
+        if (typeof Terminal === 'undefined') {
+            setupFallbackInput();
+            fallbackAppend('DD-SSH xterm.js terminal channel test\n', false);
+            fallbackAppend('Target: __TARGET__\n\n', false);
+            fallbackAppend('xterm.js could not be loaded from the CDN, so DD-SSH is using the fallback renderer.\n', false);
+            fallbackAppend('Network access may be blocked. Local bundled xterm.js assets are planned next.\n\n', false);
+            return;
         }
-    });
 
-    terminal.addEventListener('mousedown', function () {
-        terminal.focus();
-    });
+        usingXterm = true;
+        fallbackTerminal.style.display = 'none';
+        terminalHost.style.display = 'block';
+
+        term = new Terminal({
+            cursorBlink: true,
+            convertEol: true,
+            scrollback: 5000,
+            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace',
+            fontSize: 14,
+            theme: {
+                background: '#0b0f14',
+                foreground: '#d7e0ea',
+                cursor: '#ffffff',
+                selectionBackground: '#264f78'
+            }
+        });
+
+        term.open(terminalHost);
+        term.focus();
+
+        term.writeln('DD-SSH xterm.js terminal channel test');
+        term.writeln('Target: __TARGET__');
+        term.writeln('');
+        term.writeln('This is the first real xterm.js renderer milestone.');
+        term.writeln('ANSI colors and escape sequences should now render much better than the fallback view.');
+        term.writeln('PTY resize/full-screen app polish comes next.');
+        term.writeln('');
+
+        term.onData(function (data) {
+            sendInput(data);
+        });
+
+        terminalHost.addEventListener('mousedown', function () {
+            if (term) {
+                term.focus();
+            }
+        });
+    }
+
+    window.ddsshFocusTerminal = function () {
+        if (usingXterm && term) {
+            term.focus();
+            return;
+        }
+
+        fallbackTerminal.focus();
+    };
+
+    window.ddsshClearTerminal = function () {
+        if (usingXterm && term) {
+            term.clear();
+            term.focus();
+            return;
+        }
+
+        fallbackTerminal.textContent = '';
+        fallbackTerminal.focus();
+    };
 
     document.body.addEventListener('mousedown', function () {
-        terminal.focus();
+        window.ddsshFocusTerminal();
     });
-
-    appendOutput('DD-SSH web terminal channel test\n', false);
-    appendOutput('Target: __TARGET__\n\n', false);
-    appendOutput('This web terminal milestone captures keyboard input directly inside the terminal area.\n', false);
-    appendOutput('Paste works with Ctrl+V or the Paste button. Click the terminal or use Focus terminal if keyboard focus is lost.\n', false);
-    appendOutput('Multiline paste is sent directly to the remote shell.\n', false);
-    appendOutput('It is still using a fallback renderer, not bundled xterm.js yet, so full-screen apps are not expected to be correct.\n\n', false);
 
     new QWebChannel(qt.webChannelTransport, function (channel) {
         bridge = channel.objects.terminalBridge;
 
         bridge.outputReceived.connect(function (text) {
-            appendOutput(text, true);
+            writeTerminal(text, true);
         });
 
         bridge.statusChanged.connect(function (text) {
-            appendOutput('\n[DD-SSH] ' + text + '\n', false);
+            writeTerminal('\r\n[DD-SSH] ' + text + '\r\n', false);
         });
 
         bridge.errorReceived.connect(function (text) {
-            appendOutput('\n[DD-SSH ERROR] ' + text + '\n', false);
+            writeTerminal('\r\n[DD-SSH ERROR] ' + text + '\r\n', false);
         });
 
+        setupXterm();
         bridge.terminalReady();
-        terminal.focus();
-        setTimeout(function () { terminal.focus(); }, 50);
-        setTimeout(function () { terminal.focus(); }, 250);
+        window.ddsshFocusTerminal();
+        setTimeout(function () { window.ddsshFocusTerminal(); }, 50);
+        setTimeout(function () { window.ddsshFocusTerminal(); }, 250);
     });
 }());
 </script>
