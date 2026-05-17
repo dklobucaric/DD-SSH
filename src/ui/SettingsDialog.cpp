@@ -27,12 +27,13 @@ SettingsDialog::SettingsDialog(
     setWindowTitle(QStringLiteral("DD-SSH Settings"));
     setModal(true);
     setSizeGripEnabled(true);
-    setMinimumSize(760, 620);
-    resize(820, 660);
+    setMinimumSize(900, 760);
+    resize(940, 800);
 
     auto *mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(12, 12, 12, 12);
-    mainLayout->setSpacing(10);
+    mainLayout->setContentsMargins(14, 14, 14, 14);
+    mainLayout->setSpacing(12);
+    mainLayout->setSizeConstraint(QLayout::SetMinimumSize);
 
     auto *titleLabel = new QLabel(QStringLiteral("DD-SSH settings"), this);
     titleLabel->setStyleSheet(QStringLiteral("font-weight: bold;"));
@@ -55,6 +56,7 @@ SettingsDialog::SettingsDialog(
     configPathLayout->setContentsMargins(0, 0, 0, 0);
 
     m_configPathEdit = new QLineEdit(configPathRow);
+    m_configPathEdit->setMinimumWidth(520);
     m_configPathEdit->setText(m_configFilePath);
     m_configPathEdit->setReadOnly(true);
 
@@ -67,6 +69,19 @@ SettingsDialog::SettingsDialog(
     m_doubleClickLabel = new QLabel(QStringLiteral("Open xterm.js terminal"), generalGroup);
     generalLayout->addRow(QStringLiteral("Double-click session:"), m_doubleClickLabel);
 
+    m_showQuickToolbarCheck = new QCheckBox(QStringLiteral("Show quick action toolbar"), generalGroup);
+    m_showQuickToolbarCheck->setChecked(settings.showQuickToolbar);
+    m_showQuickToolbarCheck->setToolTip(QStringLiteral("Show the optional toolbar with New Session, Connect, Multi-Exec, and Settings shortcuts."));
+    generalLayout->addRow(QStringLiteral("Interface:"), m_showQuickToolbarCheck);
+
+    auto *toolbarNote = new QLabel(
+        QStringLiteral("When hidden, all actions remain available from the File, Session, Tools, and Help menus."),
+        generalGroup
+    );
+    toolbarNote->setWordWrap(true);
+    generalLayout->addRow(QString(), toolbarNote);
+
+    generalGroup->setMinimumHeight(145);
     mainLayout->addWidget(generalGroup);
 
     auto *appearanceGroup = new QGroupBox(QStringLiteral("Appearance"), this);
@@ -98,6 +113,7 @@ SettingsDialog::SettingsDialog(
     appearanceNote->setWordWrap(true);
     appearanceLayout->addRow(QString(), appearanceNote);
 
+    appearanceGroup->setMinimumHeight(125);
     mainLayout->addWidget(appearanceGroup);
 
     auto *terminalGroup = new QGroupBox(QStringLiteral("Terminal"), this);
@@ -123,6 +139,7 @@ SettingsDialog::SettingsDialog(
     terminalNote->setWordWrap(true);
     terminalLayout->addRow(QString(), terminalNote);
 
+    terminalGroup->setMinimumHeight(125);
     mainLayout->addWidget(terminalGroup);
 
     auto *configSafetyGroup = new QGroupBox(QStringLiteral("Config safety"), this);
@@ -145,6 +162,7 @@ SettingsDialog::SettingsDialog(
     backupNote->setWordWrap(true);
     configSafetyLayout->addRow(QString(), backupNote);
 
+    configSafetyGroup->setMinimumHeight(130);
     mainLayout->addWidget(configSafetyGroup);
 
     auto *warningLabel = new QLabel(
@@ -202,6 +220,7 @@ AppSettings SettingsDialog::settings() const
         ? QStringLiteral("monospace")
         : m_terminalFontFamilyEdit->text().trimmed();
     result.terminalFontSize = m_terminalFontSizeSpin->value();
+    result.showQuickToolbar = (m_showQuickToolbarCheck != nullptr) && m_showQuickToolbarCheck->isChecked();
     result.configBackupsEnabled = m_configBackupsCheck->isChecked();
     result.maxConfigBackups = m_maxBackupsSpin->value();
     result.doubleClickAction = QStringLiteral("open_terminal");

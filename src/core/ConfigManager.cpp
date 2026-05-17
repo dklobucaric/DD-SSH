@@ -522,6 +522,10 @@ void ConfigManager::ensureBaseObjects(QJsonObject *root) const
         behaviorSettings.insert(QStringLiteral("double_click_action"), QStringLiteral("open_terminal"));
     }
 
+    if (!behaviorSettings.contains(QStringLiteral("show_quick_toolbar"))) {
+        behaviorSettings.insert(QStringLiteral("show_quick_toolbar"), false);
+    }
+
     settings.insert(QStringLiteral("behavior"), behaviorSettings);
 
     root->insert(QStringLiteral("settings"), settings);
@@ -718,6 +722,7 @@ AppSettings ConfigManager::loadSettings(QString *errorMessage) const
     settings.doubleClickAction = doubleClickAction.isEmpty()
         ? QStringLiteral("open_terminal")
         : doubleClickAction;
+    settings.showQuickToolbar = behavior.value(QStringLiteral("show_quick_toolbar")).toBool(false);
 
     return settings;
 }
@@ -764,6 +769,7 @@ bool ConfigManager::saveSettings(const AppSettings &settings, QString *errorMess
             ? QStringLiteral("open_terminal")
             : settings.doubleClickAction.trimmed()
     );
+    behavior.insert(QStringLiteral("show_quick_toolbar"), settings.showQuickToolbar);
     settingsObject.insert(QStringLiteral("behavior"), behavior);
 
     root.insert(QStringLiteral("settings"), settingsObject);

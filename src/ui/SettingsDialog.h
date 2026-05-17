@@ -29,6 +29,7 @@ private:
     QComboBox *m_appThemeCombo = nullptr;
     QLineEdit *m_terminalFontFamilyEdit = nullptr;
     QSpinBox *m_terminalFontSizeSpin = nullptr;
+    QCheckBox *m_showQuickToolbarCheck = nullptr;
     QCheckBox *m_configBackupsCheck = nullptr;
     QSpinBox *m_maxBackupsSpin = nullptr;
     QLabel *m_doubleClickLabel = nullptr;

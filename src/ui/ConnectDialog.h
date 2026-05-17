@@ -18,6 +18,13 @@ public:
         PrivateKey
     };
 
+    enum class DialogMode
+    {
+        ManualConnect,
+        NewSession,
+        EditSession
+    };
+
     explicit ConnectDialog(QWidget *parent = nullptr);
 
     QString host() const;
@@ -31,6 +38,8 @@ public:
     QString sessionName() const;
     QString groupName() const;
 
+    void setDialogMode(DialogMode mode);
+    DialogMode dialogMode() const;
     void setEditMode(bool editMode);
     bool isEditMode() const;
     void setConnectionFields(
@@ -49,6 +58,7 @@ private:
     void updateSaveFields();
     void refreshDefaultSessionName();
 
+    DialogMode m_mode = DialogMode::ManualConnect;
     bool m_editMode = false;
 
     QLabel *m_titleLabel = nullptr;

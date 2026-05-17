@@ -1,3 +1,23 @@
+## dev 0.1.4.7 — Andromeda
+
+- Hides the quick action toolbar by default for a cleaner, menu-driven public-alpha UI.
+- Adds `Settings → General → Show quick action toolbar` so the shortcut toolbar can be restored when desired.
+- Persists toolbar visibility under `settings.behavior.show_quick_toolbar` in `dd-ssh.json`.
+- Keeps all toolbar actions available through the File, Session, Tools, and Help menus.
+- Updates Welcome, README, config-format notes, and test matrix for the new behavior.
+
+## dev 0.1.4.6 — Andromeda
+
+- Polishes the menu/dialog UX around session workflows.
+- Simplifies the File menu to app-level behavior: Exit only for now.
+- Moves session actions under the Session menu: New Session, Connect / Auth test, and Edit selected session.
+- Keeps toolbar shortcuts for New Session, Connect, Multi-Exec, and Settings.
+- Adds explicit ConnectDialog modes:
+  - Manual Connect: temporary/manual auth test, optional save.
+  - New Saved Session: creates a saved session after successful auth.
+  - Edit Saved Session: updates an existing saved session and preserves secrets when password/key fields are left empty.
+- Updates the Welcome screen to document the new Session menu behavior.
+
 ## dev 0.1.4.5.1 — Andromeda
 
 **Focus:** Config recovery actions.

@@ -63,13 +63,14 @@ When saving a new session, DD-SSH should warn if another session already uses th
       "max_backups": 10
     },
     "behavior": {
-      "double_click_action": "open_terminal"
+      "double_click_action": "open_terminal",
+      "show_quick_toolbar": false
     }
   }
 }
 ```
 
-App theme values are `system`, `light`, or `dark`. The app theme affects the Qt application chrome only; xterm.js terminal colors are intentionally not changed in this checkpoint. Terminal font settings apply to newly opened xterm.js terminal tabs. Starting with `dev 0.1.4.2`, the config safety backup policy is active: when backups are enabled, DD-SSH creates timestamped `dd-ssh.json.bak-*` files before saving and keeps the newest `max_backups` files.
+App theme values are `system`, `light`, or `dark`. The app theme affects the Qt application chrome only; xterm.js terminal colors are intentionally not changed in this checkpoint. Terminal font settings apply to newly opened xterm.js terminal tabs. Starting with `dev 0.1.4.2`, the config safety backup policy is active: when backups are enabled, DD-SSH creates timestamped `dd-ssh.json.bak-*` files before saving and keeps the newest `max_backups` files. Starting with `dev 0.1.4.7`, `settings.behavior.show_quick_toolbar` controls whether the optional quick action toolbar is visible. It defaults to `false` so the main window stays menu-driven and cleaner for public-alpha testing.
 
 Default config location notes:
 
@@ -94,3 +95,9 @@ dd-ssh.json.bak-YYYYMMDD-HHMMSS-zzz
 ```
 
 The recovery warning lists available `dd-ssh.json.bak-*` files in the config folder so the user can restore one manually. Automatic restore UI is intentionally deferred.
+
+## Session workflow note — dev 0.1.4.6+
+
+`dev 0.1.4.6` clarifies UI behavior around the existing session/config model. Manual Connect may optionally save a session after successful authentication, while New Session always creates or updates a saved session after successful authentication. Edit Session updates an existing `sessions[]` entry and keeps the existing plaintext secret when password/key fields are left empty.
+
+`dev 0.1.4.7` adds the optional `settings.behavior.show_quick_toolbar` value. It does not affect saved sessions, secrets, or known-host records; it only controls whether the shortcut toolbar is shown in the main window.

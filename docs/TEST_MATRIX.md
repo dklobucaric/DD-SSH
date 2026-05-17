@@ -1,6 +1,6 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.4.5.1 — Andromeda  
+**Checkpoint:** dev 0.1.4.7 — Andromeda  
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
 
 This document tracks the manually confirmed test coverage for the current Andromeda development line.
@@ -25,7 +25,7 @@ TODO      Not implemented or not tested yet
 |---|---|---|---|
 | Build | `cmake --build build --clean-first` | Build completes and links `dd-ssh` | PASS |
 | About dialog | Help → About DD-SSH | Shows version, codename, milestone, libssh version, and config path | PASS |
-| Version | About dialog | Shows `dev 0.1.4.5.1` | PASS |
+| Version | About dialog | Shows `dev 0.1.4.7` | PASS |
 | Codename | About dialog | Shows `Andromeda` | PASS |
 | Milestone | About dialog | Shows `MF 0.2 candidate` | PASS |
 
@@ -158,3 +158,15 @@ Before tagging a future `v0.2.0 — Andromeda`, confirm:
 ```
 
 When these are all confirmed, DD-SSH has a strong claim to the **MF 0.2 — Real Terminal Foundation** milestone.
+
+
+## Session menu/dialog polish — dev 0.1.4.6
+
+| Area | Test | Expected result | Status |
+| --- | --- | --- | --- |
+| File menu | Open File menu | Only app-level actions are shown; File currently contains Exit | TODO |
+| Session menu | New Session | Opens New Saved Session dialog with save required | TODO |
+| Session menu | Connect / Auth test | Opens Manual Connect dialog with save optional | TODO |
+| Session menu | Edit selected session | Edits the selected saved session or warns if none is selected | TODO |
+| Context menu | Edit session | Existing sidebar context-menu edit flow still works | TODO |
+| Regression | Double-click saved session | Opens xterm.js terminal by default | TODO |

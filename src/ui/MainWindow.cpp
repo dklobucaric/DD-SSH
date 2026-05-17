@@ -228,9 +228,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     setupMenus();
     setupToolbar();
+    applyQuickToolbarVisibility(startupSettings.showQuickToolbar);
     setupCentralLayout();
 
-    statusBar()->showMessage("DD-SSH Andromeda ready — config recovery actions");
+    statusBar()->showMessage("DD-SSH Andromeda ready — quick toolbar visibility polish");
 
     resize(1100, 700);
     showConfigRecoveryWarningIfNeeded();
@@ -251,6 +252,15 @@ void MainWindow::applyAppTheme(const QString &themeName)
     }
 
     qApp->setStyleSheet(QString());
+}
+
+void MainWindow::applyQuickToolbarVisibility(bool showQuickToolbar)
+{
+    if (m_mainToolBar == nullptr) {
+        return;
+    }
+
+    m_mainToolBar->setVisible(showQuickToolbar);
 }
 
 void MainWindow::openConfigFolder()
@@ -358,6 +368,7 @@ bool MainWindow::showConfigRecoveryDialog(const ConfigInspection &inspection)
 
         if (settingsError.isEmpty()) {
             applyAppTheme(restoredSettings.appTheme);
+            applyQuickToolbarVisibility(restoredSettings.showQuickToolbar);
         }
 
         QMessageBox::information(
@@ -402,6 +413,7 @@ bool MainWindow::showConfigRecoveryDialog(const ConfigInspection &inspection)
 
         loadSavedSessionsToSidebar();
         applyAppTheme(QStringLiteral("system"));
+        applyQuickToolbarVisibility(false);
         QMessageBox::information(
             this,
             QStringLiteral("Fresh config created"),
@@ -420,21 +432,24 @@ void MainWindow::setupMenus()
 {
     auto *fileMenu = menuBar()->addMenu("&File");
 
-    auto *newSessionAction = fileMenu->addAction("New Session");
-    connect(newSessionAction, &QAction::triggered, this, [this]() {
-        showConnectDialog();
-    });
-
-    fileMenu->addSeparator();
-
     auto *exitAction = fileMenu->addAction("Exit");
     connect(exitAction, &QAction::triggered, this, &QWidget::close);
 
     auto *sessionMenu = menuBar()->addMenu("&Session");
 
-    auto *connectAction = sessionMenu->addAction("Connect");
+    auto *newSessionAction = sessionMenu->addAction("New Session");
+    connect(newSessionAction, &QAction::triggered, this, [this]() {
+        showNewSessionDialog();
+    });
+
+    auto *connectAction = sessionMenu->addAction("Connect / Auth test");
     connect(connectAction, &QAction::triggered, this, [this]() {
-        showConnectDialog();
+        showManualConnectDialog();
+    });
+
+    auto *editSelectedAction = sessionMenu->addAction("Edit selected session");
+    connect(editSelectedAction, &QAction::triggered, this, [this]() {
+        editSelectedSession();
     });
 
     auto *toolsMenu = menuBar()->addMenu("&Tools");
@@ -460,7 +475,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: Config recovery actions.\n\n")
+            + QStringLiteral("Current phase: Quick toolbar visibility polish.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n")
@@ -485,17 +500,19 @@ void MainWindow::setupMenus()
 
 void MainWindow::setupToolbar()
 {
-    auto *toolbar = addToolBar("Main Toolbar");
+    auto *toolbar = addToolBar("Quick Action Toolbar");
+    toolbar->setObjectName(QStringLiteral("quickActionToolbar"));
     toolbar->setMovable(false);
+    m_mainToolBar = toolbar;
 
     auto *newSessionAction = toolbar->addAction("New Session");
     connect(newSessionAction, &QAction::triggered, this, [this]() {
-        showConnectDialog();
+        showNewSessionDialog();
     });
 
     auto *connectAction = toolbar->addAction("Connect");
     connect(connectAction, &QAction::triggered, this, [this]() {
-        showConnectDialog();
+        showManualConnectDialog();
     });
 
     toolbar->addSeparator();
@@ -711,8 +728,13 @@ void MainWindow::addWelcomeTab()
         "- startup shows a clear recovery warning and can open the config folder\n"
         "- available dd-ssh.json.bak-* files are listed in the recovery warning\n"
         "- the app can continue with default in-memory settings until the file is fixed\n\n"
+        "Current session/menu polish:\n"
+        "- File menu is reserved for app/config-level actions and currently only contains Exit\n"
+        "- Session menu owns session actions: New Session, Connect / Auth test, Edit selected session\n"
+        "- New Session creates a saved session after successful auth\n"
+        "- Connect / Auth test is a temporary/manual connection test, with optional save\n"
+        "- Edit Session updates an existing saved session from the selected sidebar item or context menu\n\n"
         "Next milestone:\n"
-        "- session dialog mode polish\n"
         "- settings behavior polish\n"
         "- MF 0.2 stabilization pass\n"
         "- prepare v0.2.0 Andromeda milestone notes\n\n"
@@ -769,6 +791,27 @@ void MainWindow::showSessionContextMenu(const QPoint &position)
     } else if (selectedAction == deleteAction) {
         deleteSavedSession(sessionId);
     }
+}
+
+void MainWindow::editSelectedSession()
+{
+    if (m_sessionList == nullptr) {
+        return;
+    }
+
+    QListWidgetItem *item = m_sessionList->currentItem();
+
+    if (item == nullptr || item->data(Qt::UserRole).toString().trimmed().isEmpty()) {
+        QMessageBox::information(
+            this,
+            QStringLiteral("No saved session selected"),
+            QStringLiteral("Select a saved session in the sidebar first, then choose Session → Edit selected session.")
+        );
+        statusBar()->showMessage(QStringLiteral("Edit selected session: no saved session selected"));
+        return;
+    }
+
+    editSavedSession(item->data(Qt::UserRole).toString());
 }
 
 void MainWindow::editSavedSession(const QString &sessionId)
@@ -1646,15 +1689,29 @@ void MainWindow::showSettingsDialog()
     }
 
     applyAppTheme(newSettings.appTheme);
-    statusBar()->showMessage(QStringLiteral("Settings saved to dd-ssh.json. App theme applied. New terminal font settings apply to newly opened terminals."));
+    applyQuickToolbarVisibility(newSettings.showQuickToolbar);
+    statusBar()->showMessage(QStringLiteral("Settings saved to dd-ssh.json. App theme and quick toolbar visibility applied. New terminal font settings apply to newly opened terminals."));
 }
 
-void MainWindow::showConnectDialog()
+void MainWindow::showNewSessionDialog()
+{
+    showConnectDialog(true);
+}
+
+void MainWindow::showManualConnectDialog()
+{
+    showConnectDialog(false);
+}
+
+void MainWindow::showConnectDialog(bool newSavedSessionMode)
 {
     ConnectDialog dialog(this);
+    dialog.setDialogMode(newSavedSessionMode
+        ? ConnectDialog::DialogMode::NewSession
+        : ConnectDialog::DialogMode::ManualConnect);
 
     if (dialog.exec() != QDialog::Accepted) {
-        statusBar()->showMessage("Connection dialog cancelled");
+        statusBar()->showMessage(newSavedSessionMode ? "New session dialog cancelled" : "Manual connect dialog cancelled");
         return;
     }
 
@@ -1822,7 +1879,9 @@ void MainWindow::showConnectDialog()
 
     QString output;
 
-    output += QStringLiteral("DD-SSH manual connection test\n\n");
+    output += newSavedSessionMode
+        ? QStringLiteral("DD-SSH new saved session auth test\n\n")
+        : QStringLiteral("DD-SSH manual connection test\n\n");
     output += QStringLiteral("Host: ") + dialog.host() + QStringLiteral("\n");
     output += QStringLiteral("Port: ") + QString::number(dialog.port()) + QStringLiteral("\n");
     output += QStringLiteral("Username: ") + dialog.username() + QStringLiteral("\n");

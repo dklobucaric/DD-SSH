@@ -17,13 +17,13 @@
 ConnectDialog::ConnectDialog(QWidget *parent)
     : QDialog(parent)
 {
-    setWindowTitle("Connect to SSH server");
+    setWindowTitle("Manual SSH connect / auth test");
     setModal(true);
-    resize(520, 430);
+    resize(560, 460);
 
     auto *mainLayout = new QVBoxLayout(this);
 
-    m_titleLabel = new QLabel("Create a manual SSH connection", this);
+    m_titleLabel = new QLabel("Manual SSH connection/auth test", this);
     m_titleLabel->setStyleSheet("font-weight: bold;");
     mainLayout->addWidget(m_titleLabel);
 
@@ -67,7 +67,7 @@ ConnectDialog::ConnectDialog(QWidget *parent)
     form->addRow("Private key:", keyPathRow);
 
     m_saveConnectionCheck = new QCheckBox("Save this connection", this);
-    m_saveConnectionCheck->setChecked(true);
+    m_saveConnectionCheck->setChecked(false);
     form->addRow("", m_saveConnectionCheck);
 
     m_sessionNameEdit = new QLineEdit(this);
@@ -163,6 +163,7 @@ ConnectDialog::ConnectDialog(QWidget *parent)
         accept();
     });
 
+    setDialogMode(DialogMode::ManualConnect);
     updateAuthFields();
     updateSaveFields();
     refreshDefaultSessionName();
@@ -219,13 +220,15 @@ QString ConnectDialog::groupName() const
     return m_groupEdit->text().trimmed();
 }
 
-void ConnectDialog::setEditMode(bool editMode)
+void ConnectDialog::setDialogMode(DialogMode mode)
 {
-    m_editMode = editMode;
+    m_mode = mode;
+    m_editMode = mode == DialogMode::EditSession;
 
-    if (m_editMode) {
+    if (m_mode == DialogMode::EditSession) {
         setWindowTitle("Edit saved SSH session");
         m_titleLabel->setText("Edit saved SSH session");
+        m_saveConnectionCheck->setText("Save changes to this saved session");
         m_saveConnectionCheck->setChecked(true);
         m_saveConnectionCheck->setEnabled(false);
         m_passwordEdit->setPlaceholderText("Leave empty to keep the saved password");
@@ -234,19 +237,43 @@ void ConnectDialog::setEditMode(bool editMode)
             "Editing a saved session keeps the existing plaintext secret if password/private key is left empty. "
             "Entering a new password or key replaces the saved secret in dd-ssh.json."
         );
+    } else if (m_mode == DialogMode::NewSession) {
+        setWindowTitle("New saved SSH session");
+        m_titleLabel->setText("Create a new saved SSH session");
+        m_saveConnectionCheck->setText("Save this connection to dd-ssh.json");
+        m_saveConnectionCheck->setChecked(true);
+        m_saveConnectionCheck->setEnabled(false);
+        m_passwordEdit->setPlaceholderText("Password to store in plaintext plain-v1 secrets");
+        m_keyPathEdit->setPlaceholderText("~/.ssh/id_ed25519 — file content will be copied into dd-ssh.json");
+        m_plainTextWarningLabel->setText(
+            "New Session creates a saved session after a successful auth test. "
+            "Passwords/private keys are stored in plaintext inside dd-ssh.json in this early portable mode."
+        );
     } else {
-        setWindowTitle("Connect to SSH server");
-        m_titleLabel->setText("Create a manual SSH connection");
+        setWindowTitle("Manual SSH connect / auth test");
+        m_titleLabel->setText("Manual SSH connection/auth test");
+        m_saveConnectionCheck->setText("Save this connection after successful auth");
+        m_saveConnectionCheck->setChecked(false);
         m_saveConnectionCheck->setEnabled(true);
         m_passwordEdit->setPlaceholderText("Password");
         m_keyPathEdit->setPlaceholderText("~/.ssh/id_ed25519");
         m_plainTextWarningLabel->setText(
-            "Saved passwords/private keys are stored in plaintext inside dd-ssh.json in this early portable mode."
+            "Saving is optional for Manual Connect. If enabled, passwords/private keys are stored in plaintext inside dd-ssh.json."
         );
     }
 
     updateSaveFields();
     updateAuthFields();
+}
+
+ConnectDialog::DialogMode ConnectDialog::dialogMode() const
+{
+    return m_mode;
+}
+
+void ConnectDialog::setEditMode(bool editMode)
+{
+    setDialogMode(editMode ? DialogMode::EditSession : DialogMode::ManualConnect);
 }
 
 bool ConnectDialog::isEditMode() const
