@@ -99,3 +99,17 @@ exit
 ```
 
 For lifecycle changes, also test remote reboot/disconnect and reconnect.
+
+
+## Public alpha documentation
+
+When changing user-facing behavior during the Andromeda alpha line, update the relevant docs:
+
+- README.md
+- docs/CHANGELOG.md
+- docs/TEST_MATRIX.md
+- docs/SECURITY_NOTES.md if secrets/config behavior changes
+- docs/CONFIG_FORMAT.md if JSON structure changes
+- docs/PUBLIC_ALPHA_CHECKLIST.md if release validation changes
+
+Do not mark a test as PASS unless it was actually confirmed.

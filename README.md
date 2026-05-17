@@ -17,16 +17,35 @@ DD-SSH is designed for practical sysadmin use: saved sessions, one portable JSON
 
 ## Current status
 
-**Development checkpoint:** `dev 0.1.4.9`  
+**Development checkpoint:** `dev 0.1.5.0`  
 **Codename:** Andromeda  
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation  
-**Current phase:** Public alpha documentation pass
+**Current phase:** Public alpha release preparation
 
 DD-SSH is now close to a **public alpha**. It is not a stable 1.0 release yet, but the core workflow is functional and tested on Linux:
 
 ```text
 saved session → plaintext secret from dd-ssh.json → known_hosts check → SSH auth → xterm.js terminal → PTY resize → real shell
 ```
+
+---
+
+## Public alpha preparation
+
+The current development line is preparing for a public alpha tag:
+
+```text
+v0.2.0-alpha — Andromeda
+MF 0.2 — Real Terminal Foundation
+```
+
+Before tagging, run:
+
+- [Public Alpha Checklist](docs/PUBLIC_ALPHA_CHECKLIST.md)
+- [Test Matrix](docs/TEST_MATRIX.md)
+- [Release Notes Draft](docs/RELEASE_NOTES_v0.2.0-alpha.md)
+
+GitHub issue templates are included for bug reports, terminal issues, config/recovery issues, and feature requests.
 
 ---
 
@@ -251,6 +270,7 @@ Start here:
 - [User Guide](docs/USER_GUIDE.md)
 - [Use Cases](docs/USE_CASES.md)
 - [Features and Limitations](docs/FEATURES.md)
+- [Known Limitations](docs/KNOWN_LIMITATIONS.md)
 - [Config Management](docs/CONFIG_MANAGEMENT.md)
 - [Config Format](docs/CONFIG_FORMAT.md)
 - [Security Notes](docs/SECURITY_NOTES.md)
@@ -258,6 +278,8 @@ Start here:
 - [Building](docs/BUILDING.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Test Matrix](docs/TEST_MATRIX.md)
+- [Public Alpha Checklist](docs/PUBLIC_ALPHA_CHECKLIST.md)
+- [Release Notes Draft](docs/RELEASE_NOTES_v0.2.0-alpha.md)
 - [Changelog](docs/CHANGELOG.md)
 
 ---

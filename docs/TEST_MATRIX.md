@@ -1,8 +1,8 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.4.9 — Andromeda  
+**Checkpoint:** dev 0.1.5.0 — Andromeda  
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation  
-**Phase:** Public alpha documentation pass
+**Phase:** Public alpha release preparation
 
 This matrix tracks what has been confirmed manually, what is implemented but should be re-tested before a public alpha tag, and what is still planned.
 
@@ -117,6 +117,9 @@ TODO              Not implemented yet.
 | Config docs current | PASS | CONFIG_FORMAT updated. |
 | Test matrix current | PASS | This file should stay conservative: do not mark untested items PASS. |
 | Changelog current | PASS | CHANGELOG tracks development checkpoints. |
+| Public alpha checklist | PASS | PUBLIC_ALPHA_CHECKLIST documents final pre-alpha gate. |
+| Release notes draft | PASS | RELEASE_NOTES_v0.2.0-alpha.md added for alpha tagging. |
+| GitHub issue templates | PASS | Bug, terminal, config/recovery, and feature request templates added. |
 | Use cases documented | PASS | USE_CASES added. |
 | Troubleshooting documented | PASS | TROUBLESHOOTING added. |
 | Known limitations documented | PASS | Public alpha limitations documented. |

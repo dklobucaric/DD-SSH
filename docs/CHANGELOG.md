@@ -1,5 +1,16 @@
 # DD-SSH Changelog
 
+## dev 0.1.5.0 — Andromeda
+
+Public alpha release preparation.
+
+- Added `docs/PUBLIC_ALPHA_CHECKLIST.md` as the final pre-alpha gate.
+- Added `docs/RELEASE_NOTES_v0.2.0-alpha.md` draft.
+- Added `docs/KNOWN_LIMITATIONS.md` for public tester visibility.
+- Added GitHub issue templates for bug reports, terminal issues, config/recovery issues, and feature requests.
+- Added pull request template with project safety checklist.
+- Updated README, Welcome screen, and test matrix for public alpha preparation.
+
 ## dev 0.1.4.9 — Andromeda
 
 **Focus:** Public alpha documentation pass.

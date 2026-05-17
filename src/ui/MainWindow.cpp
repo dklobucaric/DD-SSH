@@ -232,7 +232,7 @@ MainWindow::MainWindow(QWidget *parent)
     applyQuickToolbarVisibility(startupSettings.showQuickToolbar);
     setupCentralLayout();
 
-    statusBar()->showMessage("DD-SSH Andromeda ready — public alpha documentation pass");
+    statusBar()->showMessage("DD-SSH Andromeda ready — public alpha release preparation");
 
     resize(1100, 700);
     showConfigRecoveryWarningIfNeeded();
@@ -669,7 +669,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: Public alpha documentation pass.\n\n")
+            + QStringLiteral("Current phase: Public alpha release preparation.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n")
@@ -874,7 +874,7 @@ void MainWindow::addWelcomeTab()
         "A clean cross-platform SSH client and session manager.\n\n"
         "Double-click a saved session on the left to open the xterm.js terminal.\n\n"
         "Current milestone:\n"
-        "MF 0.2 candidate — Real Terminal Foundation / public alpha documentation pass\n\n"
+        "MF 0.2 candidate — Real Terminal Foundation / public alpha release preparation\n\n"
         "Working now:\n"
         "- saved sessions loaded from dd-ssh.json\n"
         "- portable plaintext secrets in dd-ssh.json\n"

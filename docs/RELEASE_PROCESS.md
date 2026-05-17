@@ -25,6 +25,9 @@ Before an alpha release:
 - README reflects current status
 - SECURITY_NOTES warns about plaintext secrets
 - TEST_MATRIX is current
+- PUBLIC_ALPHA_CHECKLIST is completed
+- RELEASE_NOTES_v0.2.0-alpha.md is reviewed
+- GitHub issue templates are present
 - CHANGELOG includes latest checkpoint
 - Build works locally
 - Password session test passes

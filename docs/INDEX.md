@@ -35,3 +35,12 @@ Codename: Andromeda
 Milestone: MF 0.2 candidate
 Phase: Public alpha documentation pass
 ```
+
+
+## Public alpha preparation
+
+- [Public Alpha Checklist](PUBLIC_ALPHA_CHECKLIST.md)
+- [Release Notes Draft: v0.2.0-alpha](RELEASE_NOTES_v0.2.0-alpha.md)
+- [Known Limitations](KNOWN_LIMITATIONS.md)
+
+GitHub issue templates live under `.github/ISSUE_TEMPLATE/`.

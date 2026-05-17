@@ -127,3 +127,8 @@ Expected before Apollo:
 - Known limitations clearly documented
 - Encrypted secret storage decision made
 - No known data-loss bugs
+
+
+## Current release-prep step
+
+`dev 0.1.5.0` is the public alpha release preparation checkpoint. It does not add a major runtime feature. It prepares the repository for `v0.2.0-alpha — Andromeda` with release notes, a public alpha checklist, known limitations, and GitHub issue templates.

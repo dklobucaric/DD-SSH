@@ -109,3 +109,13 @@ Report bugs with OS/build/config details.
 ```
 
 It is not yet a stable 1.0 daily-driver release.
+
+
+## Public alpha support docs
+
+The repository now includes public-alpha preparation documents:
+
+- `docs/PUBLIC_ALPHA_CHECKLIST.md`
+- `docs/RELEASE_NOTES_v0.2.0-alpha.md`
+- `docs/KNOWN_LIMITATIONS.md`
+- GitHub issue templates under `.github/ISSUE_TEMPLATE/`
