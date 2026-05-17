@@ -44,6 +44,9 @@ public:
     ConfigInspection inspectConfig() const;
     bool createFreshConfigFromCorrupt(QString *errorMessage = nullptr, QString *movedCorruptPath = nullptr) const;
     bool restoreLatestValidBackup(QString *errorMessage = nullptr, QString *restoredBackupName = nullptr, QString *movedCorruptPath = nullptr) const;
+    bool exportConfigToFile(const QString &targetPath, QString *errorMessage = nullptr) const;
+    bool importConfigFromFile(const QString &sourcePath, QString *errorMessage = nullptr, QString *backupPath = nullptr) const;
+    bool restoreLatestBackupReplacingCurrent(QString *errorMessage = nullptr, QString *restoredBackupName = nullptr, QString *movedCurrentPath = nullptr) const;
 
     AppSettings loadSettings(QString *errorMessage = nullptr) const;
     bool saveSettings(const AppSettings &settings, QString *errorMessage = nullptr) const;

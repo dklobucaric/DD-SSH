@@ -379,6 +379,333 @@ bool ConfigManager::restoreLatestValidBackup(QString *errorMessage, QString *res
     return true;
 }
 
+
+bool ConfigManager::exportConfigToFile(const QString &targetPath, QString *errorMessage) const
+{
+    if (errorMessage != nullptr) {
+        *errorMessage = QString();
+    }
+
+    const QString trimmedTargetPath = targetPath.trimmed();
+
+    if (trimmedTargetPath.isEmpty()) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Export target path is empty.");
+        }
+
+        return false;
+    }
+
+    const ConfigInspection inspection = inspectConfig();
+
+    if (!inspection.exists) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("There is no dd-ssh.json file to export yet.");
+        }
+
+        return false;
+    }
+
+    if (inspection.hasProblem) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("The current dd-ssh.json has a problem and will not be exported automatically. ")
+                + inspection.message;
+        }
+
+        return false;
+    }
+
+    const QFileInfo sourceInfo(configFilePath());
+    const QFileInfo targetInfo(trimmedTargetPath);
+
+    if (sourceInfo.absoluteFilePath() == targetInfo.absoluteFilePath()) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Export target is the active dd-ssh.json file. Choose a different destination.");
+        }
+
+        return false;
+    }
+
+    QDir targetDirectory = targetInfo.dir();
+
+    if (!targetDirectory.exists() && !targetDirectory.mkpath(QStringLiteral("."))) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Could not create export destination folder: ") + targetDirectory.absolutePath();
+        }
+
+        return false;
+    }
+
+    if (targetInfo.exists() && !QFile::remove(trimmedTargetPath)) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Could not replace existing export file: ") + trimmedTargetPath;
+        }
+
+        return false;
+    }
+
+    if (!QFile::copy(configFilePath(), trimmedTargetPath)) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Could not export config to: ") + trimmedTargetPath;
+        }
+
+        return false;
+    }
+
+#if !defined(Q_OS_WIN)
+    QFile::setPermissions(
+        trimmedTargetPath,
+        QFileDevice::ReadOwner | QFileDevice::WriteOwner
+    );
+#endif
+
+    return true;
+}
+
+bool ConfigManager::importConfigFromFile(const QString &sourcePath, QString *errorMessage, QString *backupPath) const
+{
+    if (errorMessage != nullptr) {
+        *errorMessage = QString();
+    }
+
+    if (backupPath != nullptr) {
+        *backupPath = QString();
+    }
+
+    const QString trimmedSourcePath = sourcePath.trimmed();
+
+    if (trimmedSourcePath.isEmpty()) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Import source path is empty.");
+        }
+
+        return false;
+    }
+
+    const QFileInfo sourceInfo(trimmedSourcePath);
+
+    if (!sourceInfo.exists() || !sourceInfo.isFile()) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Import source does not exist: ") + trimmedSourcePath;
+        }
+
+        return false;
+    }
+
+    const QFileInfo currentInfo(configFilePath());
+
+    if (sourceInfo.absoluteFilePath() == currentInfo.absoluteFilePath()) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Import source is already the active dd-ssh.json file.");
+        }
+
+        return false;
+    }
+
+    QFile importFile(trimmedSourcePath);
+
+    if (!importFile.open(QIODevice::ReadOnly)) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Could not read import file: ") + importFile.errorString();
+        }
+
+        return false;
+    }
+
+    QJsonParseError parseError;
+    const QJsonDocument importDocument = QJsonDocument::fromJson(importFile.readAll(), &parseError);
+    importFile.close();
+
+    if (parseError.error != QJsonParseError::NoError) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Import file is not valid JSON: ")
+                + parseError.errorString()
+                + QStringLiteral(" at offset ")
+                + QString::number(parseError.offset)
+                + QStringLiteral(".");
+        }
+
+        return false;
+    }
+
+    if (!importDocument.isObject()) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Import file must contain a JSON object at the root.");
+        }
+
+        return false;
+    }
+
+    const ConfigInspection inspection = inspectConfig();
+
+    if (inspection.hasProblem) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("The current dd-ssh.json has a problem. Use config recovery before importing a replacement. ")
+                + inspection.message;
+        }
+
+        return false;
+    }
+
+    QDir directory(configDirectoryPath());
+
+    if (!directory.exists() && !directory.mkpath(QStringLiteral("."))) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Could not create config directory: ") + directory.absolutePath();
+        }
+
+        return false;
+    }
+
+    QString createdBackupPath;
+
+    if (currentInfo.exists() && currentInfo.isFile()) {
+        const QString timestamp = QDateTime::currentDateTimeUtc().toString(QStringLiteral("yyyyMMdd-HHmmss-zzz"));
+        createdBackupPath = directory.filePath(QStringLiteral("dd-ssh.json.bak-import-") + timestamp);
+
+        int counter = 2;
+        while (QFileInfo::exists(createdBackupPath)) {
+            createdBackupPath = directory.filePath(
+                QStringLiteral("dd-ssh.json.bak-import-")
+                + timestamp
+                + QStringLiteral("-")
+                + QString::number(counter++)
+            );
+        }
+
+        if (!QFile::copy(configFilePath(), createdBackupPath)) {
+            if (errorMessage != nullptr) {
+                *errorMessage = QStringLiteral("Could not create pre-import backup: ") + createdBackupPath;
+            }
+
+            return false;
+        }
+
+#if !defined(Q_OS_WIN)
+        QFile::setPermissions(
+            createdBackupPath,
+            QFileDevice::ReadOwner | QFileDevice::WriteOwner
+        );
+#endif
+    }
+
+    QJsonObject root = importDocument.object();
+    ensureBaseObjects(&root);
+
+    QJsonObject metadata = root.value(QStringLiteral("metadata")).toObject();
+    metadata.insert(QStringLiteral("last_imported_at"), QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
+    metadata.insert(QStringLiteral("last_imported_from"), sourceInfo.absoluteFilePath());
+
+    if (!createdBackupPath.isEmpty()) {
+        metadata.insert(QStringLiteral("pre_import_backup"), createdBackupPath);
+    }
+
+    root.insert(QStringLiteral("metadata"), metadata);
+
+    if (!writeRootObjectWithoutBackup(root, errorMessage)) {
+        return false;
+    }
+
+    if (backupPath != nullptr) {
+        *backupPath = createdBackupPath;
+    }
+
+    return true;
+}
+
+
+bool ConfigManager::restoreLatestBackupReplacingCurrent(QString *errorMessage, QString *restoredBackupName, QString *movedCurrentPath) const
+{
+    if (errorMessage != nullptr) {
+        *errorMessage = QString();
+    }
+
+    if (restoredBackupName != nullptr) {
+        *restoredBackupName = QString();
+    }
+
+    if (movedCurrentPath != nullptr) {
+        *movedCurrentPath = QString();
+    }
+
+    const ConfigInspection inspection = inspectConfig();
+
+    if (inspection.hasProblem) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("The current dd-ssh.json has a problem. Use the startup recovery dialog before restoring from the File menu. ")
+                + inspection.message;
+        }
+
+        return false;
+    }
+
+    QDir directory(configDirectoryPath());
+
+    if (!directory.exists()) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Config directory does not exist: ") + configDirectoryPath();
+        }
+
+        return false;
+    }
+
+    const QFileInfoList backups = directory.entryInfoList(
+        QStringList() << QStringLiteral("dd-ssh.json.bak-*"),
+        QDir::Files,
+        QDir::Time
+    );
+
+    QFileInfo selectedBackup;
+
+    for (const QFileInfo &backup : backups) {
+        if (backupFileIsValidObject(backup.absoluteFilePath())) {
+            selectedBackup = backup;
+            break;
+        }
+    }
+
+    if (!selectedBackup.exists()) {
+        if (errorMessage != nullptr) {
+            *errorMessage = backups.isEmpty()
+                ? QStringLiteral("No dd-ssh.json.bak-* backup files were found.")
+                : QStringLiteral("Backup files were found, but none of them contain a valid JSON object.");
+        }
+
+        return false;
+    }
+
+    QString movedPath;
+
+    if (!moveExistingConfigAside(QStringLiteral("pre-restore"), &movedPath, errorMessage)) {
+        return false;
+    }
+
+    if (!QFile::copy(selectedBackup.absoluteFilePath(), configFilePath())) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Could not restore backup: ") + selectedBackup.fileName();
+        }
+
+        return false;
+    }
+
+#if !defined(Q_OS_WIN)
+    QFile::setPermissions(
+        configFilePath(),
+        QFileDevice::ReadOwner | QFileDevice::WriteOwner
+    );
+#endif
+
+    if (restoredBackupName != nullptr) {
+        *restoredBackupName = selectedBackup.fileName();
+    }
+
+    if (movedCurrentPath != nullptr) {
+        *movedCurrentPath = movedPath;
+    }
+
+    return true;
+}
+
 QString ConfigManager::makeSessionId(
     const QString &name,
     const QString &host,

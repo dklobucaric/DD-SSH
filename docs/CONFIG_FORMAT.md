@@ -70,7 +70,7 @@ When saving a new session, DD-SSH should warn if another session already uses th
 }
 ```
 
-App theme values are `system`, `light`, or `dark`. The app theme affects the Qt application chrome only; xterm.js terminal colors are intentionally not changed in this checkpoint. Terminal font settings apply to newly opened xterm.js terminal tabs. Starting with `dev 0.1.4.2`, the config safety backup policy is active: when backups are enabled, DD-SSH creates timestamped `dd-ssh.json.bak-*` files before saving and keeps the newest `max_backups` files. Starting with `dev 0.1.4.7`, `settings.behavior.show_quick_toolbar` controls whether the optional quick action toolbar is visible. It defaults to `false` so the main window stays menu-driven and cleaner for public-alpha testing.
+App theme values are `system`, `light`, or `dark`. The app theme affects the Qt application chrome only; xterm.js terminal colors are intentionally not changed in this checkpoint. Terminal font settings apply to newly opened xterm.js terminal tabs. Starting with `dev 0.1.4.2`, the config safety backup policy is active: when backups are enabled, DD-SSH creates timestamped `dd-ssh.json.bak-*` files before saving and keeps the newest `max_backups` files. Starting with `dev 0.1.4.7`, `settings.behavior.show_quick_toolbar` controls whether the optional quick action toolbar is visible. It defaults to `false` so the main window stays menu-driven and cleaner for public-alpha testing. Starting with `dev 0.1.4.8`, the File menu can export the active `dd-ssh.json`, import a validated replacement config with a pre-import backup, and restore the latest valid `dd-ssh.json.bak-*` backup.
 
 Default config location notes:
 
@@ -101,3 +101,27 @@ The recovery warning lists available `dd-ssh.json.bak-*` files in the config fol
 `dev 0.1.4.6` clarifies UI behavior around the existing session/config model. Manual Connect may optionally save a session after successful authentication, while New Session always creates or updates a saved session after successful authentication. Edit Session updates an existing `sessions[]` entry and keeps the existing plaintext secret when password/key fields are left empty.
 
 `dev 0.1.4.7` adds the optional `settings.behavior.show_quick_toolbar` value. It does not affect saved sessions, secrets, or known-host records; it only controls whether the shortcut toolbar is shown in the main window.
+
+## Config import/export behavior
+
+`dev 0.1.4.8` adds File-menu config import/export/restore actions. These operate on the complete `dd-ssh.json` file, not just visual settings. That means exported/imported configs include sessions, known-host records, plaintext secrets, settings, and metadata.
+
+Import safety rules:
+
+```text
+- selected import file must be valid JSON
+- root JSON value must be an object
+- current config must not be corrupt; use recovery first if it is
+- current config is copied to dd-ssh.json.bak-import-* before replacement
+- imported config is normalized with the base app/settings/sessions/secrets objects
+```
+
+Restore behavior:
+
+```text
+- Restore Latest Backup picks the newest valid dd-ssh.json.bak-* file
+- the active config is moved aside as dd-ssh.json.pre-restore-*
+- the selected backup becomes the active dd-ssh.json
+```
+
+Security reminder: exported configs may contain plaintext passwords and private keys when `secrets.mode = "plain-v1"`.

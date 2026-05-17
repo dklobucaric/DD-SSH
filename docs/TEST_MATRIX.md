@@ -1,6 +1,6 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.4.7 — Andromeda  
+**Checkpoint:** dev 0.1.4.8 — Andromeda
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
 
 This document tracks the manually confirmed test coverage for the current Andromeda development line.
@@ -25,7 +25,7 @@ TODO      Not implemented or not tested yet
 |---|---|---|---|
 | Build | `cmake --build build --clean-first` | Build completes and links `dd-ssh` | PASS |
 | About dialog | Help → About DD-SSH | Shows version, codename, milestone, libssh version, and config path | PASS |
-| Version | About dialog | Shows `dev 0.1.4.7` | PASS |
+| Version | About dialog | Shows `dev 0.1.4.8` | PASS |
 | Codename | About dialog | Shows `Andromeda` | PASS |
 | Milestone | About dialog | Shows `MF 0.2 candidate` | PASS |
 
@@ -170,3 +170,12 @@ When these are all confirmed, DD-SSH has a strong claim to the **MF 0.2 — Real
 | Session menu | Edit selected session | Edits the selected saved session or warns if none is selected | TODO |
 | Context menu | Edit session | Existing sidebar context-menu edit flow still works | TODO |
 | Regression | Double-click saved session | Opens xterm.js terminal by default | TODO |
+
+## Config import/export checks
+
+| Area | Test | Expected result | Status |
+| --- | --- | --- | --- |
+| Export Config | File → Export Config... | Active `dd-ssh.json` is copied to selected destination; warning reminds user that plaintext secrets may be included | TBD |
+| Import Config | File → Import Config... with valid JSON object | Current config is backed up as `dd-ssh.json.bak-import-*`, imported config becomes active, settings/sessions reload | TBD |
+| Import guard | Import invalid JSON | Import is rejected; active config remains unchanged | TBD |
+| Restore Latest Backup | File → Restore Latest Backup... | Newest valid backup is restored; previous active config is moved aside as `dd-ssh.json.pre-restore-*` | TBD |

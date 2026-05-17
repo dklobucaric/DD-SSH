@@ -25,6 +25,9 @@ private:
     void showConfigRecoveryWarningIfNeeded();
     bool showConfigRecoveryDialog(const ConfigInspection &inspection);
     void openConfigFolder();
+    void exportConfig();
+    void importConfig();
+    void restoreLatestConfigBackup();
     void showNewSessionDialog();
     void showManualConnectDialog();
     void showConnectDialog(bool newSavedSessionMode);

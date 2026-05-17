@@ -1,3 +1,11 @@
+## dev 0.1.4.8 — Andromeda
+
+- Added File-menu config actions: Open Config Folder, Export Config, Import Config, Restore Latest Backup, and Exit.
+- Export Config copies the active `dd-ssh.json` to a user-selected path and warns that exported configs may contain plaintext passwords and private keys.
+- Import Config validates the selected JSON file, warns before replacing sessions/secrets/known_hosts/settings, creates a pre-import backup of the active config, then reloads settings and saved sessions.
+- Restore Latest Backup replaces the active config with the newest valid `dd-ssh.json.bak-*` backup and moves the previous active config aside as `dd-ssh.json.pre-restore-*`.
+- Updated Welcome status text for config import/export support.
+
 ## dev 0.1.4.7 — Andromeda
 
 - Hides the quick action toolbar by default for a cleaner, menu-driven public-alpha UI.

@@ -15,6 +15,7 @@
 #include <QDesktopServices>
 #include <QFile>
 #include <QFileDevice>
+#include <QFileDialog>
 #include <QFontDatabase>
 #include <QListWidget>
 #include <QListWidgetItem>
@@ -231,7 +232,7 @@ MainWindow::MainWindow(QWidget *parent)
     applyQuickToolbarVisibility(startupSettings.showQuickToolbar);
     setupCentralLayout();
 
-    statusBar()->showMessage("DD-SSH Andromeda ready — quick toolbar visibility polish");
+    statusBar()->showMessage("DD-SSH Andromeda ready — config import/export polish");
 
     resize(1100, 700);
     showConfigRecoveryWarningIfNeeded();
@@ -273,6 +274,175 @@ void MainWindow::openConfigFolder()
     }
 
     QDesktopServices::openUrl(QUrl::fromLocalFile(directory.absolutePath()));
+}
+
+
+void MainWindow::exportConfig()
+{
+    ConfigManager config;
+
+    QString defaultFileName = QDir::home().filePath(QStringLiteral("dd-ssh-export.json"));
+    const QString targetPath = QFileDialog::getSaveFileName(
+        this,
+        QStringLiteral("Export DD-SSH config"),
+        defaultFileName,
+        QStringLiteral("JSON files (*.json);;All files (*)")
+    );
+
+    if (targetPath.trimmed().isEmpty()) {
+        return;
+    }
+
+    QString errorMessage;
+
+    if (!config.exportConfigToFile(targetPath, &errorMessage)) {
+        QMessageBox::critical(
+            this,
+            QStringLiteral("Export config failed — DD-SSH"),
+            errorMessage
+        );
+        statusBar()->showMessage(QStringLiteral("Config export failed"));
+        return;
+    }
+
+    QMessageBox::information(
+        this,
+        QStringLiteral("Config exported — DD-SSH"),
+        QStringLiteral("DD-SSH config was exported to:\n%1\n\nSecurity note: exported configs may contain plaintext passwords and private keys.")
+            .arg(targetPath)
+    );
+    statusBar()->showMessage(QStringLiteral("Config exported to %1").arg(targetPath));
+}
+
+void MainWindow::importConfig()
+{
+    ConfigManager config;
+
+    const QString sourcePath = QFileDialog::getOpenFileName(
+        this,
+        QStringLiteral("Import DD-SSH config"),
+        QDir::homePath(),
+        QStringLiteral("JSON files (*.json);;All files (*)")
+    );
+
+    if (sourcePath.trimmed().isEmpty()) {
+        return;
+    }
+
+    const QMessageBox::StandardButton decision = QMessageBox::warning(
+        this,
+        QStringLiteral("Import config — DD-SSH"),
+        QStringLiteral(
+            "Importing a config will replace the active dd-ssh.json.\n\n"
+            "This includes saved sessions, plaintext secrets, known_hosts, settings, and metadata.\n\n"
+            "DD-SSH will create a pre-import backup of the current config before replacing it.\n\n"
+            "Import file:\n%1\n\n"
+            "Continue?"
+        ).arg(sourcePath),
+        QMessageBox::Yes | QMessageBox::Cancel,
+        QMessageBox::Cancel
+    );
+
+    if (decision != QMessageBox::Yes) {
+        statusBar()->showMessage(QStringLiteral("Config import cancelled"));
+        return;
+    }
+
+    QString errorMessage;
+    QString backupPath;
+
+    if (!config.importConfigFromFile(sourcePath, &errorMessage, &backupPath)) {
+        QMessageBox::critical(
+            this,
+            QStringLiteral("Import config failed — DD-SSH"),
+            errorMessage
+        );
+        statusBar()->showMessage(QStringLiteral("Config import failed"));
+        return;
+    }
+
+    QString info = QStringLiteral("DD-SSH config was imported from:\n%1").arg(sourcePath);
+
+    if (!backupPath.isEmpty()) {
+        info += QStringLiteral("\n\nPrevious config backup created at:\n%1").arg(backupPath);
+    }
+
+    QMessageBox::information(
+        this,
+        QStringLiteral("Config imported — DD-SSH"),
+        info
+    );
+
+    QString settingsError;
+    const AppSettings settings = config.loadSettings(&settingsError);
+
+    if (settingsError.isEmpty()) {
+        applyAppTheme(settings.appTheme);
+        applyQuickToolbarVisibility(settings.showQuickToolbar);
+    }
+
+    loadSavedSessionsToSidebar();
+    statusBar()->showMessage(QStringLiteral("Config imported. Saved sessions and settings reloaded."));
+}
+
+
+void MainWindow::restoreLatestConfigBackup()
+{
+    ConfigManager config;
+
+    const QMessageBox::StandardButton decision = QMessageBox::warning(
+        this,
+        QStringLiteral("Restore latest config backup — DD-SSH"),
+        QStringLiteral(
+            "This will replace the active dd-ssh.json with the newest valid dd-ssh.json.bak-* backup.\n\n"
+            "The current config will be moved aside first as dd-ssh.json.pre-restore-<timestamp>.\n\n"
+            "Continue?"
+        ),
+        QMessageBox::Yes | QMessageBox::Cancel,
+        QMessageBox::Cancel
+    );
+
+    if (decision != QMessageBox::Yes) {
+        statusBar()->showMessage(QStringLiteral("Config backup restore cancelled"));
+        return;
+    }
+
+    QString errorMessage;
+    QString restoredBackupName;
+    QString movedCurrentPath;
+
+    if (!config.restoreLatestBackupReplacingCurrent(&errorMessage, &restoredBackupName, &movedCurrentPath)) {
+        QMessageBox::critical(
+            this,
+            QStringLiteral("Restore backup failed — DD-SSH"),
+            errorMessage
+        );
+        statusBar()->showMessage(QStringLiteral("Config backup restore failed"));
+        return;
+    }
+
+    QString info = QStringLiteral("Restored latest valid backup:\n%1").arg(restoredBackupName);
+
+    if (!movedCurrentPath.isEmpty()) {
+        info += QStringLiteral("\n\nPrevious active config moved to:\n%1").arg(movedCurrentPath);
+    }
+
+    QMessageBox::information(
+        this,
+        QStringLiteral("Backup restored — DD-SSH"),
+        info
+    );
+
+    QString settingsError;
+    const AppSettings settings = config.loadSettings(&settingsError);
+
+    if (settingsError.isEmpty()) {
+        applyAppTheme(settings.appTheme);
+        applyQuickToolbarVisibility(settings.showQuickToolbar);
+    }
+
+    loadSavedSessionsToSidebar();
+    statusBar()->showMessage(QStringLiteral("Latest config backup restored. Saved sessions and settings reloaded."));
 }
 
 void MainWindow::showConfigRecoveryWarningIfNeeded()
@@ -432,6 +602,30 @@ void MainWindow::setupMenus()
 {
     auto *fileMenu = menuBar()->addMenu("&File");
 
+    auto *openConfigFolderAction = fileMenu->addAction("Open Config Folder");
+    connect(openConfigFolderAction, &QAction::triggered, this, [this]() {
+        openConfigFolder();
+    });
+
+    fileMenu->addSeparator();
+
+    auto *exportConfigAction = fileMenu->addAction("Export Config...");
+    connect(exportConfigAction, &QAction::triggered, this, [this]() {
+        exportConfig();
+    });
+
+    auto *importConfigAction = fileMenu->addAction("Import Config...");
+    connect(importConfigAction, &QAction::triggered, this, [this]() {
+        importConfig();
+    });
+
+    auto *restoreBackupAction = fileMenu->addAction("Restore Latest Backup...");
+    connect(restoreBackupAction, &QAction::triggered, this, [this]() {
+        restoreLatestConfigBackup();
+    });
+
+    fileMenu->addSeparator();
+
     auto *exitAction = fileMenu->addAction("Exit");
     connect(exitAction, &QAction::triggered, this, &QWidget::close);
 
@@ -475,7 +669,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: Quick toolbar visibility polish.\n\n")
+            + QStringLiteral("Current phase: Config import and export polish.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n")
@@ -722,6 +916,7 @@ void MainWindow::addWelcomeTab()
         "- Settings dialog stores terminal font and config safety options\n"
         "- Linux config path now uses DD-LAB/DD-SSH casing\n"
         "- rotating config backups can be enabled/limited from Settings\n"
+        "- File menu can export/import dd-ssh.json and restore the latest backup\n"
         "- app appearance supports System, Light, and Dark modes\n\n"
         "Current config recovery behavior:\n"
         "- invalid dd-ssh.json is never overwritten automatically\n"
@@ -729,13 +924,13 @@ void MainWindow::addWelcomeTab()
         "- available dd-ssh.json.bak-* files are listed in the recovery warning\n"
         "- the app can continue with default in-memory settings until the file is fixed\n\n"
         "Current session/menu polish:\n"
-        "- File menu is reserved for app/config-level actions and currently only contains Exit\n"
+        "- File menu owns app/config actions: open folder, export, import, restore backup, exit\n"
         "- Session menu owns session actions: New Session, Connect / Auth test, Edit selected session\n"
         "- New Session creates a saved session after successful auth\n"
         "- Connect / Auth test is a temporary/manual connection test, with optional save\n"
         "- Edit Session updates an existing saved session from the selected sidebar item or context menu\n\n"
         "Next milestone:\n"
-        "- settings behavior polish\n"
+        "- config import/export test pass\n"
         "- MF 0.2 stabilization pass\n"
         "- prepare v0.2.0 Andromeda milestone notes\n\n"
         "Codename roadmap:\n"
