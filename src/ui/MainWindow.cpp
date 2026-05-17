@@ -87,7 +87,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: Terminal UI and status cleanup.\n\n")
+            + QStringLiteral("Current phase: Andromeda test matrix documentation.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n")
@@ -322,10 +322,15 @@ void MainWindow::addWelcomeTab()
         "- terminal tab controls use clearer labels/tooltips\n"
         "- status bar mirrors terminal lifecycle events\n"
         "- terminal tabs keep connected/disconnected markers\n\n"
+        "Current test documentation:\n"
+        "- docs/TEST_MATRIX.md records confirmed Andromeda terminal tests\n"
+        "- password and private-key login are tracked separately\n"
+        "- terminal app tests include htop, nano, vim, top, clear, and stty size\n"
+        "- lifecycle tests include remote reboot/disconnect and reconnect\n\n"
         "Next milestone:\n"
-        "- Andromeda test matrix documentation\n"
         "- terminal settings polish\n"
-        "- MF 0.2 stabilization pass\n\n"
+        "- MF 0.2 stabilization pass\n"
+        "- prepare v0.2.0 Andromeda milestone notes\n\n"
         "Codename roadmap:\n"
         "- 0.1.x — Launchpad\n"
         "- 0.2.x — Andromeda\n"

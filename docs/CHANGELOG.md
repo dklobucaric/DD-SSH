@@ -15,6 +15,13 @@ The Welcome screen is intentionally kept as a short current-state dashboard. Det
 1.0.x — Apollo
 ```
 
+## dev 0.1.3.9 — Andromeda
+
+**Focus:** Andromeda test matrix documentation.
+
+- Added `docs/TEST_MATRIX.md` as the validation checklist for the MF 0.2 / Real Terminal Foundation candidate.
+- Captured confirmed tests for password login, private-key login, local xterm.js renderer, SSH PTY resize, terminal apps, lifecycle handling, remote reboot detection, and reconnect.
+- Kept code behavior unchanged; this checkpoint documents the tested state before the final MF 0.2 stabilization pass.
 
 ## dev 0.1.3.8 — Andromeda
 
