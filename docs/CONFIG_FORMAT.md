@@ -43,3 +43,37 @@ When saving a new session, DD-SSH should warn if another session already uses th
 ## Saved session shell channel
 
 `dev 0.1.2.0` can open an experimental shell channel from a saved session. `dev 0.1.2.1` cleans up the temporary shell UI. `dev 0.1.2.3` adds a Qt WebEngine terminal fallback with paste support as preparation for xterm.js. `dev 0.1.2.4` fixes direct input/paste dispatch in that fallback terminal. `dev 0.1.2.5` adds focus polish for the fallback terminal. `dev 0.1.3.0` introduced the first xterm.js renderer path while keeping the fallback renderer if xterm.js assets cannot be loaded. `dev 0.1.3.1` adds xterm FitAddon plus SSH PTY resize sync. `dev 0.1.3.2.2` fixes the local xterm.js/FitAddon Qt resource paths for offline runtime use. `dev 0.1.3.3` adds the Andromeda terminal compatibility polish and still does not change the JSON format. The session still resolves authentication through `auth.secret_ref` or `auth.key_ref` and loads the plaintext value from `secrets.items` when `secrets.mode` is `plain-v1`.
+
+## Settings block
+
+`dev 0.1.4.0` introduces the first Settings foundation. The settings block is intentionally small and safe:
+
+```json
+{
+  "settings": {
+    "terminal": {
+      "font_family": "monospace",
+      "font_size": 14
+    },
+    "config_safety": {
+      "backups_enabled": true,
+      "max_backups": 10
+    },
+    "behavior": {
+      "double_click_action": "open_terminal"
+    }
+  }
+}
+```
+
+Terminal font settings apply to newly opened xterm.js terminal tabs. Starting with `dev 0.1.4.2`, the config safety backup policy is active: when backups are enabled, DD-SSH creates timestamped `dd-ssh.json.bak-*` files before saving and keeps the newest `max_backups` files.
+
+Default config location notes:
+
+```text
+Linux:   ~/.config/DD-LAB/DD-SSH/dd-ssh.json
+Windows: Qt AppConfigLocation / per-user AppData-style config folder
+macOS:   Qt AppConfigLocation / per-user Application Support-style config folder
+```
+
+The exact Windows/macOS base directory is selected by Qt through `QStandardPaths::AppConfigLocation`; DD-SSH does not write next to the executable unless a future portable-mode feature is added.

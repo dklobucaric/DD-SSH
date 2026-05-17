@@ -46,6 +46,9 @@ WebTerminalTab::WebTerminalTab(
     , m_session(session)
     , m_secretValue(secretValue)
 {
+    ConfigManager config;
+    m_appSettings = config.loadSettings();
+
     auto *layout = new QVBoxLayout(this);
 
     const QString target =
@@ -254,7 +257,7 @@ QString WebTerminalTab::terminalHtml() const
         background: #0b0f14;
         color: #d7e0ea;
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-        font-size: 14px;
+        font-size: __FONT_SIZE__px;
     }
 
     #header {
@@ -530,8 +533,8 @@ QString WebTerminalTab::terminalHtml() const
             cursorBlink: true,
             convertEol: true,
             scrollback: 5000,
-            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace',
-            fontSize: 14,
+            fontFamily: __FONT_FAMILY_JS__,
+            fontSize: __FONT_SIZE__,
             theme: {
                 background: '#0b0f14',
                 foreground: '#d7e0ea',
@@ -659,7 +662,12 @@ QString WebTerminalTab::terminalHtml() const
 </script>
 </body>
 </html>
-)HTML").replace(QStringLiteral("__TARGET__"), target.toHtmlEscaped());
+)HTML")
+        .replace(QStringLiteral("__TARGET__"), target.toHtmlEscaped())
+        .replace(QStringLiteral("__FONT_FAMILY_JS__"), javaScriptStringLiteral(m_appSettings.terminalFontFamily.trimmed().isEmpty()
+            ? QStringLiteral("monospace")
+            : m_appSettings.terminalFontFamily.trimmed()))
+        .replace(QStringLiteral("__FONT_SIZE__"), QString::number(m_appSettings.terminalFontSize));
 }
 
 void WebTerminalTab::startShell()

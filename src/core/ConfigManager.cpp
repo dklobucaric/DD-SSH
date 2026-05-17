@@ -4,6 +4,7 @@
 #include <QDir>
 #include <QFile>
 #include <QFileDevice>
+#include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -11,6 +12,22 @@
 #include <QSaveFile>
 #include <QSet>
 #include <QStandardPaths>
+#include <QStringList>
+
+namespace {
+int clampInt(int value, int minimum, int maximum)
+{
+    if (value < minimum) {
+        return minimum;
+    }
+
+    if (value > maximum) {
+        return maximum;
+    }
+
+    return value;
+}
+}
 
 ConfigManager::ConfigManager() = default;
 
@@ -127,9 +144,41 @@ void ConfigManager::ensureBaseObjects(QJsonObject *root) const
 
     root->insert(QStringLiteral("app"), app);
 
-    if (!root->value(QStringLiteral("settings")).isObject()) {
-        root->insert(QStringLiteral("settings"), QJsonObject());
+    QJsonObject settings = root->value(QStringLiteral("settings")).toObject();
+
+    QJsonObject terminalSettings = settings.value(QStringLiteral("terminal")).toObject();
+
+    if (!terminalSettings.contains(QStringLiteral("font_family"))) {
+        terminalSettings.insert(QStringLiteral("font_family"), QStringLiteral("monospace"));
     }
+
+    if (!terminalSettings.contains(QStringLiteral("font_size"))) {
+        terminalSettings.insert(QStringLiteral("font_size"), 14);
+    }
+
+    settings.insert(QStringLiteral("terminal"), terminalSettings);
+
+    QJsonObject configSafetySettings = settings.value(QStringLiteral("config_safety")).toObject();
+
+    if (!configSafetySettings.contains(QStringLiteral("backups_enabled"))) {
+        configSafetySettings.insert(QStringLiteral("backups_enabled"), true);
+    }
+
+    if (!configSafetySettings.contains(QStringLiteral("max_backups"))) {
+        configSafetySettings.insert(QStringLiteral("max_backups"), 10);
+    }
+
+    settings.insert(QStringLiteral("config_safety"), configSafetySettings);
+
+    QJsonObject behaviorSettings = settings.value(QStringLiteral("behavior")).toObject();
+
+    if (!behaviorSettings.contains(QStringLiteral("double_click_action"))) {
+        behaviorSettings.insert(QStringLiteral("double_click_action"), QStringLiteral("open_terminal"));
+    }
+
+    settings.insert(QStringLiteral("behavior"), behaviorSettings);
+
+    root->insert(QStringLiteral("settings"), settings);
 
     if (!root->value(QStringLiteral("groups")).isArray()) {
         root->insert(QStringLiteral("groups"), QJsonArray());
@@ -164,6 +213,84 @@ void ConfigManager::ensureBaseObjects(QJsonObject *root) const
     root->insert(QStringLiteral("metadata"), metadata);
 }
 
+
+bool ConfigManager::createConfigBackupIfNeeded(const QJsonObject &root, QString *errorMessage) const
+{
+    if (errorMessage != nullptr) {
+        *errorMessage = QString();
+    }
+
+    const QJsonObject settings = root.value(QStringLiteral("settings")).toObject();
+    const QJsonObject configSafety = settings.value(QStringLiteral("config_safety")).toObject();
+
+    const bool backupsEnabled = configSafety.value(QStringLiteral("backups_enabled")).toBool(true);
+    const int maxBackups = clampInt(configSafety.value(QStringLiteral("max_backups")).toInt(10), 1, 50);
+
+    if (!backupsEnabled) {
+        return true;
+    }
+
+    const QString sourcePath = configFilePath();
+    const QFileInfo sourceInfo(sourcePath);
+
+    if (!sourceInfo.exists() || !sourceInfo.isFile()) {
+        return true;
+    }
+
+    QDir directory(configDirectoryPath());
+
+    if (!directory.exists()) {
+        return true;
+    }
+
+    const QString timestamp = QDateTime::currentDateTimeUtc().toString(QStringLiteral("yyyyMMdd-HHmmss-zzz"));
+    const QString backupPath = directory.filePath(QStringLiteral("dd-ssh.json.bak-") + timestamp);
+
+    if (!QFile::copy(sourcePath, backupPath)) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Could not create config backup before save: ") + backupPath;
+        }
+
+        return false;
+    }
+
+#if !defined(Q_OS_WIN)
+    QFile::setPermissions(
+        backupPath,
+        QFileDevice::ReadOwner | QFileDevice::WriteOwner
+    );
+#endif
+
+    return pruneConfigBackups(maxBackups, errorMessage);
+}
+
+bool ConfigManager::pruneConfigBackups(int maxBackups, QString *errorMessage) const
+{
+    if (errorMessage != nullptr) {
+        *errorMessage = QString();
+    }
+
+    const int keepCount = clampInt(maxBackups, 1, 50);
+    QDir directory(configDirectoryPath());
+
+    const QFileInfoList backups = directory.entryInfoList(
+        QStringList() << QStringLiteral("dd-ssh.json.bak-*"),
+        QDir::Files,
+        QDir::Time
+    );
+
+    for (int i = keepCount; i < backups.size(); ++i) {
+        const QString backupPath = backups.at(i).absoluteFilePath();
+
+        if (!QFile::remove(backupPath) && errorMessage != nullptr && errorMessage->isEmpty()) {
+            *errorMessage = QStringLiteral("Could not remove old config backup: ") + backupPath;
+        }
+    }
+
+    // Backup pruning should not fail the config save if a stale backup could not be removed.
+    return true;
+}
+
 bool ConfigManager::writeRootObject(const QJsonObject &root, QString *errorMessage) const
 {
     QDir directory(configDirectoryPath());
@@ -173,6 +300,10 @@ bool ConfigManager::writeRootObject(const QJsonObject &root, QString *errorMessa
             *errorMessage = QStringLiteral("Could not create config directory: ") + directory.absolutePath();
         }
 
+        return false;
+    }
+
+    if (!createConfigBackupIfNeeded(root, errorMessage)) {
         return false;
     }
 
@@ -201,6 +332,80 @@ bool ConfigManager::writeRootObject(const QJsonObject &root, QString *errorMessa
     secureConfigFilePermissions(&permissionError);
 
     return true;
+}
+
+AppSettings ConfigManager::loadSettings(QString *errorMessage) const
+{
+    if (errorMessage != nullptr) {
+        *errorMessage = QString();
+    }
+
+    AppSettings settings;
+    QJsonObject root;
+
+    if (!readRootObject(&root, errorMessage)) {
+        return settings;
+    }
+
+    ensureBaseObjects(&root);
+
+    const QJsonObject settingsObject = root.value(QStringLiteral("settings")).toObject();
+    const QJsonObject terminal = settingsObject.value(QStringLiteral("terminal")).toObject();
+    const QJsonObject configSafety = settingsObject.value(QStringLiteral("config_safety")).toObject();
+    const QJsonObject behavior = settingsObject.value(QStringLiteral("behavior")).toObject();
+
+    const QString fontFamily = terminal.value(QStringLiteral("font_family")).toString(QStringLiteral("monospace")).trimmed();
+    settings.terminalFontFamily = fontFamily.isEmpty()
+        ? QStringLiteral("monospace")
+        : fontFamily;
+    settings.terminalFontSize = clampInt(terminal.value(QStringLiteral("font_size")).toInt(14), 8, 36);
+    settings.configBackupsEnabled = configSafety.value(QStringLiteral("backups_enabled")).toBool(true);
+    settings.maxConfigBackups = clampInt(configSafety.value(QStringLiteral("max_backups")).toInt(10), 1, 50);
+
+    const QString doubleClickAction = behavior.value(QStringLiteral("double_click_action")).toString(QStringLiteral("open_terminal")).trimmed();
+    settings.doubleClickAction = doubleClickAction.isEmpty()
+        ? QStringLiteral("open_terminal")
+        : doubleClickAction;
+
+    return settings;
+}
+
+bool ConfigManager::saveSettings(const AppSettings &settings, QString *errorMessage) const
+{
+    QJsonObject root;
+
+    if (!readRootObject(&root, errorMessage)) {
+        return false;
+    }
+
+    ensureBaseObjects(&root);
+
+    QJsonObject settingsObject = root.value(QStringLiteral("settings")).toObject();
+
+    QJsonObject terminal = settingsObject.value(QStringLiteral("terminal")).toObject();
+    const QString fontFamily = settings.terminalFontFamily.trimmed().isEmpty()
+        ? QStringLiteral("monospace")
+        : settings.terminalFontFamily.trimmed();
+    terminal.insert(QStringLiteral("font_family"), fontFamily);
+    terminal.insert(QStringLiteral("font_size"), clampInt(settings.terminalFontSize, 8, 36));
+    settingsObject.insert(QStringLiteral("terminal"), terminal);
+
+    QJsonObject configSafety = settingsObject.value(QStringLiteral("config_safety")).toObject();
+    configSafety.insert(QStringLiteral("backups_enabled"), settings.configBackupsEnabled);
+    configSafety.insert(QStringLiteral("max_backups"), clampInt(settings.maxConfigBackups, 1, 50));
+    settingsObject.insert(QStringLiteral("config_safety"), configSafety);
+
+    QJsonObject behavior = settingsObject.value(QStringLiteral("behavior")).toObject();
+    behavior.insert(
+        QStringLiteral("double_click_action"),
+        settings.doubleClickAction.trimmed().isEmpty()
+            ? QStringLiteral("open_terminal")
+            : settings.doubleClickAction.trimmed()
+    );
+    settingsObject.insert(QStringLiteral("behavior"), behavior);
+
+    root.insert(QStringLiteral("settings"), settingsObject);
+    return writeRootObject(root, errorMessage);
 }
 
 bool ConfigManager::secureConfigFilePermissions(QString *errorMessage) const

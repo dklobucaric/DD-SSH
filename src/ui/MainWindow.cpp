@@ -2,6 +2,7 @@
 #include "ConnectDialog.h"
 #include "BasicTerminalTab.h"
 #include "WebTerminalTab.h"
+#include "SettingsDialog.h"
 #include "core/ConfigManager.h"
 #include "core/KnownHostsManager.h"
 #include "core/SessionProfile.h"
@@ -45,7 +46,7 @@ MainWindow::MainWindow(QWidget *parent)
     setupToolbar();
     setupCentralLayout();
 
-    statusBar()->showMessage("DD-SSH Andromeda ready — terminal UI/status cleanup");
+    statusBar()->showMessage("DD-SSH Andromeda ready — settings foundation");
 
     resize(1100, 700);
 }
@@ -78,6 +79,13 @@ void MainWindow::setupMenus()
         statusBar()->showMessage("Multi-Exec placeholder clicked");
     });
 
+    toolsMenu->addSeparator();
+
+    auto *settingsMenuAction = toolsMenu->addAction("Settings");
+    connect(settingsMenuAction, &QAction::triggered, this, [this]() {
+        showSettingsDialog();
+    });
+
     auto *helpMenu = menuBar()->addMenu("&Help");
 
     auto *aboutAction = helpMenu->addAction("About DD-SSH");
@@ -87,7 +95,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: Andromeda test matrix documentation.\n\n")
+            + QStringLiteral("Current phase: Config path and backup policy implementation.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n")
@@ -136,7 +144,7 @@ void MainWindow::setupToolbar()
 
     auto *settingsAction = toolbar->addAction("Settings");
     connect(settingsAction, &QAction::triggered, this, [this]() {
-        statusBar()->showMessage("Settings placeholder clicked");
+        showSettingsDialog();
     });
 }
 
@@ -327,7 +335,12 @@ void MainWindow::addWelcomeTab()
         "- password and private-key login are tracked separately\n"
         "- terminal app tests include htop, nano, vim, top, clear, and stty size\n"
         "- lifecycle tests include remote reboot/disconnect and reconnect\n\n"
+        "Current settings/config polish:\n"
+        "- Settings dialog stores terminal font and config safety options\n"
+        "- Linux config path now uses DD-LAB/DD-SSH casing\n"
+        "- rotating config backups can be enabled/limited from Settings\n\n"
         "Next milestone:\n"
+        "- config recovery/corrupt JSON handling\n"
         "- terminal settings polish\n"
         "- MF 0.2 stabilization pass\n"
         "- prepare v0.2.0 Andromeda milestone notes\n\n"
@@ -1197,6 +1210,44 @@ void MainWindow::testSavedSession(const QString &sessionId)
     } else {
         statusBar()->showMessage("Saved session handshake failed for " + tabTitle);
     }
+}
+
+void MainWindow::showSettingsDialog()
+{
+    ConfigManager config;
+    QString loadError;
+    const AppSettings currentSettings = config.loadSettings(&loadError);
+
+    if (!loadError.isEmpty()) {
+        QMessageBox::warning(
+            this,
+            QStringLiteral("Could not load settings"),
+            loadError
+        );
+        statusBar()->showMessage(QStringLiteral("Could not load settings from dd-ssh.json"));
+        return;
+    }
+
+    SettingsDialog dialog(currentSettings, config.configFilePath(), this);
+
+    if (dialog.exec() != QDialog::Accepted) {
+        statusBar()->showMessage(QStringLiteral("Settings cancelled"));
+        return;
+    }
+
+    QString saveError;
+
+    if (!config.saveSettings(dialog.settings(), &saveError)) {
+        QMessageBox::warning(
+            this,
+            QStringLiteral("Could not save settings"),
+            saveError
+        );
+        statusBar()->showMessage(QStringLiteral("Could not save settings to dd-ssh.json"));
+        return;
+    }
+
+    statusBar()->showMessage(QStringLiteral("Settings saved to dd-ssh.json. New terminal settings apply to newly opened terminals."));
 }
 
 void MainWindow::showConnectDialog()

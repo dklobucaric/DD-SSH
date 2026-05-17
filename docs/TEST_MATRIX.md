@@ -1,6 +1,6 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.3.9 — Andromeda  
+**Checkpoint:** dev 0.1.4.2 — Andromeda  
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
 
 This document tracks the manually confirmed test coverage for the current Andromeda development line.
@@ -25,7 +25,7 @@ TODO      Not implemented or not tested yet
 |---|---|---|---|
 | Build | `cmake --build build --clean-first` | Build completes and links `dd-ssh` | PASS |
 | About dialog | Help → About DD-SSH | Shows version, codename, milestone, libssh version, and config path | PASS |
-| Version | About dialog | Shows `dev 0.1.3.9` | PASS |
+| Version | About dialog | Shows `dev 0.1.4.2` | PASS |
 | Codename | About dialog | Shows `Andromeda` | PASS |
 | Milestone | About dialog | Shows `MF 0.2 candidate` | PASS |
 
@@ -45,6 +45,9 @@ TODO      Not implemented or not tested yet
 | Duplicate warning | Save same username + host + port | Offers Update existing / Create copy / Cancel | PASS |
 | Session edit | Context menu → Edit session | Existing session can be modified | PASS |
 | Session delete | Context menu → Delete session | Session is removed; known_hosts stays preserved | PASS |
+| Settings save | Toolbar/Tools → Settings | Settings are saved under `settings` in `dd-ssh.json` | TODO |
+| Terminal font settings | Change font size, open new terminal | Newly opened xterm.js tab uses the configured font size | TODO |
+| Settings dialog layout | Open Settings from toolbar or Tools menu | Dialog opens at a readable size without manual resizing | PASS |
 
 ---
 

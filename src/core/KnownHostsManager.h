@@ -2,6 +2,8 @@
 
 #include <QString>
 
+class QJsonObject;
+
 class KnownHostsManager
 {
 public:
@@ -42,4 +44,6 @@ public:
 private:
     QString makeHostKey(const QString &host, int port) const;
     QString configDirectoryPath() const;
+    bool createConfigBackupIfNeeded(const QJsonObject &root, QString *errorMessage = nullptr) const;
+    bool pruneConfigBackups(int maxBackups, QString *errorMessage = nullptr) const;
 };

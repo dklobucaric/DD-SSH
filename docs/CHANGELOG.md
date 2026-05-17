@@ -15,6 +15,38 @@ The Welcome screen is intentionally kept as a short current-state dashboard. Det
 1.0.x — Apollo
 ```
 
+## dev 0.1.4.2 — Andromeda
+
+**Focus:** Config path casing and rotating backup policy implementation.
+
+- Changed the application organization name from `DD-Lab` to `DD-LAB`, so new default Linux config path resolves to `~/.config/DD-LAB/DD-SSH/dd-ssh.json`.
+- Implemented rotating `dd-ssh.json.bak-*` backups before config saves when backups are enabled in Settings.
+- Backup retention now follows `settings.config_safety.max_backups`.
+- Backup files are kept owner read/write only on Unix-like systems where Qt permissions apply.
+- Updated the Settings dialog text to state that backup creation is active, not merely planned.
+- Kept SSH/session/xterm behavior unchanged.
+
+## dev 0.1.4.1 — Andromeda
+
+**Focus:** Settings dialog sizing polish.
+
+- Increased the default and minimum Settings dialog size so the first open is readable without manual resizing.
+- Enabled the dialog size grip so the user can still resize it when desired.
+- Added slightly better spacing and expanding form fields in the Settings dialog.
+- Kept the plaintext secrets warning, config path display, toolbar Settings action, Tools → Settings action, and settings storage behavior unchanged.
+- No SSH/session/xterm behavior changes.
+
+## dev 0.1.4.0 — Andromeda
+
+**Focus:** Settings foundation.
+
+- Added a Settings dialog available from the toolbar and Tools menu.
+- Settings are saved under the top-level `settings` block in `dd-ssh.json`.
+- Added terminal font family and font size settings; changes apply to newly opened xterm.js terminal tabs.
+- Added config safety settings for enabling backups and keeping the last N backups. This checkpoint stores the policy; rotating backup creation is planned next.
+- Settings shows the active config file path and an explicit plaintext secrets warning.
+- Kept SSH, session CRUD, xterm.js, PTY resize, reconnect, and lifecycle behavior unchanged.
+
 ## dev 0.1.3.9 — Andromeda
 
 **Focus:** Andromeda test matrix documentation.

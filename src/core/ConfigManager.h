@@ -5,6 +5,15 @@
 #include <QList>
 #include <QString>
 
+struct AppSettings
+{
+    QString terminalFontFamily = QStringLiteral("monospace");
+    int terminalFontSize = 14;
+    bool configBackupsEnabled = true;
+    int maxConfigBackups = 10;
+    QString doubleClickAction = QStringLiteral("open_terminal");
+};
+
 class QJsonObject;
 
 class ConfigManager
@@ -14,6 +23,9 @@ public:
 
     QString configDirectoryPath() const;
     QString configFilePath() const;
+
+    AppSettings loadSettings(QString *errorMessage = nullptr) const;
+    bool saveSettings(const AppSettings &settings, QString *errorMessage = nullptr) const;
 
     QList<SessionProfile> loadSessions(QString *errorMessage = nullptr) const;
     QList<SessionProfile> findSessionsByTarget(
@@ -75,5 +87,7 @@ public:
 private:
     bool readRootObject(QJsonObject *root, QString *errorMessage = nullptr) const;
     bool writeRootObject(const QJsonObject &root, QString *errorMessage = nullptr) const;
+    bool createConfigBackupIfNeeded(const QJsonObject &root, QString *errorMessage = nullptr) const;
+    bool pruneConfigBackups(int maxBackups, QString *errorMessage = nullptr) const;
     void ensureBaseObjects(QJsonObject *root) const;
 };

@@ -4,10 +4,28 @@
 #include <QDir>
 #include <QFile>
 #include <QFileDevice>
+#include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSaveFile>
 #include <QStandardPaths>
+#include <QStringList>
+
+
+namespace {
+int clampBackupCount(int value)
+{
+    if (value < 1) {
+        return 1;
+    }
+
+    if (value > 50) {
+        return 50;
+    }
+
+    return value;
+}
+}
 
 KnownHostsManager::KnownHostsManager() = default;
 
@@ -82,6 +100,83 @@ KnownHostsManager::CheckResult KnownHostsManager::checkHost(
 
     result.status = HostStatus::Changed;
     return result;
+}
+
+
+bool KnownHostsManager::createConfigBackupIfNeeded(const QJsonObject &root, QString *errorMessage) const
+{
+    if (errorMessage != nullptr) {
+        *errorMessage = QString();
+    }
+
+    const QJsonObject settings = root.value(QStringLiteral("settings")).toObject();
+    const QJsonObject configSafety = settings.value(QStringLiteral("config_safety")).toObject();
+
+    const bool backupsEnabled = configSafety.value(QStringLiteral("backups_enabled")).toBool(true);
+    const int maxBackups = clampBackupCount(configSafety.value(QStringLiteral("max_backups")).toInt(10));
+
+    if (!backupsEnabled) {
+        return true;
+    }
+
+    const QString sourcePath = configFilePath();
+    const QFileInfo sourceInfo(sourcePath);
+
+    if (!sourceInfo.exists() || !sourceInfo.isFile()) {
+        return true;
+    }
+
+    QDir directory(configDirectoryPath());
+
+    if (!directory.exists()) {
+        return true;
+    }
+
+    const QString timestamp = QDateTime::currentDateTimeUtc().toString(QStringLiteral("yyyyMMdd-HHmmss-zzz"));
+    const QString backupPath = directory.filePath(QStringLiteral("dd-ssh.json.bak-") + timestamp);
+
+    if (!QFile::copy(sourcePath, backupPath)) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Could not create config backup before saving known_hosts: ") + backupPath;
+        }
+
+        return false;
+    }
+
+#if !defined(Q_OS_WIN)
+    QFile::setPermissions(
+        backupPath,
+        QFileDevice::ReadOwner | QFileDevice::WriteOwner
+    );
+#endif
+
+    return pruneConfigBackups(maxBackups, errorMessage);
+}
+
+bool KnownHostsManager::pruneConfigBackups(int maxBackups, QString *errorMessage) const
+{
+    if (errorMessage != nullptr) {
+        *errorMessage = QString();
+    }
+
+    const int keepCount = clampBackupCount(maxBackups);
+    QDir directory(configDirectoryPath());
+
+    const QFileInfoList backups = directory.entryInfoList(
+        QStringList() << QStringLiteral("dd-ssh.json.bak-*"),
+        QDir::Files,
+        QDir::Time
+    );
+
+    for (int i = keepCount; i < backups.size(); ++i) {
+        const QString backupPath = backups.at(i).absoluteFilePath();
+
+        if (!QFile::remove(backupPath) && errorMessage != nullptr && errorMessage->isEmpty()) {
+            *errorMessage = QStringLiteral("Could not remove old config backup: ") + backupPath;
+        }
+    }
+
+    return true;
 }
 
 bool KnownHostsManager::trustHost(
@@ -159,6 +254,10 @@ bool KnownHostsManager::trustHost(
     QJsonObject metadata = root.value(QStringLiteral("metadata")).toObject();
     metadata.insert(QStringLiteral("last_modified"), nowUtc);
     root.insert(QStringLiteral("metadata"), metadata);
+
+    if (!createConfigBackupIfNeeded(root, errorMessage)) {
+        return false;
+    }
 
     QSaveFile saveFile(configFilePath());
 

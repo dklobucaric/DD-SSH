@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
     QApplication::setApplicationName("DD-SSH");
     QApplication::setApplicationDisplayName("DD-SSH");
     QApplication::setApplicationVersion(QStringLiteral(DD_SSH_VERSION_STRING));
-    QApplication::setOrganizationName("DD-Lab");
+    QApplication::setOrganizationName("DD-LAB");
 
     MainWindow window;
     window.show();

@@ -19,6 +19,7 @@ private:
     void loadSavedSessionsToSidebar();
     void addWelcomeTab();
     void showConnectDialog();
+    void showSettingsDialog();
     void testSavedSession(const QString &sessionId);
     void openSavedSessionShell(const QString &sessionId);
     void openSavedSessionWebTerminal(const QString &sessionId);

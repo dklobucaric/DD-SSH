@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/SessionProfile.h"
+#include "core/ConfigManager.h"
 
 #include <QWidget>
 
@@ -58,6 +59,7 @@ private:
 
     SessionProfile m_session;
     QString m_secretValue;
+    AppSettings m_appSettings;
 
     QLabel *m_statusLabel = nullptr;
     QWebEngineView *m_view = nullptr;
