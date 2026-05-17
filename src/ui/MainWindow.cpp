@@ -12,6 +12,7 @@
 #include <QAction>
 #include <QApplication>
 #include <QCoreApplication>
+#include <QDesktopServices>
 #include <QFile>
 #include <QFileDevice>
 #include <QFontDatabase>
@@ -28,6 +29,7 @@
 #include <QTemporaryFile>
 #include <QTextEdit>
 #include <QToolBar>
+#include <QUrl>
 
 #ifndef DD_SSH_CODENAME_STRING
 #define DD_SSH_CODENAME_STRING "unnamed"
@@ -228,9 +230,10 @@ MainWindow::MainWindow(QWidget *parent)
     setupToolbar();
     setupCentralLayout();
 
-    statusBar()->showMessage("DD-SSH Andromeda ready — app theme foundation");
+    statusBar()->showMessage("DD-SSH Andromeda ready — config recovery actions");
 
     resize(1100, 700);
+    showConfigRecoveryWarningIfNeeded();
 }
 
 void MainWindow::applyAppTheme(const QString &themeName)
@@ -248,6 +251,169 @@ void MainWindow::applyAppTheme(const QString &themeName)
     }
 
     qApp->setStyleSheet(QString());
+}
+
+void MainWindow::openConfigFolder()
+{
+    ConfigManager config;
+    QDir directory(config.configDirectoryPath());
+
+    if (!directory.exists()) {
+        directory.mkpath(QStringLiteral("."));
+    }
+
+    QDesktopServices::openUrl(QUrl::fromLocalFile(directory.absolutePath()));
+}
+
+void MainWindow::showConfigRecoveryWarningIfNeeded()
+{
+    ConfigManager config;
+    const ConfigInspection inspection = config.inspectConfig();
+
+    if (!inspection.hasProblem) {
+        return;
+    }
+
+    showConfigRecoveryDialog(inspection);
+}
+
+bool MainWindow::showConfigRecoveryDialog(const ConfigInspection &inspection)
+{
+    QString details = inspection.message
+        + QStringLiteral("\n\nConfig file:\n")
+        + inspection.configFilePath
+        + QStringLiteral("\n\nDD-SSH will not overwrite this file automatically. You can continue read-only, restore the latest valid backup, or move the corrupt file aside and create a fresh empty config.");
+
+    if (!inspection.backupFileNames.isEmpty()) {
+        details += QStringLiteral("\n\nAvailable backups in the config folder:");
+
+        const int maxShownBackups = 10;
+
+        for (int i = 0; i < inspection.backupFileNames.size() && i < maxShownBackups; ++i) {
+            details += QStringLiteral("\n- ") + inspection.backupFileNames.at(i);
+        }
+
+        if (inspection.backupFileNames.size() > maxShownBackups) {
+            details += QStringLiteral("\n- ...");
+        }
+    } else {
+        details += QStringLiteral("\n\nNo dd-ssh.json.bak-* backup files were found in the config folder.");
+    }
+
+    QMessageBox messageBox(this);
+    messageBox.setIcon(QMessageBox::Warning);
+    messageBox.setWindowTitle(QStringLiteral("DD-SSH config recovery"));
+    messageBox.setText(inspection.title.isEmpty()
+        ? QStringLiteral("Config file problem detected")
+        : inspection.title);
+    messageBox.setInformativeText(details);
+
+    QAbstractButton *openFolderButton = messageBox.addButton(
+        QStringLiteral("Open config folder"),
+        QMessageBox::ActionRole
+    );
+    QAbstractButton *restoreButton = messageBox.addButton(
+        QStringLiteral("Restore latest valid backup"),
+        QMessageBox::ActionRole
+    );
+    QAbstractButton *freshConfigButton = messageBox.addButton(
+        QStringLiteral("Create fresh config"),
+        QMessageBox::DestructiveRole
+    );
+    QAbstractButton *continueButton = messageBox.addButton(
+        QStringLiteral("Continue read-only"),
+        QMessageBox::AcceptRole
+    );
+    messageBox.setDefaultButton(qobject_cast<QPushButton *>(continueButton));
+    messageBox.exec();
+
+    ConfigManager config;
+
+    if (messageBox.clickedButton() == openFolderButton) {
+        openConfigFolder();
+        statusBar()->showMessage(QStringLiteral("Opened config folder. Corrupt dd-ssh.json was not overwritten."));
+        return false;
+    }
+
+    if (messageBox.clickedButton() == restoreButton) {
+        QString error;
+        QString restoredBackupName;
+        QString movedCorruptPath;
+
+        if (!config.restoreLatestValidBackup(&error, &restoredBackupName, &movedCorruptPath)) {
+            QMessageBox::warning(
+                this,
+                QStringLiteral("Could not restore backup"),
+                error.isEmpty()
+                    ? QStringLiteral("DD-SSH could not restore the latest valid backup.")
+                    : error
+            );
+            statusBar()->showMessage(QStringLiteral("Config recovery failed: backup restore did not complete"));
+            return false;
+        }
+
+        loadSavedSessionsToSidebar();
+        QString settingsError;
+        const AppSettings restoredSettings = config.loadSettings(&settingsError);
+
+        if (settingsError.isEmpty()) {
+            applyAppTheme(restoredSettings.appTheme);
+        }
+
+        QMessageBox::information(
+            this,
+            QStringLiteral("Config backup restored"),
+            QStringLiteral("Restored backup:\n%1\n\nCorrupt config moved to:\n%2")
+                .arg(restoredBackupName.isEmpty() ? QStringLiteral("latest valid backup") : restoredBackupName)
+                .arg(movedCorruptPath.isEmpty() ? QStringLiteral("(no previous config file was present)") : movedCorruptPath)
+        );
+        statusBar()->showMessage(QStringLiteral("Config restored from backup: ") + restoredBackupName);
+        return true;
+    }
+
+    if (messageBox.clickedButton() == freshConfigButton) {
+        const QMessageBox::StandardButton decision = QMessageBox::warning(
+            this,
+            QStringLiteral("Create fresh config?"),
+            QStringLiteral("DD-SSH will move the corrupt dd-ssh.json aside and create a fresh empty config.\n\nSaved sessions, known_hosts, and plaintext secrets will not be copied into the new config. The old corrupt file will be preserved for manual recovery.\n\nContinue?"),
+            QMessageBox::Yes | QMessageBox::No,
+            QMessageBox::No
+        );
+
+        if (decision != QMessageBox::Yes) {
+            statusBar()->showMessage(QStringLiteral("Create fresh config cancelled"));
+            return false;
+        }
+
+        QString error;
+        QString movedCorruptPath;
+
+        if (!config.createFreshConfigFromCorrupt(&error, &movedCorruptPath)) {
+            QMessageBox::warning(
+                this,
+                QStringLiteral("Could not create fresh config"),
+                error.isEmpty()
+                    ? QStringLiteral("DD-SSH could not create a fresh config.")
+                    : error
+            );
+            statusBar()->showMessage(QStringLiteral("Config recovery failed: fresh config was not created"));
+            return false;
+        }
+
+        loadSavedSessionsToSidebar();
+        applyAppTheme(QStringLiteral("system"));
+        QMessageBox::information(
+            this,
+            QStringLiteral("Fresh config created"),
+            QStringLiteral("A fresh empty dd-ssh.json was created.\n\nPrevious corrupt config moved to:\n%1")
+                .arg(movedCorruptPath.isEmpty() ? QStringLiteral("(no previous config file was present)") : movedCorruptPath)
+        );
+        statusBar()->showMessage(QStringLiteral("Fresh dd-ssh.json created. Saved session list is empty."));
+        return true;
+    }
+
+    statusBar()->showMessage(QStringLiteral("Config recovery: continuing read-only; dd-ssh.json was not overwritten"));
+    return false;
 }
 
 void MainWindow::setupMenus()
@@ -294,7 +460,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: App theme foundation.\n\n")
+            + QStringLiteral("Current phase: Config recovery actions.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n")
@@ -452,8 +618,9 @@ void MainWindow::loadSavedSessionsToSidebar()
     const QList<SessionProfile> sessions = config.loadSessions(&loadError);
 
     if (!loadError.isEmpty()) {
-        auto *item = new QListWidgetItem("Could not load sessions");
+        auto *item = new QListWidgetItem("Config problem — sessions not loaded");
         item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
+        item->setToolTip(loadError);
         m_sessionList->addItem(item);
         statusBar()->showMessage("Could not load saved sessions: " + loadError);
         return;
@@ -537,10 +704,16 @@ void MainWindow::addWelcomeTab()
         "Current settings/config polish:\n"
         "- Settings dialog stores terminal font and config safety options\n"
         "- Linux config path now uses DD-LAB/DD-SSH casing\n"
-        "- rotating config backups can be enabled/limited from Settings\n\n"
+        "- rotating config backups can be enabled/limited from Settings\n"
+        "- app appearance supports System, Light, and Dark modes\n\n"
+        "Current config recovery behavior:\n"
+        "- invalid dd-ssh.json is never overwritten automatically\n"
+        "- startup shows a clear recovery warning and can open the config folder\n"
+        "- available dd-ssh.json.bak-* files are listed in the recovery warning\n"
+        "- the app can continue with default in-memory settings until the file is fixed\n\n"
         "Next milestone:\n"
-        "- config recovery/corrupt JSON handling\n"
-        "- terminal settings polish\n"
+        "- session dialog mode polish\n"
+        "- settings behavior polish\n"
         "- MF 0.2 stabilization pass\n"
         "- prepare v0.2.0 Andromeda milestone notes\n\n"
         "Codename roadmap:\n"
@@ -1415,16 +1588,40 @@ void MainWindow::showSettingsDialog()
 {
     ConfigManager config;
     QString loadError;
-    const AppSettings currentSettings = config.loadSettings(&loadError);
+    AppSettings currentSettings = config.loadSettings(&loadError);
 
     if (!loadError.isEmpty()) {
-        QMessageBox::warning(
-            this,
-            QStringLiteral("Could not load settings"),
-            loadError
-        );
-        statusBar()->showMessage(QStringLiteral("Could not load settings from dd-ssh.json"));
-        return;
+        const ConfigInspection inspection = config.inspectConfig();
+
+        if (inspection.hasProblem) {
+            const bool recovered = showConfigRecoveryDialog(inspection);
+
+            if (!recovered) {
+                statusBar()->showMessage(QStringLiteral("Settings not opened because dd-ssh.json still needs recovery"));
+                return;
+            }
+
+            loadError.clear();
+            currentSettings = config.loadSettings(&loadError);
+
+            if (!loadError.isEmpty()) {
+                QMessageBox::warning(
+                    this,
+                    QStringLiteral("Could not load settings"),
+                    loadError
+                );
+                statusBar()->showMessage(QStringLiteral("Could not load settings after config recovery"));
+                return;
+            }
+        } else {
+            QMessageBox::warning(
+                this,
+                QStringLiteral("Could not load settings"),
+                loadError
+            );
+            statusBar()->showMessage(QStringLiteral("Could not load settings from dd-ssh.json"));
+            return;
+        }
     }
 
     SettingsDialog dialog(currentSettings, config.configFilePath(), this);

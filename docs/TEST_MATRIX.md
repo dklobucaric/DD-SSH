@@ -1,6 +1,6 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.4.4 — Andromeda  
+**Checkpoint:** dev 0.1.4.5.1 — Andromeda  
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
 
 This document tracks the manually confirmed test coverage for the current Andromeda development line.
@@ -25,7 +25,7 @@ TODO      Not implemented or not tested yet
 |---|---|---|---|
 | Build | `cmake --build build --clean-first` | Build completes and links `dd-ssh` | PASS |
 | About dialog | Help → About DD-SSH | Shows version, codename, milestone, libssh version, and config path | PASS |
-| Version | About dialog | Shows `dev 0.1.4.2` | PASS |
+| Version | About dialog | Shows `dev 0.1.4.5.1` | PASS |
 | Codename | About dialog | Shows `Andromeda` | PASS |
 | Milestone | About dialog | Shows `MF 0.2 candidate` | PASS |
 
@@ -45,10 +45,13 @@ TODO      Not implemented or not tested yet
 | Duplicate warning | Save same username + host + port | Offers Update existing / Create copy / Cancel | PASS |
 | Session edit | Context menu → Edit session | Existing session can be modified | PASS |
 | Session delete | Context menu → Delete session | Session is removed; known_hosts stays preserved | PASS |
-| Settings save | Toolbar/Tools → Settings | Settings are saved under `settings` in `dd-ssh.json` | TODO |
-| Terminal font settings | Change font size, open new terminal | Newly opened xterm.js tab uses the configured font size | TODO |
-| App theme setting | Settings → Appearance → System/Light/Dark | Main Qt app appearance changes after saving; xterm.js terminal theme remains unchanged | TODO |
+| Settings save | Toolbar/Tools → Settings | Settings are saved under `settings` in `dd-ssh.json` | PASS |
+| Terminal font settings | Change font size, open new terminal | Newly opened xterm.js tab uses the configured font size | PASS |
+| App theme setting | Settings → Appearance → System/Light/Dark | Main Qt app appearance changes after saving; xterm.js terminal theme remains unchanged | PASS |
 | Settings dialog layout | Open Settings from toolbar or Tools menu | Dialog opens at a readable size without manual resizing | PASS |
+| Config backup policy | Save settings/session/known_hosts | Timestamped `dd-ssh.json.bak-*` files are created when enabled | PASS |
+| Corrupt config guard | Start with invalid `dd-ssh.json` | App warns, lists backups, offers Open config folder, and does not overwrite file | TODO |
+| Known-host corrupt guard | Trust host while config is invalid | Save is refused instead of overwriting broken config | TODO |
 
 ---
 
@@ -115,12 +118,13 @@ These are expected at this stage and should not be treated as regressions unless
 
 ```text
 - Terminal UI still has visible dev/debug controls.
-- Settings dialog is still a placeholder.
+- Settings dialog exists but still has only foundational options.
 - Multi-Exec is still a placeholder.
 - Plaintext secrets are intentional for early portable config work but are insecure.
 - No encrypted secrets/master password yet.
 - No import/export UI yet.
 - No custom config path / portable mode UI yet.
+- Config recovery can warn/list backups, but restore-from-backup is still manual.
 - No keep-alive settings yet.
 - No packaging/installers yet.
 ```
@@ -146,6 +150,10 @@ Before tagging a future `v0.2.0 — Andromeda`, confirm:
 [ ] remote reboot is detected cleanly
 [ ] reconnect works after disconnect
 [ ] active tab close asks for confirmation
+[ ] Corrupt config recovery warning works
+[ ] Config recovery does not overwrite invalid JSON
+[ ] Config recovery can restore latest valid backup
+[ ] Config recovery can create fresh config after moving corrupt file aside
 [ ] README/CHANGELOG/TEST_MATRIX are updated
 ```
 

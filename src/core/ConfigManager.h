@@ -4,6 +4,7 @@
 
 #include <QList>
 #include <QString>
+#include <QStringList>
 
 struct AppSettings
 {
@@ -15,6 +16,20 @@ struct AppSettings
     QString doubleClickAction = QStringLiteral("open_terminal");
 };
 
+struct ConfigInspection
+{
+    bool exists = false;
+    bool readable = false;
+    bool validJson = false;
+    bool isObject = false;
+    bool hasProblem = false;
+    QString title;
+    QString message;
+    QString configFilePath;
+    QString configDirectoryPath;
+    QStringList backupFileNames;
+};
+
 class QJsonObject;
 
 class ConfigManager
@@ -24,6 +39,10 @@ public:
 
     QString configDirectoryPath() const;
     QString configFilePath() const;
+    QStringList listConfigBackups() const;
+    ConfigInspection inspectConfig() const;
+    bool createFreshConfigFromCorrupt(QString *errorMessage = nullptr, QString *movedCorruptPath = nullptr) const;
+    bool restoreLatestValidBackup(QString *errorMessage = nullptr, QString *restoredBackupName = nullptr, QString *movedCorruptPath = nullptr) const;
 
     AppSettings loadSettings(QString *errorMessage = nullptr) const;
     bool saveSettings(const AppSettings &settings, QString *errorMessage = nullptr) const;
@@ -90,5 +109,8 @@ private:
     bool writeRootObject(const QJsonObject &root, QString *errorMessage = nullptr) const;
     bool createConfigBackupIfNeeded(const QJsonObject &root, QString *errorMessage = nullptr) const;
     bool pruneConfigBackups(int maxBackups, QString *errorMessage = nullptr) const;
+    bool writeRootObjectWithoutBackup(const QJsonObject &root, QString *errorMessage = nullptr) const;
+    bool moveExistingConfigAside(const QString &suffixPrefix, QString *movedPath = nullptr, QString *errorMessage = nullptr) const;
+    bool backupFileIsValidObject(const QString &absolutePath) const;
     void ensureBaseObjects(QJsonObject *root) const;
 };

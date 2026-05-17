@@ -8,6 +8,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonParseError>
 #include <QRegularExpression>
 #include <QSaveFile>
 #include <QSet>
@@ -45,6 +46,337 @@ QString ConfigManager::configDirectoryPath() const
 QString ConfigManager::configFilePath() const
 {
     return configDirectoryPath() + QStringLiteral("/dd-ssh.json");
+}
+
+QStringList ConfigManager::listConfigBackups() const
+{
+    QDir directory(configDirectoryPath());
+
+    if (!directory.exists()) {
+        return QStringList();
+    }
+
+    const QFileInfoList backups = directory.entryInfoList(
+        QStringList() << QStringLiteral("dd-ssh.json.bak-*"),
+        QDir::Files,
+        QDir::Time
+    );
+
+    QStringList backupNames;
+
+    for (const QFileInfo &backup : backups) {
+        backupNames.append(backup.fileName());
+    }
+
+    return backupNames;
+}
+
+ConfigInspection ConfigManager::inspectConfig() const
+{
+    ConfigInspection inspection;
+    inspection.configFilePath = configFilePath();
+    inspection.configDirectoryPath = configDirectoryPath();
+    inspection.backupFileNames = listConfigBackups();
+
+    QFile file(configFilePath());
+    inspection.exists = file.exists();
+
+    if (!inspection.exists) {
+        inspection.readable = true;
+        inspection.validJson = true;
+        inspection.isObject = true;
+        return inspection;
+    }
+
+    if (!file.open(QIODevice::ReadOnly)) {
+        inspection.hasProblem = true;
+        inspection.title = QStringLiteral("Config file cannot be read");
+        inspection.message = QStringLiteral("DD-SSH could not read the config file. It will not be overwritten automatically.\n\nError: ")
+            + file.errorString();
+        return inspection;
+    }
+
+    inspection.readable = true;
+
+    QJsonParseError parseError;
+    const QByteArray content = file.readAll();
+    const QJsonDocument document = QJsonDocument::fromJson(content, &parseError);
+    file.close();
+
+    if (parseError.error != QJsonParseError::NoError) {
+        inspection.hasProblem = true;
+        inspection.title = QStringLiteral("Config JSON is invalid");
+        inspection.message = QStringLiteral("DD-SSH found an invalid dd-ssh.json file. It will not be overwritten automatically.\n\nParse error: ")
+            + parseError.errorString()
+            + QStringLiteral(" at offset ")
+            + QString::number(parseError.offset)
+            + QStringLiteral(".");
+        return inspection;
+    }
+
+    inspection.validJson = true;
+
+    if (!document.isObject()) {
+        inspection.hasProblem = true;
+        inspection.title = QStringLiteral("Config JSON is not an object");
+        inspection.message = QStringLiteral("DD-SSH expected the root of dd-ssh.json to be a JSON object. It will not be overwritten automatically.");
+        return inspection;
+    }
+
+    inspection.isObject = true;
+    return inspection;
+}
+
+
+bool ConfigManager::writeRootObjectWithoutBackup(const QJsonObject &root, QString *errorMessage) const
+{
+    QDir directory(configDirectoryPath());
+
+    if (!directory.exists() && !directory.mkpath(QStringLiteral("."))) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Could not create config directory: ") + directory.absolutePath();
+        }
+
+        return false;
+    }
+
+    QSaveFile saveFile(configFilePath());
+
+    if (!saveFile.open(QIODevice::WriteOnly)) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Could not open config file for writing: ") + saveFile.errorString();
+        }
+
+        return false;
+    }
+
+    const QJsonDocument document(root);
+    saveFile.write(document.toJson(QJsonDocument::Indented));
+
+    if (!saveFile.commit()) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Could not save config file: ") + saveFile.errorString();
+        }
+
+        return false;
+    }
+
+    QString permissionError;
+    secureConfigFilePermissions(&permissionError);
+
+    return true;
+}
+
+bool ConfigManager::moveExistingConfigAside(const QString &suffixPrefix, QString *movedPath, QString *errorMessage) const
+{
+    if (movedPath != nullptr) {
+        *movedPath = QString();
+    }
+
+    if (errorMessage != nullptr) {
+        *errorMessage = QString();
+    }
+
+    const QString sourcePath = configFilePath();
+    QFileInfo sourceInfo(sourcePath);
+
+    if (!sourceInfo.exists()) {
+        return true;
+    }
+
+    QDir directory(configDirectoryPath());
+
+    if (!directory.exists() && !directory.mkpath(QStringLiteral("."))) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Could not create config directory: ") + directory.absolutePath();
+        }
+
+        return false;
+    }
+
+    QString safePrefix = suffixPrefix.trimmed();
+
+    if (safePrefix.isEmpty()) {
+        safePrefix = QStringLiteral("saved");
+    }
+
+    const QString timestamp = QDateTime::currentDateTimeUtc().toString(QStringLiteral("yyyyMMdd-HHmmss-zzz"));
+    QString destinationPath = directory.filePath(QStringLiteral("dd-ssh.json.") + safePrefix + QStringLiteral("-") + timestamp);
+
+    int counter = 2;
+    while (QFileInfo::exists(destinationPath)) {
+        destinationPath = directory.filePath(
+            QStringLiteral("dd-ssh.json.")
+            + safePrefix
+            + QStringLiteral("-")
+            + timestamp
+            + QStringLiteral("-")
+            + QString::number(counter++)
+        );
+    }
+
+    if (!QFile::rename(sourcePath, destinationPath)) {
+        if (!QFile::copy(sourcePath, destinationPath)) {
+            if (errorMessage != nullptr) {
+                *errorMessage = QStringLiteral("Could not move corrupt config aside to: ") + destinationPath;
+            }
+
+            return false;
+        }
+
+        if (!QFile::remove(sourcePath)) {
+            if (errorMessage != nullptr) {
+                *errorMessage = QStringLiteral("Copied corrupt config aside but could not remove original: ") + sourcePath;
+            }
+
+            return false;
+        }
+    }
+
+#if !defined(Q_OS_WIN)
+    QFile::setPermissions(
+        destinationPath,
+        QFileDevice::ReadOwner | QFileDevice::WriteOwner
+    );
+#endif
+
+    if (movedPath != nullptr) {
+        *movedPath = destinationPath;
+    }
+
+    return true;
+}
+
+bool ConfigManager::backupFileIsValidObject(const QString &absolutePath) const
+{
+    QFile backupFile(absolutePath);
+
+    if (!backupFile.open(QIODevice::ReadOnly)) {
+        return false;
+    }
+
+    QJsonParseError parseError;
+    const QJsonDocument document = QJsonDocument::fromJson(backupFile.readAll(), &parseError);
+    backupFile.close();
+
+    return parseError.error == QJsonParseError::NoError && document.isObject();
+}
+
+bool ConfigManager::createFreshConfigFromCorrupt(QString *errorMessage, QString *movedCorruptPath) const
+{
+    if (errorMessage != nullptr) {
+        *errorMessage = QString();
+    }
+
+    QString movedPath;
+
+    if (!moveExistingConfigAside(QStringLiteral("corrupt"), &movedPath, errorMessage)) {
+        return false;
+    }
+
+    QJsonObject root;
+    ensureBaseObjects(&root);
+
+    QJsonObject metadata = root.value(QStringLiteral("metadata")).toObject();
+    metadata.insert(QStringLiteral("last_recovery_action"), QStringLiteral("created_fresh_config"));
+    metadata.insert(QStringLiteral("last_recovery_at"), QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
+
+    if (!movedPath.isEmpty()) {
+        metadata.insert(QStringLiteral("previous_config_moved_to"), movedPath);
+    }
+
+    root.insert(QStringLiteral("metadata"), metadata);
+
+    if (!writeRootObjectWithoutBackup(root, errorMessage)) {
+        return false;
+    }
+
+    if (movedCorruptPath != nullptr) {
+        *movedCorruptPath = movedPath;
+    }
+
+    return true;
+}
+
+bool ConfigManager::restoreLatestValidBackup(QString *errorMessage, QString *restoredBackupName, QString *movedCorruptPath) const
+{
+    if (errorMessage != nullptr) {
+        *errorMessage = QString();
+    }
+
+    if (restoredBackupName != nullptr) {
+        *restoredBackupName = QString();
+    }
+
+    if (movedCorruptPath != nullptr) {
+        *movedCorruptPath = QString();
+    }
+
+    QDir directory(configDirectoryPath());
+
+    if (!directory.exists()) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Config directory does not exist: ") + configDirectoryPath();
+        }
+
+        return false;
+    }
+
+    const QFileInfoList backups = directory.entryInfoList(
+        QStringList() << QStringLiteral("dd-ssh.json.bak-*"),
+        QDir::Files,
+        QDir::Time
+    );
+
+    QFileInfo selectedBackup;
+
+    for (const QFileInfo &backup : backups) {
+        if (backupFileIsValidObject(backup.absoluteFilePath())) {
+            selectedBackup = backup;
+            break;
+        }
+    }
+
+    if (!selectedBackup.exists()) {
+        if (errorMessage != nullptr) {
+            *errorMessage = backups.isEmpty()
+                ? QStringLiteral("No dd-ssh.json.bak-* backup files were found.")
+                : QStringLiteral("Backup files were found, but none of them contain a valid JSON object.");
+        }
+
+        return false;
+    }
+
+    QString movedPath;
+
+    if (!moveExistingConfigAside(QStringLiteral("corrupt"), &movedPath, errorMessage)) {
+        return false;
+    }
+
+    if (!QFile::copy(selectedBackup.absoluteFilePath(), configFilePath())) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Could not restore backup: ") + selectedBackup.fileName();
+        }
+
+        return false;
+    }
+
+#if !defined(Q_OS_WIN)
+    QFile::setPermissions(
+        configFilePath(),
+        QFileDevice::ReadOwner | QFileDevice::WriteOwner
+    );
+#endif
+
+    if (restoredBackupName != nullptr) {
+        *restoredBackupName = selectedBackup.fileName();
+    }
+
+    if (movedCorruptPath != nullptr) {
+        *movedCorruptPath = movedPath;
+    }
+
+    return true;
 }
 
 QString ConfigManager::makeSessionId(
@@ -108,7 +440,12 @@ bool ConfigManager::readRootObject(QJsonObject *root, QString *errorMessage) con
 
     if (parseError.error != QJsonParseError::NoError) {
         if (errorMessage != nullptr) {
-            *errorMessage = QStringLiteral("Could not parse config JSON: ") + parseError.errorString();
+            *errorMessage = QStringLiteral("Could not parse config JSON. DD-SSH will not overwrite this file automatically. Error: ")
+                + parseError.errorString()
+                + QStringLiteral(" at offset ")
+                + QString::number(parseError.offset)
+                + QStringLiteral(". Config file: ")
+                + configFilePath();
         }
 
         return false;
@@ -116,7 +453,8 @@ bool ConfigManager::readRootObject(QJsonObject *root, QString *errorMessage) con
 
     if (!document.isObject()) {
         if (errorMessage != nullptr) {
-            *errorMessage = QStringLiteral("Config file is not a JSON object.");
+            *errorMessage = QStringLiteral("Config file is not a JSON object. DD-SSH will not overwrite this file automatically. Config file: ")
+                + configFilePath();
         }
 
         return false;

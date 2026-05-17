@@ -80,3 +80,17 @@ macOS:   Qt AppConfigLocation / per-user Application Support-style config folder
 ```
 
 The exact Windows/macOS base directory is selected by Qt through `QStandardPaths::AppConfigLocation`; DD-SSH does not write next to the executable unless a future portable-mode feature is added.
+
+## Config recovery and backups
+
+`dev 0.1.4.5` adds a safety guard for damaged config files. If `dd-ssh.json` exists but cannot be parsed as a JSON object, DD-SSH must not overwrite it automatically. The app may continue with default in-memory settings and an empty session list, but save operations should fail until the user fixes, restores, moves, or deletes the broken file.
+
+`dev 0.1.4.5.1` adds explicit recovery actions. From the recovery dialog, the user can continue read-only, open the config folder, restore the latest valid `dd-ssh.json.bak-*` backup, or create a fresh empty config. Creating a fresh config and restoring a backup both move the corrupt file aside as `dd-ssh.json.corrupt-<timestamp>` instead of deleting it.
+
+When config backups are enabled under `settings.config_safety`, DD-SSH creates timestamped files named like:
+
+```text
+dd-ssh.json.bak-YYYYMMDD-HHMMSS-zzz
+```
+
+The recovery warning lists available `dd-ssh.json.bak-*` files in the config folder so the user can restore one manually. Automatic restore UI is intentionally deferred.

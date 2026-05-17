@@ -7,6 +7,7 @@
 #include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonParseError>
 #include <QSaveFile>
 #include <QStandardPaths>
 #include <QStringList>
@@ -209,12 +210,30 @@ bool KnownHostsManager::trustHost(
             return false;
         }
 
-        const QJsonDocument existingDocument = QJsonDocument::fromJson(existingFile.readAll());
+        QJsonParseError parseError;
+        const QJsonDocument existingDocument = QJsonDocument::fromJson(existingFile.readAll(), &parseError);
         existingFile.close();
 
-        if (existingDocument.isObject()) {
-            root = existingDocument.object();
+        if (parseError.error != QJsonParseError::NoError) {
+            if (errorMessage != nullptr) {
+                *errorMessage = QStringLiteral("Existing config JSON is invalid. Refusing to overwrite dd-ssh.json automatically. Error: ")
+                    + parseError.errorString()
+                    + QStringLiteral(" at offset ")
+                    + QString::number(parseError.offset);
+            }
+
+            return false;
         }
+
+        if (!existingDocument.isObject()) {
+            if (errorMessage != nullptr) {
+                *errorMessage = QStringLiteral("Existing config file is not a JSON object. Refusing to overwrite dd-ssh.json automatically.");
+            }
+
+            return false;
+        }
+
+        root = existingDocument.object();
     }
 
     QJsonObject app = root.value(QStringLiteral("app")).toObject();

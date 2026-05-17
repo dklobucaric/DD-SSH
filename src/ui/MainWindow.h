@@ -6,6 +6,7 @@
 
 class QListWidget;
 class QTabWidget;
+struct ConfigInspection;
 
 class MainWindow : public QMainWindow
 {
@@ -19,6 +20,9 @@ private:
     void loadSavedSessionsToSidebar();
     void addWelcomeTab();
     void applyAppTheme(const QString &themeName);
+    void showConfigRecoveryWarningIfNeeded();
+    bool showConfigRecoveryDialog(const ConfigInspection &inspection);
+    void openConfigFolder();
     void showConnectDialog();
     void showSettingsDialog();
     void testSavedSession(const QString &sessionId);

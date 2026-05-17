@@ -1,3 +1,26 @@
+## dev 0.1.4.5.1 — Andromeda
+
+**Focus:** Config recovery actions.
+
+- Renamed the safe continuation path to **Continue read-only**.
+- Added **Restore latest valid backup** from the config recovery dialog.
+- Added **Create fresh config**, which moves the corrupt file aside before writing a new empty default config.
+- Removed the duplicate small settings-load warning for corrupt configs; Settings now opens the main recovery dialog instead.
+- Corrupt configs are preserved as `dd-ssh.json.corrupt-<timestamp>`.
+
+# Changelog
+
+## dev 0.1.4.5 — Andromeda
+
+**Focus:** Config recovery / corrupt JSON handling.
+
+- Refuse to overwrite invalid or non-object `dd-ssh.json` files automatically.
+- Added startup recovery warning for corrupt/unreadable config files.
+- Recovery warning can open the config folder.
+- Recovery warning lists available `dd-ssh.json.bak-*` backup files.
+- The app can continue with default in-memory settings and an empty session list until the config file is fixed/restored/deleted.
+- Known-host trust saves now also refuse to overwrite invalid config JSON.
+
 # DD-SSH Changelog
 
 This changelog tracks development checkpoints for DD-SSH.
