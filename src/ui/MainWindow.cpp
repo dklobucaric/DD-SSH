@@ -95,7 +95,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: Config path and backup policy implementation.\n\n")
+            + QStringLiteral("Current phase: Codename roadmap alignment.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n")
@@ -345,11 +345,11 @@ void MainWindow::addWelcomeTab()
         "- MF 0.2 stabilization pass\n"
         "- prepare v0.2.0 Andromeda milestone notes\n\n"
         "Codename roadmap:\n"
-        "- 0.1.x — Launchpad\n"
-        "- 0.2.x — Andromeda\n"
-        "- 0.3.x — Orion\n"
-        "- 0.4.x — Vega\n"
-        "- 0.5.x — Cassiopeia\n"
+        "- 0.0.x — Launchpad / early prototype history\n"
+        "- 0.1.x — Andromeda / current MF 0.2 candidate line\n"
+        "- 0.2.x — Orion\n"
+        "- 0.3.x — Vega\n"
+        "- 0.4.x — Cassiopeia\n"
         "- 1.0.x — Apollo\n\n"
         "Detailed version history lives in docs/CHANGELOG.md.\n"
     );

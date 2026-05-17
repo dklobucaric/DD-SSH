@@ -7,13 +7,21 @@ The Welcome screen is intentionally kept as a short current-state dashboard. Det
 ## Codename roadmap
 
 ```text
-0.1.x — Launchpad
-0.2.x — Andromeda
-0.3.x — Orion
-0.4.x — Vega
-0.5.x — Cassiopeia
+0.0.x — Launchpad / early prototype history
+0.1.x — Andromeda / current MF 0.2 candidate line
+0.2.x — Orion
+0.3.x — Vega
+0.4.x — Cassiopeia
 1.0.x — Apollo
 ```
+
+## dev 0.1.4.3 — Andromeda
+
+**Focus:** Codename roadmap alignment.
+
+- Aligned the Welcome screen and changelog codename roadmap with the current development reality: the 0.1.x line is now treated as Andromeda / MF 0.2 candidate work.
+- Preserved Launchpad as historical early-prototype naming under 0.0.x instead of the active 0.1.x line.
+- Kept SSH, session, settings, config backup, and xterm behavior unchanged.
 
 ## dev 0.1.4.2 — Andromeda
 

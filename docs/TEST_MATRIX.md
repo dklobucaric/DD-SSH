@@ -1,6 +1,6 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.4.2 — Andromeda  
+**Checkpoint:** dev 0.1.4.3 — Andromeda  
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
 
 This document tracks the manually confirmed test coverage for the current Andromeda development line.
