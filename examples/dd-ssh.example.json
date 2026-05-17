@@ -4,18 +4,48 @@
     "config_version": 1
   },
   "settings": {
+    "appearance": {
+      "app_theme": "system"
+    },
     "terminal": {
       "font_family": "monospace",
-      "font_size": 11,
-      "theme": "dark"
+      "font_size": 14
+    },
+    "config_safety": {
+      "backups_enabled": true,
+      "max_backups": 10
+    },
+    "behavior": {
+      "double_click_action": "open_terminal",
+      "show_quick_toolbar": false
     }
   },
   "groups": [],
-  "sessions": [],
+  "sessions": [
+    {
+      "id": "example-root-192-168-1-237-223",
+      "name": "Example server",
+      "group": "Lab",
+      "host": "192.168.1.237",
+      "port": 223,
+      "username": "root",
+      "auth": {
+        "type": "password",
+        "secret_ref": "secret-example-password"
+      }
+    }
+  ],
   "known_hosts": {},
   "secrets": {
-    "mode": "plain-dev-only",
-    "items": {}
+    "mode": "plain-v1",
+    "items": {
+      "secret-example-password": {
+        "type": "password",
+        "value": "example-plaintext-password"
+      }
+    }
   },
-  "metadata": {}
+  "metadata": {
+    "created_by": "DD-SSH example config"
+  }
 }

@@ -6,26 +6,96 @@ Guidelines for AI coding agents working on DD-SSH.
 
 DD-SSH is a cross-platform SSH client and session manager.
 
+Current checkpoint:
+
+```text
+Version: dev 0.1.4.9
+Codename: Andromeda
+Milestone: MF 0.2 candidate
+```
+
 ## Stack
 
-- C++
+- C++20
 - Qt 6
 - CMake
 - libssh
-- xterm.js / Qt WebEngine for early terminal frontend
+- Qt WebEngine + Qt WebChannel
+- local bundled xterm.js assets
 - JSON config
 
-## Rules
+## Hard rules
 
 - Do not add Electron.
 - Do not add telemetry.
 - Do not store secrets in logs.
-- Do not hardcode Linux-only, Windows-only, or macOS-only paths without abstraction.
-- Keep SSH protocol logic outside UI classes.
-- Keep terminal frontend abstracted.
-- Keep config format documented in `docs/CONFIG_FORMAT.md`.
-- Every feature must preserve Linux, Windows, and macOS portability.
-- Prefer small focused classes.
-- Do not modify `main` directly.
+- Do not print password/private-key values.
+- Do not hardcode Linux-only paths without abstraction.
+- Use Qt standard paths for config locations.
 - Do not silently accept changed host keys.
-- Do not introduce SFTP or split-screen into v1 scope unless explicitly requested.
+- Do not overwrite corrupt config files automatically.
+- Do not change config format without updating `docs/CONFIG_FORMAT.md`.
+- Do not add SFTP or split panes into early scope unless explicitly requested.
+- Keep Windows/macOS portability in mind even when developing on Linux.
+
+## Current config warning
+
+DD-SSH currently stores secrets in plaintext under:
+
+```text
+secrets.mode = plain-v1
+```
+
+Treat all real `dd-ssh.json` files and backups as sensitive.
+
+## Versioning rule
+
+Every generated checkpoint must update:
+
+```text
+CMakeLists.txt → DD_SSH_VERSION_STRING
+```
+
+If appropriate, also update:
+
+```text
+README.md
+docs/CHANGELOG.md
+docs/TEST_MATRIX.md
+Welcome/About phase text
+```
+
+## Architecture rule
+
+Prefer focused classes.
+
+Do not dump everything into MainWindow.
+
+Current important classes:
+
+- MainWindow
+- ConnectDialog
+- SettingsDialog
+- WebTerminalTab
+- TerminalBridge
+- ConfigManager
+- KnownHostsManager
+- SshSession
+- SshShellWorker
+
+## Testing rule
+
+Before declaring a terminal checkpoint healthy, manually test at least:
+
+```bash
+whoami
+hostname
+stty size
+htop
+nano /tmp/dd-ssh-test.txt
+vim /tmp/dd-ssh-test.txt
+clear
+exit
+```
+
+For lifecycle changes, also test remote reboot/disconnect and reconnect.

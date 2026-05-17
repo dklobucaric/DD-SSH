@@ -1,0 +1,37 @@
+# DD-SSH Documentation Index
+
+This directory contains the working documentation for DD-SSH.
+
+## User-facing docs
+
+- [Getting Started](GETTING_STARTED.md) — first build, first session, first terminal
+- [User Guide](USER_GUIDE.md) — menus, workflows, sessions, settings, terminal use
+- [Use Cases](USE_CASES.md) — realistic ways DD-SSH is expected to be used
+- [Features and Limitations](FEATURES.md) — what works now, what does not
+- [Troubleshooting](TROUBLESHOOTING.md) — common problems and recovery steps
+
+## Technical docs
+
+- [Architecture](ARCHITECTURE.md) — UI/core/SSH/terminal/config layers
+- [Config Format](CONFIG_FORMAT.md) — `dd-ssh.json` structure
+- [Config Management](CONFIG_MANAGEMENT.md) — backups, import/export, recovery
+- [Security Notes](SECURITY_NOTES.md) — plaintext secrets, known_hosts, future encryption
+- [Building](BUILDING.md) — local build instructions
+- [Packaging](PACKAGING.md) — future distribution notes
+
+## Project management docs
+
+- [Project Blueprint](PROJECT_BLUEPRINT.md) — product direction
+- [Roadmap](ROADMAP.md) — version plan and future features
+- [Test Matrix](TEST_MATRIX.md) — manual validation checklist
+- [Changelog](CHANGELOG.md) — checkpoint history
+- [Release Process](RELEASE_PROCESS.md) — future release checklist
+
+## Current checkpoint
+
+```text
+Version: dev 0.1.4.9
+Codename: Andromeda
+Milestone: MF 0.2 candidate
+Phase: Public alpha documentation pass
+```

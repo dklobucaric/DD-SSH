@@ -1,38 +1,31 @@
-# DD-SSH Project Blueprint v0.1
+# DD-SSH Project Blueprint
 
-**Project name:** DD-SSH  
-**Project type:** Cross-platform SSH client / session manager  
-**Primary platforms:** Linux, Windows, macOS  
-**Project status:** Planning / architecture phase  
-**Primary goal:** Build a clean, lightweight, practical SSH client inspired by the simplicity of PortX, but focused only on the features that matter for everyday sysadmin work.
+## Project summary
 
----
+DD-SSH is a clean cross-platform SSH client and session manager.
 
-## 1. Executive Summary
-
-DD-SSH is intended to be a cross-platform SSH terminal client and session manager built for users who manage multiple servers and want a simple, fast, reliable tool without enterprise bloat, cloud lock-in, SFTP panels, split screens, telemetry, or unnecessary visual noise.
-
-The application should run on Linux, Windows, and macOS from a shared codebase. It should eventually be distributed through multiple channels: source code on GitHub, Linux packages, Windows installer, macOS app bundle/DMG, and potentially official stores where feasible.
-
-The project should be built carefully and incrementally. The first major technical milestone is not packaging or store upload. The first milestone is a stable SSH terminal proof-of-concept.
-
-The core idea:
+Primary stack:
 
 ```text
-One clean SSH app.
-One consistent config format.
-One codebase.
-Multiple operating systems.
-No nonsense.
+C++
+Qt 6
+CMake
+libssh
+xterm.js through Qt WebEngine
+JSON config
 ```
 
----
+Primary platforms:
 
-## 2. Product Philosophy
+```text
+Linux
+Windows
+macOS
+```
 
-DD-SSH should feel like a practical sysadmin tool, not a spaceship dashboard with 600 buttons.
+Current tested focus: Linux.
 
-The philosophy:
+## Product philosophy
 
 ```text
 Fast to open.
@@ -41,149 +34,82 @@ Easy to understand.
 Easy to sync.
 Easy to back up.
 Hard to accidentally destroy things.
+No unnecessary circus.
 ```
 
-The user should be able to:
+## What DD-SSH is
 
-1. Open DD-SSH.
-2. See a clean list of saved connections.
-3. Double-click a server.
-4. Get a real SSH terminal.
-5. Work.
+- Desktop SSH client
+- Saved session manager
+- xterm.js terminal frontend
+- Single JSON config app
+- Practical sysadmin tool
+- Open-source project
 
----
+## What DD-SSH is not yet
 
-## 3. Core Feature Scope
+- Stable 1.0 product
+- SFTP client
+- Split-pane terminal suite
+- Cloud sync service
+- Team collaboration system
+- Encrypted secret vault
+- Multi-exec power tool
 
-Initial desired feature list:
+## Current Andromeda direction
+
+The 0.1.x Andromeda line is building toward:
 
 ```text
-1. SSH terminal
-2. Session manager
-3. Password authentication
-4. Private-key authentication
-5. Tabs
-6. Copy/paste
-7. Export/import config/session data
-8. Sync-friendly connection config
-9. Keep-alive
-10. Known-host handling
-11. Multi-exec command
+MF 0.2 — Real Terminal Foundation
 ```
 
-Explicitly excluded from early versions:
+That means:
+
+- Saved sessions work
+- SSH auth works
+- known_hosts works
+- xterm terminal works
+- PTY resize works
+- terminal lifecycle works
+- config safety exists
+- public alpha docs exist
+
+## Core data model
+
+`dd-ssh.json` is the source of truth for:
 
 ```text
-- SFTP
-- Split screen
-- Built-in cloud account
-- Built-in WebDAV sync in v1
-- Android version
-- Team sharing
-- AI agent inside the application
-- Automatic remote command execution without user confirmation
+settings
+sessions
+known_hosts
+secrets
+metadata
 ```
 
----
+Secrets are currently plaintext under `secrets.mode = plain-v1`.
 
-## 4. Technology Direction
+## Architectural rules
 
-Recommended initial stack:
+- Do not put SSH protocol logic into UI classes when a core/ssh class can own it.
+- Do not block the GUI thread with SSH read loops.
+- Do not silently accept changed host keys.
+- Do not write secrets to logs.
+- Do not overwrite corrupt configs automatically.
+- Do not change config format without updating docs.
+- Keep terminal frontend replaceable enough for future changes.
 
-```text
-Language: C++
-GUI framework: Qt 6
-Build system: CMake
-SSH library: libssh
-Terminal frontend: xterm.js inside Qt WebEngine, at least for the first proof-of-concept
-Config format: JSON
-Version control: Git / GitHub
-```
+## Near-term goals
 
----
+- Finish public alpha documentation
+- Stabilize config workflow
+- Prepare v0.2.0-alpha Andromeda
 
-## 5. High-Level Architecture
+## Later goals
 
-```text
-+------------------------------------------------------------+
-|                          DD-SSH                            |
-+------------------------------------------------------------+
-| UI Layer                                                   |
-| - MainWindow                                               |
-| - Session sidebar                                          |
-| - Terminal tabs                                            |
-| - Settings dialog                                          |
-| - Multi-exec panel                                         |
-+------------------------------------------------------------+
-| Core Layer                                                 |
-| - SessionManager                                           |
-| - ConfigManager                                            |
-| - KnownHostsManager                                        |
-| - MultiExecManager                                         |
-| - SyncManager                                              |
-+------------------------------------------------------------+
-| SSH Layer                                                  |
-| - SshSession                                               |
-| - SshWorker                                                |
-| - AuthManager                                              |
-| - KeepAliveManager                                         |
-+------------------------------------------------------------+
-| Terminal Layer                                             |
-| - TerminalTab                                              |
-| - TerminalFrontend interface                               |
-| - XtermJsTerminalFrontend                                  |
-| - FutureNativeTerminalFrontend                             |
-+------------------------------------------------------------+
-```
-
----
-
-## 6. Roadmap Summary
-
-```text
-v0.0 Planning and foundation
-v0.1 SSH terminal proof
-v0.2 Config and session manager
-v0.3 Tabs and private keys
-v0.4 Keep-alive and sync-friendly config
-v0.5 Multi-exec
-v0.6 Cross-platform build stabilization
-v0.7 Packaging preparation
-v1.0 First public release
-```
-
----
-
-## 7. Golden Rules
-
-```text
-1. Do not build everything at once.
-2. Do not optimize before the first terminal works.
-3. Do not add SFTP in v1.
-4. Do not add split screen in v1.
-5. Do not add AI features inside the app in v1.
-6. Do not let UI classes contain SSH protocol logic.
-7. Do not let SSH worker block the GUI thread.
-8. Do not silently accept changed host keys.
-9. Do not write secrets to logs.
-10. Do not break cross-platform portability for short-term convenience.
-11. Do not change config format without updating documentation.
-12. Do not chase stores before the app is stable.
-```
-
----
-
-## 8. Immediate Next Mission
-
-```text
-Make one SSH terminal tab work correctly.
-Then make it pleasant.
-Then make it portable.
-Then make it distributable.
-```
-
-This document is the foundation for DD-SSH and should live in:
-
-```text
-docs/PROJECT_BLUEPRINT.md
-```
+- Custom config path / portable mode
+- Keep-alive
+- Multi-Exec
+- Cross-platform packaging
+- Encrypted secrets
+- Public releases

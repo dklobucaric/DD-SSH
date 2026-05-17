@@ -1,53 +1,129 @@
 # DD-SSH Roadmap
 
-## v0.0 — Planning and foundation
+## Codename roadmap
 
-- Project blueprint
-- Repo skeleton
-- Initial CMake project
-- Basic Qt app window
+```text
+0.0.x — Launchpad / early prototype history
+0.1.x — Andromeda / current MF 0.2 candidate line
+0.2.x — Orion
+0.3.x — Vega
+0.4.x — Cassiopeia
+1.0.x — Apollo
+```
 
-## v0.1 — SSH terminal proof
+## Current line: 0.1.x — Andromeda
 
-- Manual connect dialog
-- libssh connection
-- Password authentication
-- Known-host prompt
-- PTY/shell
-- Terminal frontend output/input
+Goal: Real Terminal Foundation and public-alpha readiness.
 
-## v0.2 — Session manager
+Already implemented:
 
-- Single JSON config
-- Session sidebar
-- Add/edit/delete sessions
-- Import/export
+- Saved sessions
+- One-file JSON config
+- Plaintext portable secrets
+- known_hosts handling
+- Password/private-key auth
+- Session CRUD
+- xterm.js local terminal
+- PTY resize
+- Terminal lifecycle/reconnect
+- Settings foundation
+- App light/dark/system theme
+- Config backup/recovery
+- Config import/export/restore
+- Documentation/test matrix
 
-## v0.3 — Tabs and private keys
+Remaining before public alpha tag:
 
-- Multiple terminal tabs
-- Private-key authentication
-- Key passphrase prompt
+- Final README/docs polish
+- Confirm latest test matrix
+- Optional screenshots
+- Known limitations review
+- GitHub issue template maybe
 
-## v0.4 — Keep-alive and sync-friendly config
+Potential tag:
 
-- Keep-alive
-- User-selected config path
-- External config change detection
-- Config backup before save
+```text
+v0.2.0-alpha — Andromeda
+```
 
-## v0.5 — Multi-exec
+## 0.2.x — Orion
 
-- Select active tabs
+Focus: usability and session workflow polish.
+
+Possible items:
+
+- Better session grouping UI
+- Search/filter saved sessions
+- Session detail panel
+- Duplicate session action
+- More polished session edit flow
+- Better tab title/status UX
+- More robust reconnect options
+- Config import/export UX refinements
+
+## 0.3.x — Vega
+
+Focus: portability and config location.
+
+Possible items:
+
+- Custom config path picker
+- Portable mode next to executable
+- Config file reload detection
+- External sync conflict detection
+- Better backup browser/restore picker
+- Import/export individual sessions
+
+## 0.4.x — Cassiopeia
+
+Focus: connection reliability and admin workflow.
+
+Possible items:
+
+- Keep-alive per session
+- Default keep-alive setting
+- Dead connection detection polish
+- SSH agent investigation
+- Keyboard-interactive auth polish
+- Better known_hosts management UI
+
+## 0.5.x — Multi-Exec foundation
+
+Focus: controlled multi-target command sending.
+
+Required behavior:
+
+- Select active terminal tabs
 - Preview targets
-- Send text only / send text + Enter
-- Dangerous command warning
-- Local log
+- Send text only
+- Send text + Enter
+- Dangerous command warnings
+- Local multi-exec log without secrets
 
-## v1.0 — First public release
+Multi-Exec is powerful and risky. It should not be rushed.
 
-- Linux build
-- Windows build
-- macOS build
-- Documentation
-- Basic packages/installers
+## 0.9.x — Advanced theming / polish
+
+Possible items:
+
+- Terminal theme picker
+- Custom app themes
+- Custom terminal colors
+- Theme import/export
+- Live terminal preference updates
+
+Terminal theme customization is intentionally low priority compared with app-level usability.
+
+## 1.0.x — Apollo
+
+Goal: first serious public release.
+
+Expected before Apollo:
+
+- Linux/Windows/macOS validation
+- Packaging story
+- Installer or portable builds
+- Security notes finalized
+- Known limitations clearly documented
+- Encrypted secret storage decision made
+- No known data-loss bugs
