@@ -37,18 +37,217 @@
 #define DD_SSH_MILESTONE_STRING "development"
 #endif
 
+
+namespace {
+QString normalizedAppTheme(const QString &themeName)
+{
+    const QString normalized = themeName.trimmed().toLower();
+
+    if (normalized == QStringLiteral("light") || normalized == QStringLiteral("dark")) {
+        return normalized;
+    }
+
+    return QStringLiteral("system");
+}
+
+QString lightAppStyleSheet()
+{
+    return QStringLiteral(R"DDSSH(
+QMainWindow,
+QDialog,
+QMessageBox,
+QWidget {
+    background-color: #f6f7f9;
+    color: #202124;
+}
+QMenuBar,
+QMenu,
+QToolBar,
+QStatusBar {
+    background-color: #ffffff;
+    color: #202124;
+}
+QMenuBar::item:selected,
+QMenu::item:selected {
+    background-color: #e8f0fe;
+}
+QSplitter::handle {
+    background-color: #d0d5dd;
+}
+QGroupBox {
+    border: 1px solid #cfd4dc;
+    border-radius: 4px;
+    margin-top: 8px;
+    padding-top: 12px;
+}
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 8px;
+    padding: 0 4px;
+}
+QLineEdit,
+QSpinBox,
+QComboBox,
+QListWidget,
+QTextEdit,
+QPlainTextEdit {
+    background-color: #ffffff;
+    color: #202124;
+    border: 1px solid #b8c0cc;
+    selection-background-color: #cfe3ff;
+    selection-color: #111111;
+}
+QPushButton {
+    background-color: #ffffff;
+    color: #202124;
+    border: 1px solid #aab2c0;
+    border-radius: 4px;
+    padding: 4px 10px;
+}
+QPushButton:hover {
+    background-color: #eef4ff;
+}
+QPushButton:disabled {
+    color: #8a8f98;
+    background-color: #f1f3f5;
+}
+QTabWidget::pane {
+    border: 1px solid #cfd4dc;
+}
+QTabBar::tab {
+    background-color: #edf1f5;
+    color: #202124;
+    border: 1px solid #cfd4dc;
+    padding: 5px 10px;
+}
+QTabBar::tab:selected {
+    background-color: #ffffff;
+}
+)DDSSH");
+}
+
+QString darkAppStyleSheet()
+{
+    return QStringLiteral(R"DDSSH(
+QMainWindow,
+QDialog,
+QMessageBox,
+QWidget {
+    background-color: #1f232a;
+    color: #e6edf3;
+}
+QMenuBar,
+QMenu,
+QToolBar,
+QStatusBar {
+    background-color: #151922;
+    color: #e6edf3;
+}
+QMenuBar::item:selected,
+QMenu::item:selected {
+    background-color: #263449;
+}
+QSplitter::handle {
+    background-color: #303846;
+}
+QGroupBox {
+    border: 1px solid #3a4354;
+    border-radius: 4px;
+    margin-top: 8px;
+    padding-top: 12px;
+}
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 8px;
+    padding: 0 4px;
+}
+QLabel {
+    color: #e6edf3;
+}
+QLineEdit,
+QSpinBox,
+QComboBox,
+QListWidget,
+QTextEdit,
+QPlainTextEdit {
+    background-color: #0f141b;
+    color: #e6edf3;
+    border: 1px solid #3a4354;
+    selection-background-color: #315f9f;
+    selection-color: #ffffff;
+}
+QListWidget::item:selected {
+    background-color: #2f7d46;
+    color: #ffffff;
+}
+QPushButton {
+    background-color: #26303d;
+    color: #e6edf3;
+    border: 1px solid #536174;
+    border-radius: 4px;
+    padding: 4px 10px;
+}
+QPushButton:hover {
+    background-color: #334155;
+}
+QPushButton:disabled {
+    color: #7d8794;
+    background-color: #202631;
+}
+QTabWidget::pane {
+    border: 1px solid #3a4354;
+}
+QTabBar::tab {
+    background-color: #202631;
+    color: #d8dee9;
+    border: 1px solid #3a4354;
+    padding: 5px 10px;
+}
+QTabBar::tab:selected {
+    background-color: #111827;
+    color: #ffffff;
+}
+)DDSSH");
+}
+}
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     setWindowTitle("DD-SSH");
 
+    ConfigManager config;
+    QString settingsError;
+    const AppSettings startupSettings = config.loadSettings(&settingsError);
+
+    if (settingsError.isEmpty()) {
+        applyAppTheme(startupSettings.appTheme);
+    }
+
     setupMenus();
     setupToolbar();
     setupCentralLayout();
 
-    statusBar()->showMessage("DD-SSH Andromeda ready — settings foundation");
+    statusBar()->showMessage("DD-SSH Andromeda ready — app theme foundation");
 
     resize(1100, 700);
+}
+
+void MainWindow::applyAppTheme(const QString &themeName)
+{
+    const QString normalized = normalizedAppTheme(themeName);
+
+    if (normalized == QStringLiteral("dark")) {
+        qApp->setStyleSheet(darkAppStyleSheet());
+        return;
+    }
+
+    if (normalized == QStringLiteral("light")) {
+        qApp->setStyleSheet(lightAppStyleSheet());
+        return;
+    }
+
+    qApp->setStyleSheet(QString());
 }
 
 void MainWindow::setupMenus()
@@ -95,7 +294,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: Codename roadmap alignment.\n\n")
+            + QStringLiteral("Current phase: App theme foundation.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n")
@@ -1237,7 +1436,9 @@ void MainWindow::showSettingsDialog()
 
     QString saveError;
 
-    if (!config.saveSettings(dialog.settings(), &saveError)) {
+    const AppSettings newSettings = dialog.settings();
+
+    if (!config.saveSettings(newSettings, &saveError)) {
         QMessageBox::warning(
             this,
             QStringLiteral("Could not save settings"),
@@ -1247,7 +1448,8 @@ void MainWindow::showSettingsDialog()
         return;
     }
 
-    statusBar()->showMessage(QStringLiteral("Settings saved to dd-ssh.json. New terminal settings apply to newly opened terminals."));
+    applyAppTheme(newSettings.appTheme);
+    statusBar()->showMessage(QStringLiteral("Settings saved to dd-ssh.json. App theme applied. New terminal font settings apply to newly opened terminals."));
 }
 
 void MainWindow::showConnectDialog()

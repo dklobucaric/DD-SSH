@@ -18,6 +18,7 @@ private:
     void setupCentralLayout();
     void loadSavedSessionsToSidebar();
     void addWelcomeTab();
+    void applyAppTheme(const QString &themeName);
     void showConnectDialog();
     void showSettingsDialog();
     void testSavedSession(const QString &sessionId);

@@ -1,6 +1,7 @@
 #include "SettingsDialog.h"
 
 #include <QCheckBox>
+#include <QComboBox>
 #include <QDesktopServices>
 #include <QDialogButtonBox>
 #include <QFileInfo>
@@ -26,20 +27,20 @@ SettingsDialog::SettingsDialog(
     setWindowTitle(QStringLiteral("DD-SSH Settings"));
     setModal(true);
     setSizeGripEnabled(true);
-    setMinimumSize(700, 560);
-    resize(760, 600);
+    setMinimumSize(760, 620);
+    resize(820, 660);
 
     auto *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(12, 12, 12, 12);
     mainLayout->setSpacing(10);
 
-    auto *titleLabel = new QLabel(QStringLiteral("DD-SSH settings foundation"), this);
+    auto *titleLabel = new QLabel(QStringLiteral("DD-SSH settings"), this);
     titleLabel->setStyleSheet(QStringLiteral("font-weight: bold;"));
     mainLayout->addWidget(titleLabel);
 
     auto *introLabel = new QLabel(
         QStringLiteral("These settings are stored in dd-ssh.json under the top-level settings block. "
-                       "This first settings checkpoint is intentionally small and safe."),
+                       "App theme changes apply immediately after saving; terminal font changes apply to newly opened terminals."),
         this
     );
     introLabel->setWordWrap(true);
@@ -67,6 +68,37 @@ SettingsDialog::SettingsDialog(
     generalLayout->addRow(QStringLiteral("Double-click session:"), m_doubleClickLabel);
 
     mainLayout->addWidget(generalGroup);
+
+    auto *appearanceGroup = new QGroupBox(QStringLiteral("Appearance"), this);
+    auto *appearanceLayout = new QFormLayout(appearanceGroup);
+    appearanceLayout->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
+
+    m_appThemeCombo = new QComboBox(appearanceGroup);
+    m_appThemeCombo->addItem(QStringLiteral("System default"), QStringLiteral("system"));
+    m_appThemeCombo->addItem(QStringLiteral("Light"), QStringLiteral("light"));
+    m_appThemeCombo->addItem(QStringLiteral("Dark"), QStringLiteral("dark"));
+
+    const QString normalizedTheme = settings.appTheme.trimmed().toLower();
+    const int themeIndex = m_appThemeCombo->findData(
+        (normalizedTheme == QStringLiteral("light") || normalizedTheme == QStringLiteral("dark"))
+            ? normalizedTheme
+            : QStringLiteral("system")
+    );
+
+    if (themeIndex >= 0) {
+        m_appThemeCombo->setCurrentIndex(themeIndex);
+    }
+
+    appearanceLayout->addRow(QStringLiteral("App theme:"), m_appThemeCombo);
+
+    auto *appearanceNote = new QLabel(
+        QStringLiteral("This changes the Qt app chrome only. The xterm.js terminal stays on its current dark terminal theme for now."),
+        appearanceGroup
+    );
+    appearanceNote->setWordWrap(true);
+    appearanceLayout->addRow(QString(), appearanceNote);
+
+    mainLayout->addWidget(appearanceGroup);
 
     auto *terminalGroup = new QGroupBox(QStringLiteral("Terminal"), this);
     auto *terminalLayout = new QFormLayout(terminalGroup);
@@ -157,6 +189,15 @@ SettingsDialog::SettingsDialog(
 AppSettings SettingsDialog::settings() const
 {
     AppSettings result;
+    result.appTheme = QStringLiteral("system");
+
+    if (m_appThemeCombo != nullptr) {
+        const QString selectedTheme = m_appThemeCombo->currentData().toString().trimmed();
+
+        if (!selectedTheme.isEmpty()) {
+            result.appTheme = selectedTheme;
+        }
+    }
     result.terminalFontFamily = m_terminalFontFamilyEdit->text().trimmed().isEmpty()
         ? QStringLiteral("monospace")
         : m_terminalFontFamilyEdit->text().trimmed();

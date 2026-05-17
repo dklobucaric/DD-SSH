@@ -146,6 +146,14 @@ void ConfigManager::ensureBaseObjects(QJsonObject *root) const
 
     QJsonObject settings = root->value(QStringLiteral("settings")).toObject();
 
+    QJsonObject appearanceSettings = settings.value(QStringLiteral("appearance")).toObject();
+
+    if (!appearanceSettings.contains(QStringLiteral("app_theme"))) {
+        appearanceSettings.insert(QStringLiteral("app_theme"), QStringLiteral("system"));
+    }
+
+    settings.insert(QStringLiteral("appearance"), appearanceSettings);
+
     QJsonObject terminalSettings = settings.value(QStringLiteral("terminal")).toObject();
 
     if (!terminalSettings.contains(QStringLiteral("font_family"))) {
@@ -350,9 +358,15 @@ AppSettings ConfigManager::loadSettings(QString *errorMessage) const
     ensureBaseObjects(&root);
 
     const QJsonObject settingsObject = root.value(QStringLiteral("settings")).toObject();
+    const QJsonObject appearance = settingsObject.value(QStringLiteral("appearance")).toObject();
     const QJsonObject terminal = settingsObject.value(QStringLiteral("terminal")).toObject();
     const QJsonObject configSafety = settingsObject.value(QStringLiteral("config_safety")).toObject();
     const QJsonObject behavior = settingsObject.value(QStringLiteral("behavior")).toObject();
+
+    const QString rawAppTheme = appearance.value(QStringLiteral("app_theme")).toString(QStringLiteral("system")).trimmed().toLower();
+    settings.appTheme = (rawAppTheme == QStringLiteral("light") || rawAppTheme == QStringLiteral("dark"))
+        ? rawAppTheme
+        : QStringLiteral("system");
 
     const QString fontFamily = terminal.value(QStringLiteral("font_family")).toString(QStringLiteral("monospace")).trimmed();
     settings.terminalFontFamily = fontFamily.isEmpty()
@@ -381,6 +395,16 @@ bool ConfigManager::saveSettings(const AppSettings &settings, QString *errorMess
     ensureBaseObjects(&root);
 
     QJsonObject settingsObject = root.value(QStringLiteral("settings")).toObject();
+
+    QJsonObject appearance = settingsObject.value(QStringLiteral("appearance")).toObject();
+    const QString appTheme = settings.appTheme.trimmed().toLower();
+    appearance.insert(
+        QStringLiteral("app_theme"),
+        (appTheme == QStringLiteral("light") || appTheme == QStringLiteral("dark"))
+            ? appTheme
+            : QStringLiteral("system")
+    );
+    settingsObject.insert(QStringLiteral("appearance"), appearance);
 
     QJsonObject terminal = settingsObject.value(QStringLiteral("terminal")).toObject();
     const QString fontFamily = settings.terminalFontFamily.trimmed().isEmpty()

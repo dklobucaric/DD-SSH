@@ -1,6 +1,6 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.4.3 — Andromeda  
+**Checkpoint:** dev 0.1.4.4 — Andromeda  
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
 
 This document tracks the manually confirmed test coverage for the current Andromeda development line.
@@ -47,6 +47,7 @@ TODO      Not implemented or not tested yet
 | Session delete | Context menu → Delete session | Session is removed; known_hosts stays preserved | PASS |
 | Settings save | Toolbar/Tools → Settings | Settings are saved under `settings` in `dd-ssh.json` | TODO |
 | Terminal font settings | Change font size, open new terminal | Newly opened xterm.js tab uses the configured font size | TODO |
+| App theme setting | Settings → Appearance → System/Light/Dark | Main Qt app appearance changes after saving; xterm.js terminal theme remains unchanged | TODO |
 | Settings dialog layout | Open Settings from toolbar or Tools menu | Dialog opens at a readable size without manual resizing | PASS |
 
 ---

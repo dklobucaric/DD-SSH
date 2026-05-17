@@ -9,6 +9,7 @@ struct AppSettings
 {
     QString terminalFontFamily = QStringLiteral("monospace");
     int terminalFontSize = 14;
+    QString appTheme = QStringLiteral("system");
     bool configBackupsEnabled = true;
     int maxConfigBackups = 10;
     QString doubleClickAction = QStringLiteral("open_terminal");

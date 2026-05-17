@@ -51,6 +51,9 @@ When saving a new session, DD-SSH should warn if another session already uses th
 ```json
 {
   "settings": {
+    "appearance": {
+      "app_theme": "system"
+    },
     "terminal": {
       "font_family": "monospace",
       "font_size": 14
@@ -66,7 +69,7 @@ When saving a new session, DD-SSH should warn if another session already uses th
 }
 ```
 
-Terminal font settings apply to newly opened xterm.js terminal tabs. Starting with `dev 0.1.4.2`, the config safety backup policy is active: when backups are enabled, DD-SSH creates timestamped `dd-ssh.json.bak-*` files before saving and keeps the newest `max_backups` files.
+App theme values are `system`, `light`, or `dark`. The app theme affects the Qt application chrome only; xterm.js terminal colors are intentionally not changed in this checkpoint. Terminal font settings apply to newly opened xterm.js terminal tabs. Starting with `dev 0.1.4.2`, the config safety backup policy is active: when backups are enabled, DD-SSH creates timestamped `dd-ssh.json.bak-*` files before saving and keeps the newest `max_backups` files.
 
 Default config location notes:
 

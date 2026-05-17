@@ -15,6 +15,16 @@ The Welcome screen is intentionally kept as a short current-state dashboard. Det
 1.0.x — Apollo
 ```
 
+## dev 0.1.4.4 — Andromeda
+
+**Focus:** App theme foundation.
+
+- Added Settings → Appearance → App theme with `System default`, `Light`, and `Dark` options.
+- Added `settings.appearance.app_theme` to `dd-ssh.json`.
+- Applies the Qt app theme immediately after Settings are saved.
+- Keeps the xterm.js terminal theme unchanged; this checkpoint only affects the main app chrome, dialogs, sidebar, menus, tabs, and status UI.
+- Updated Welcome/README/config docs for app-level theming.
+
 ## dev 0.1.4.3 — Andromeda
 
 **Focus:** Codename roadmap alignment.
