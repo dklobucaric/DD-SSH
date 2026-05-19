@@ -82,8 +82,11 @@
 
 ### Platform support
 
-- Linux is the main tested platform so far.
-- Windows and macOS builds are intended but not validated in the same depth yet.
+- Linux is the primary development and regression-test platform.
+- Native Windows build/runtime validation has started and is documented in `docs/WINDOWS_BUILD.md`.
+- Windows app launch, SSH/xterm terminal, and `htop` were confirmed during the first MSVC/Qt/vcpkg test pass.
+- Windows Release build metrics and deployment are still pending.
+- macOS builds are intended but not validated yet.
 - Packaging/installers are not ready.
 
 ### Features not implemented

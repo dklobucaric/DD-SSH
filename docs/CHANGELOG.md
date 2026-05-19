@@ -1,5 +1,16 @@
 # DD-SSH Changelog
 
+## dev 0.1.5.1 — Andromeda
+
+Windows build documentation and release build test preparation.
+
+- Documented the first native Windows build path using MSVC x64, CMake, Ninja, Qt 6.11.1 MSVC 2022 64-bit, Qt WebEngine/WebChannel/Positioning, vcpkg `libssh`, and vcpkg `pkgconf`.
+- Added `docs/WINDOWS_BUILD.md` with Debug and Release build commands.
+- Documented Windows-specific observations: first WebEngine terminal startup delay, higher RAM usage from Qt WebEngine/Chromium, Qt cache folder, and AppData config path.
+- Updated README, Welcome screen, Building docs, Test Matrix, Roadmap, and Public Alpha Checklist with Windows validation status.
+- Added `.gitignore` coverage for Windows/MSVC local build artifacts.
+- No SSH/session/terminal runtime logic changes are intended in this checkpoint.
+
 ## dev 0.1.5.0 — Andromeda
 
 Public alpha release preparation.

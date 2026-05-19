@@ -71,18 +71,41 @@ No CDN should be required for terminal rendering.
 
 ## Current tested platform
 
-Linux is the primary tested platform so far.
-
-Windows/macOS are project targets but need dedicated validation.
+Linux remains the primary development platform. Windows native build/runtime validation has started and is documented in `docs/WINDOWS_BUILD.md`. macOS still needs dedicated validation.
 
 ## Version identity
 
 The About dialog reads version strings from `CMakeLists.txt`:
 
 ```cmake
-set(DD_SSH_VERSION_STRING "dev 0.1.4.9")
+set(DD_SSH_VERSION_STRING "dev 0.1.5.1")
 set(DD_SSH_CODENAME_STRING "Andromeda")
 set(DD_SSH_MILESTONE_STRING "MF 0.2 candidate")
 ```
 
 Every generated checkpoint should update the version string.
+
+
+---
+
+## Windows native build
+
+A native Windows build has been validated during the Andromeda line using MSVC, Ninja, Qt 6.11.1 MSVC 2022 64-bit, Qt WebEngine/WebChannel/Positioning, vcpkg `libssh`, and vcpkg `pkgconf`.
+
+See the dedicated guide:
+
+- [Windows Build Guide](WINDOWS_BUILD.md)
+
+Short version:
+
+```cmd
+cmake -S . -B build-win -G Ninja ^
+  -DCMAKE_BUILD_TYPE=Debug ^
+  -DCMAKE_PREFIX_PATH=C:\Qt\6.11.1\msvc2022_64 ^
+  -DCMAKE_TOOLCHAIN_FILE=C:\dev\vcpkg\scripts\buildsystems\vcpkg.cmake ^
+  -DPKG_CONFIG_EXECUTABLE=C:\dev\vcpkg\installed\x64-windows\tools\pkgconf\pkgconf.exe
+
+cmake --build build-win
+```
+
+Release build testing should use `build-win-release` and `-DCMAKE_BUILD_TYPE=Release`.

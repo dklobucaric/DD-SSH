@@ -73,3 +73,26 @@ git push origin v0.2.0-alpha
 ```
 
 Do not tag until tests are confirmed.
+
+
+---
+
+## Windows Release build gate
+
+Before a public alpha tag that claims Windows support, perform the Windows Release build process from [Windows Build Guide](WINDOWS_BUILD.md).
+
+Record:
+
+```text
+- Windows version
+- Qt version
+- vcpkg/libssh version
+- Release configure/build result
+- app startup time
+- first terminal startup time
+- second terminal startup time
+- RAM after Welcome screen
+- RAM after one xterm terminal
+```
+
+Deployment/installer artifacts are not required for the first internal Windows validation, but public releases should eventually use `windeployqt` and a clean machine/runtime test.

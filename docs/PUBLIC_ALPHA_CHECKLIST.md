@@ -1,6 +1,6 @@
 # DD-SSH Public Alpha Checklist
 
-**Checkpoint:** dev 0.1.5.0 — Andromeda  
+**Checkpoint:** dev 0.1.5.1 — Andromeda  
 **Milestone target:** v0.2.0-alpha — Real Terminal Foundation
 
 This checklist is the final pre-alpha gate. It is intentionally practical: run it on a real machine, with real saved sessions, before tagging a public alpha.
@@ -24,10 +24,10 @@ cmake --build build --clean-first
 - [ ] Help → About DD-SSH shows:
 
 ```text
-Version: dev 0.1.5.0
+Version: dev 0.1.5.1
 Codename: Andromeda
 Milestone: MF 0.2 candidate
-Current phase: Public alpha release preparation.
+Current phase: Windows build documentation and release build test.
 ```
 
 - [ ] Welcome tab opens and describes the current Andromeda status.
@@ -190,3 +190,25 @@ Can an external tester build DD-SSH, create a session, open xterm.js terminal, r
 ```
 
 If yes, Andromeda is ready for public alpha.
+
+
+---
+
+## Windows build validation
+
+Before tagging public alpha, run or review the Windows path in [Windows Build Guide](WINDOWS_BUILD.md).
+
+Minimum Windows public-alpha checklist:
+
+```text
+[ ] Debug build still configures and builds with MSVC/Ninja
+[ ] Release build configures and builds
+[ ] App launches from build environment
+[ ] About and Settings open
+[ ] Config path uses AppData/Local/DD-LAB/DD-SSH
+[ ] Password SSH session opens xterm terminal
+[ ] htop works
+[ ] first terminal startup delay is documented
+[ ] RAM usage observation is documented
+[ ] deployment with windeployqt is either tested or clearly marked pending
+```

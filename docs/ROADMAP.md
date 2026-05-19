@@ -131,4 +131,26 @@ Expected before Apollo:
 
 ## Current release-prep step
 
-`dev 0.1.5.0` is the public alpha release preparation checkpoint. It does not add a major runtime feature. It prepares the repository for `v0.2.0-alpha — Andromeda` with release notes, a public alpha checklist, known limitations, and GitHub issue templates.
+`dev 0.1.5.0` is the public alpha release preparation checkpoint. `dev 0.1.5.1` adds the Windows build documentation and release-build test path after the first native Windows build succeeded. It prepares the repository for `v0.2.0-alpha — Andromeda` with release notes, a public alpha checklist, known limitations, GitHub issue templates, and Windows build validation notes.
+
+
+---
+
+## 0.1.5.x Windows/public-alpha preparation
+
+```text
+dev 0.1.5.0 — Public alpha release preparation
+dev 0.1.5.1 — Windows build documentation and release build test
+dev 0.1.5.2 — App icon integration
+dev 0.1.5.3 — WebEngine startup polish
+dev 0.1.5.4 — Windows deployment experiment
+```
+
+Planned Windows-related scope:
+
+- document native Windows MSVC/Qt/vcpkg build
+- test Release build separately from Debug
+- document first-terminal startup delay from Qt WebEngine
+- document RAM expectations caused by Qt WebEngine/Chromium
+- add app/window/exe icons
+- later test `windeployqt` and standalone deployment folder

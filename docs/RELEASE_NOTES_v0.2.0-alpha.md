@@ -104,3 +104,18 @@ Before tagging this alpha, complete:
 - [ ] GitHub issue templates review
 - [ ] Fresh clone build test
 
+
+
+---
+
+## Windows validation notes
+
+During the Andromeda preparation line, DD-SSH was successfully built and launched natively on Windows using MSVC, Qt 6.11.1, Qt WebEngine/WebChannel/Positioning, vcpkg `libssh`, and vcpkg `pkgconf`.
+
+The Windows build was able to open an SSH/xterm terminal and run `htop`.
+
+Known Windows alpha caveats:
+
+- first xterm terminal startup may be slower than Linux due to Qt WebEngine initialization
+- RAM usage is higher than a native terminal-only app because Qt WebEngine embeds Chromium components
+- deployment with `windeployqt` is still planned

@@ -1,8 +1,8 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.5.0 — Andromeda  
+**Checkpoint:** dev 0.1.5.1 — Andromeda  
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation  
-**Phase:** Public alpha release preparation
+**Phase:** Windows build documentation and release build test
 
 This matrix tracks what has been confirmed manually, what is implemented but should be re-tested before a public alpha tag, and what is still planned.
 
@@ -22,6 +22,10 @@ TODO              Not implemented yet.
 |---|---|---|---|---|
 | Build | `cmake --build build --clean-first` | Build completes and links `dd-ssh` | PASS | Re-tested frequently during development. |
 | Launch | `./build/dd-ssh` | App opens | PASS | Linux primary test platform. |
+| Windows configure | CMake with MSVC/Qt/vcpkg/pkgconf | Configure completes | PASS | Confirmed on native Windows branch. |
+| Windows Debug build | `cmake --build build-win` | `dd-ssh.exe` builds | PASS | Confirmed on native Windows. |
+| Windows launch | `build-win\dd-ssh.exe` with Qt/vcpkg DLL paths | App opens | PASS | Confirmed; Welcome screen and UI visible. |
+| Windows Release build | `build-win-release` | Release exe builds | NOT TESTED | Next focused performance test. |
 | About | Help → About DD-SSH | Shows version/codename/milestone/config path | PASS | Verified after version/codename work. |
 | Version | About dialog | Shows current checkpoint version | PASS | Should be checked after every patch. |
 | Codename | About dialog | Shows `Andromeda` | PASS | Current 0.1.x codename line. |
@@ -88,7 +92,7 @@ TODO              Not implemented yet.
 | App theme | System/Light/Dark | Qt app theme changes after OK and persists | PASS | Confirmed by user; app theme changes apply and persist. |
 | Terminal font | Change font size | New terminal tabs use new font | PASS | Confirmed by user. |
 | Backup setting | Enable/disable backups, max count | Setting is saved | PASS | Confirmed together with backup creation. |
-| Open config folder | Settings/File action | Opens config folder | IMPLEMENTED | Needs platform-specific validation beyond Linux. |
+| Open config folder | Settings/File action | Opens config folder | PASS | Confirmed during Windows/AppData validation path and Linux settings workflow. |
 | Plaintext warning | Settings dialog | Orange plaintext secrets warning visible | PASS | Confirmed and intentionally kept. |
 | Dark terminal | xterm terminal | Terminal remains dark independent of app theme | PASS | Intentional for now; xterm theming deferred. |
 
@@ -130,8 +134,25 @@ TODO              Not implemented yet.
 | Platform | Status | Notes |
 |---|---|---|
 | Linux | PASS | Primary tested platform. |
-| Windows | TODO | Build/runtime not validated yet. |
+| Windows | PARTIAL | Native Windows build launches and SSH/xterm/htop work. Release build, deployment, and installer are not validated yet. |
 | macOS | TODO | Build/runtime not validated yet. |
+
+
+## 9a. Windows validation details
+
+| Area | Test | Expected result | Status | Notes |
+|---|---|---|---|---|
+| MSVC | `cl` in x64 Native Tools prompt | Microsoft C/C++ compiler is available | PASS | MSVC x64 confirmed. |
+| Qt WebEngine | Qt 6.11.1 MSVC 2022 64-bit | WebEngineWidgets found by CMake | PASS | Needed Qt Positioning dependency. |
+| Qt WebChannel | `Qt6WebChannelConfig.cmake` exists | WebChannel bridge available | PASS | Confirmed in Qt install. |
+| Qt Positioning | `Qt6PositioningConfig.cmake` exists | WebEngine dependency resolves | PASS | Added after first CMake failure. |
+| vcpkg libssh | `vcpkg install libssh:x64-windows` | libssh installed | PASS | vcpkg reported successful install. |
+| pkgconf | vcpkg `pkgconf` path passed to CMake | `pkg_check_modules(libssh)` works | PASS | CMake found libssh 0.12.0. |
+| AppData config | First Windows launch | Config stored under AppData/Local/DD-LAB/DD-SSH | PASS | Windows path verified by app launch behavior. |
+| Windows terminal | Saved session opens xterm | SSH terminal opens | PASS | Confirmed with real SSH session. |
+| Windows htop | `htop` in terminal | Fullscreen terminal app renders | PASS | Confirmed by screenshot/test. |
+| Windows startup/RAM | Task Manager observation | Record initial metrics | PARTIAL | Debug build showed several-second first terminal startup and ~350–380 MB RAM with WebEngine terminal. Release build measurement pending. |
+| Windows deploy | Run outside build environment | App starts without developer PATH | TODO | Planned for deployment experiment with `windeployqt`. |
 
 ## 10. Public alpha readiness summary
 
@@ -143,7 +164,7 @@ TODO              Not implemented yet.
 | Config import/export | IMPLEMENTED | Needs final focused pass before public alpha tag. |
 | Settings foundation | PASS | Font/app settings exist; theme needs final confirmation if not already done. |
 | Security posture documented | PASS | Plaintext secrets warning exists. |
-| Windows/macOS validation | TODO | Required before claiming cross-platform release quality. |
+| Windows/macOS validation | PARTIAL | Windows native Debug build validated; Windows Release/deployment and macOS remain pending. |
 | Packaging/installers | TODO | Not part of current dev line. |
 
 ## 11. Suggested final pre-alpha test pass
@@ -168,4 +189,5 @@ Then verify:
 8. Config backup is created before save.
 9. Corrupt config recovery still works.
 10. Export/import/restore config actions pass a focused test.
+11. Windows Release build test records startup/RAM notes.
 ```

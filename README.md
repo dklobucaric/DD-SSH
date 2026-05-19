@@ -17,12 +17,12 @@ DD-SSH is designed for practical sysadmin use: saved sessions, one portable JSON
 
 ## Current status
 
-**Development checkpoint:** `dev 0.1.5.0`  
+**Development checkpoint:** `dev 0.1.5.1`  
 **Codename:** Andromeda  
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation  
-**Current phase:** Public alpha release preparation
+**Current phase:** Windows build documentation and release build test
 
-DD-SSH is now close to a **public alpha**. It is not a stable 1.0 release yet, but the core workflow is functional and tested on Linux:
+DD-SSH is now close to a **public alpha**. It is not a stable 1.0 release yet, but the core workflow is functional and tested on Linux. A native Windows build has also been validated with MSVC, Qt 6.11.1, Qt WebEngine/WebChannel/Positioning, vcpkg/libssh, and pkgconf:
 
 ```text
 saved session → plaintext secret from dd-ssh.json → known_hosts check → SSH auth → xterm.js terminal → PTY resize → real shell
@@ -43,6 +43,7 @@ Before tagging, run:
 
 - [Public Alpha Checklist](docs/PUBLIC_ALPHA_CHECKLIST.md)
 - [Test Matrix](docs/TEST_MATRIX.md)
+- [Windows Build Guide](docs/WINDOWS_BUILD.md)
 - [Release Notes Draft](docs/RELEASE_NOTES_v0.2.0-alpha.md)
 
 GitHub issue templates are included for bug reports, terminal issues, config/recovery issues, and feature requests.
@@ -123,6 +124,19 @@ See [Security Notes](docs/SECURITY_NOTES.md).
   - Restore Latest Backup
   - Exit
 
+### Windows validation
+
+- Native Windows build confirmed using MSVC x64 and Ninja
+- Qt 6.11.1 MSVC 2022 64-bit tested with WebEngine, WebChannel, and Positioning
+- `libssh` provided by vcpkg
+- `pkgconf` used for current CMake/libssh discovery
+- Windows config path uses AppData/Local style location via Qt
+- xterm.js terminal, SSH connection, and `htop` were confirmed working on Windows
+- First xterm/WebEngine terminal startup may be slower than Linux; later terminals are faster
+- RAM usage is higher on Windows because Qt WebEngine embeds a Chromium-based engine
+
+See [Windows Build Guide](docs/WINDOWS_BUILD.md).
+
 ### Config safety
 
 - Linux default config path:
@@ -153,7 +167,7 @@ DD-SSH is intentionally still limited. Not implemented yet:
 - Keep-alive settings
 - Portable mode next to binary
 - Custom config path picker
-- Windows/macOS validation pass
+- macOS validation pass
 - Packaging/installers
 - Signed releases
 - Full public release process
@@ -186,7 +200,7 @@ cmake --build build
 ./build/dd-ssh
 ```
 
-See [Building](docs/BUILDING.md).
+See [Building](docs/BUILDING.md) and [Windows Build Guide](docs/WINDOWS_BUILD.md).
 
 ### 2. Create a session
 
@@ -276,6 +290,7 @@ Start here:
 - [Security Notes](docs/SECURITY_NOTES.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Building](docs/BUILDING.md)
+- [Windows Build Guide](docs/WINDOWS_BUILD.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Test Matrix](docs/TEST_MATRIX.md)
 - [Public Alpha Checklist](docs/PUBLIC_ALPHA_CHECKLIST.md)

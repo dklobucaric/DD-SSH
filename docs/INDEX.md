@@ -17,6 +17,7 @@ This directory contains the working documentation for DD-SSH.
 - [Config Management](CONFIG_MANAGEMENT.md) — backups, import/export, recovery
 - [Security Notes](SECURITY_NOTES.md) — plaintext secrets, known_hosts, future encryption
 - [Building](BUILDING.md) — local build instructions
+- [Windows Build Guide](WINDOWS_BUILD.md) — native Windows MSVC/Qt/vcpkg build notes
 - [Packaging](PACKAGING.md) — future distribution notes
 
 ## Project management docs
@@ -30,10 +31,10 @@ This directory contains the working documentation for DD-SSH.
 ## Current checkpoint
 
 ```text
-Version: dev 0.1.4.9
+Version: dev 0.1.5.1
 Codename: Andromeda
 Milestone: MF 0.2 candidate
-Phase: Public alpha documentation pass
+Phase: Windows build documentation and release build test
 ```
 
 
@@ -41,6 +42,7 @@ Phase: Public alpha documentation pass
 
 - [Public Alpha Checklist](PUBLIC_ALPHA_CHECKLIST.md)
 - [Release Notes Draft: v0.2.0-alpha](RELEASE_NOTES_v0.2.0-alpha.md)
+- [Windows Build Guide](WINDOWS_BUILD.md)
 - [Known Limitations](KNOWN_LIMITATIONS.md)
 
 GitHub issue templates live under `.github/ISSUE_TEMPLATE/`.

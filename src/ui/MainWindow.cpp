@@ -669,7 +669,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: Public alpha release preparation.\n\n")
+            + QStringLiteral("Current phase: Windows build documentation and release build test.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n")
@@ -874,7 +874,7 @@ void MainWindow::addWelcomeTab()
         "A clean cross-platform SSH client and session manager.\n\n"
         "Double-click a saved session on the left to open the xterm.js terminal.\n\n"
         "Current milestone:\n"
-        "MF 0.2 candidate — Real Terminal Foundation / public alpha release preparation\n\n"
+        "MF 0.2 candidate — Real Terminal Foundation / Windows build validation\n\n"
         "Working now:\n"
         "- saved sessions loaded from dd-ssh.json\n"
         "- portable plaintext secrets in dd-ssh.json\n"
@@ -887,7 +887,8 @@ void MainWindow::addWelcomeTab()
         "- tested terminal apps: htop, nano, vim, top, clear\n"
         "- reconnect after disconnect/reboot\n"
         "- settings foundation with app theme, font settings, backups, and toolbar visibility\n"
-        "- config import/export/restore and corrupt config recovery\n\n"
+        "- config import/export/restore and corrupt config recovery\n"
+        "- native Windows build validated with Qt/MSVC/vcpkg/libssh\n\n"
         "Main menus:\n"
         "- File: Open Config Folder, Export Config, Import Config, Restore Latest Backup, Exit\n"
         "- Session: New Session, Connect / Auth test, Edit selected session\n"
@@ -896,6 +897,7 @@ void MainWindow::addWelcomeTab()
         "Documentation:\n"
         "- README.md is the public-alpha entry point\n"
         "- docs/GETTING_STARTED.md explains first build and first connection\n"
+        "- docs/WINDOWS_BUILD.md explains native Windows build and release build testing\n"
         "- docs/USER_GUIDE.md explains menus and workflows\n"
         "- docs/USE_CASES.md explains practical usage scenarios\n"
         "- docs/CONFIG_MANAGEMENT.md explains backups/import/export/recovery\n"
@@ -903,8 +905,9 @@ void MainWindow::addWelcomeTab()
         "- docs/TEST_MATRIX.md tracks current Andromeda validation\n"
         "- docs/ROADMAP.md tracks future versions\n\n"
         "Next milestone:\n"
-        "- public alpha release readiness review\n"
-        "- final Andromeda test matrix pass\n"
+        "- app icon integration for Windows/Linux\n"
+        "- WebEngine startup polish / first-terminal loading message\n"
+        "- Windows deployment experiment with windeployqt\n"
         "- prepare v0.2.0-alpha milestone notes\n\n"
         "Codename roadmap:\n"
         "- 0.0.x — Launchpad / early prototype history\n"

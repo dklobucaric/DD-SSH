@@ -1,0 +1,416 @@
+# Windows Build Guide
+
+**Checkpoint:** dev 0.1.5.1 — Andromeda  
+**Purpose:** document the first native Windows build path and release-build test procedure.
+
+This guide documents the Windows setup that was validated during the Andromeda line. It is intentionally practical and conservative: first get a native Windows build running, then test runtime behavior, then later experiment with deployment/installer packaging.
+
+---
+
+## Current Windows status
+
+Confirmed during the first native Windows test pass:
+
+```text
+[x] MSVC x64 compiler works
+[x] CMake configure works
+[x] Ninja build works
+[x] Qt app launches on Windows
+[x] Qt app theme follows Windows dark mode when set to System
+[x] Settings and Welcome screen open
+[x] SSH connection works
+[x] xterm.js local renderer works through Qt WebEngine
+[x] htop runs inside the Windows-built DD-SSH terminal
+```
+
+Known Windows observations from the first Debug build test:
+
+```text
+- app startup is slower than Linux
+- first xterm.js terminal can take several seconds because Qt WebEngine/Chromium starts lazily
+- later terminal tabs open much faster
+- Task Manager showed roughly 350–380 MB RAM with a WebEngine terminal open
+- Qt may create a cache folder under the DD-SSH AppData location
+```
+
+These are not currently treated as fatal bugs. They are expected side effects of using Qt WebEngine/xterm.js, especially in Debug builds.
+
+---
+
+## Recommended Windows approach
+
+Use a **native Windows build**, not WSL, for Windows validation.
+
+Recommended stack:
+
+```text
+Windows 10/11
+Visual Studio 2022 Build Tools / MSVC x64
+CMake
+Ninja
+Git for Windows
+Qt 6 MSVC 2022 64-bit
+Qt WebEngine
+Qt WebChannel
+Qt Positioning
+vcpkg
+libssh from vcpkg
+pkgconf from vcpkg
+```
+
+Do not start with MinGW for this project. The first tested path uses MSVC.
+
+---
+
+## 1. Install Visual Studio C++ Build Tools
+
+Install Visual Studio 2022 Build Tools or Visual Studio Community 2022.
+
+Required workload:
+
+```text
+Desktop development with C++
+```
+
+Required components:
+
+```text
+MSVC v143/v144 x64 compiler toolset
+Windows 10/11 SDK
+C++ CMake tools for Windows
+```
+
+Open:
+
+```text
+x64 Native Tools Command Prompt for VS 2022
+```
+
+Verify:
+
+```cmd
+cl
+cmake --version
+ninja --version
+git --version
+```
+
+Expected: `cl` prints Microsoft C/C++ compiler information, not `'cl' is not recognized`.
+
+---
+
+## 2. Install Qt
+
+Use Qt Maintenance Tool / Online Installer.
+
+Tested path:
+
+```text
+C:\Qt\6.11.1\msvc2022_64
+```
+
+Required Qt components:
+
+```text
+Qt 6.11.1 MSVC 2022 64-bit
+Qt WebEngine
+Qt WebChannel
+Qt Positioning
+```
+
+Verify:
+
+```cmd
+dir C:\Qt\6.11.1\msvc2022_64\lib\cmake\Qt6WebEngineCore
+dir C:\Qt\6.11.1\msvc2022_64\lib\cmake\Qt6WebEngineWidgets
+dir C:\Qt\6.11.1\msvc2022_64\lib\cmake\Qt6WebChannel
+dir C:\Qt\6.11.1\msvc2022_64\lib\cmake\Qt6Positioning
+```
+
+If CMake says WebEngine is missing because `Qt6Positioning` could not be found, install Qt Positioning through the Maintenance Tool.
+
+---
+
+## 3. Install vcpkg, libssh, and pkgconf
+
+From the x64 Native Tools prompt:
+
+```cmd
+cd C:\
+mkdir dev
+cd C:\dev
+
+git clone https://github.com/microsoft/vcpkg.git
+cd C:\dev\vcpkg
+
+bootstrap-vcpkg.bat
+vcpkg install libssh:x64-windows
+vcpkg install pkgconf:x64-windows
+```
+
+Verify pkgconf path:
+
+```cmd
+dir /s /b C:\dev\vcpkg\*pkgconf.exe
+```
+
+Expected path:
+
+```text
+C:\dev\vcpkg\installed\x64-windows\tools\pkgconf\pkgconf.exe
+```
+
+Current CMake uses `pkg-config`/`pkgconf` for libssh discovery. A future CMake polish may prefer `find_package(libssh CONFIG REQUIRED)` on Windows, but the documented working setup uses pkgconf.
+
+---
+
+## 4. Clone DD-SSH
+
+```cmd
+cd C:\dev
+git clone https://github.com/dklobucaric/DD-SSH.git
+cd C:\dev\DD-SSH
+```
+
+For Windows experiments:
+
+```cmd
+git checkout feature/windows-build
+```
+
+For testing the main development line:
+
+```cmd
+git fetch origin
+git checkout -b dev origin/dev
+```
+
+---
+
+## 5. Debug build
+
+Clean old build folder:
+
+```cmd
+cd C:\dev\DD-SSH
+rmdir /s /q build-win
+```
+
+Configure:
+
+```cmd
+cmake -S . -B build-win -G Ninja ^
+  -DCMAKE_BUILD_TYPE=Debug ^
+  -DCMAKE_PREFIX_PATH=C:\Qt\6.11.1\msvc2022_64 ^
+  -DCMAKE_TOOLCHAIN_FILE=C:\dev\vcpkg\scripts\buildsystems\vcpkg.cmake ^
+  -DPKG_CONFIG_EXECUTABLE=C:\dev\vcpkg\installed\x64-windows\tools\pkgconf\pkgconf.exe
+```
+
+Build:
+
+```cmd
+cmake --build build-win
+```
+
+Run from the same terminal:
+
+```cmd
+set PATH=C:\Qt\6.11.1\msvc2022_64\bin;C:\dev\vcpkg\installed\x64-windows\bin;%PATH%
+build-win\dd-ssh.exe
+```
+
+---
+
+## 6. Release build test
+
+The Release build is the first meaningful performance test. Debug builds are expected to be slower and heavier.
+
+```cmd
+cd C:\dev\DD-SSH
+rmdir /s /q build-win-release
+
+cmake -S . -B build-win-release -G Ninja ^
+  -DCMAKE_BUILD_TYPE=Release ^
+  -DCMAKE_PREFIX_PATH=C:\Qt\6.11.1\msvc2022_64 ^
+  -DCMAKE_TOOLCHAIN_FILE=C:\dev\vcpkg\scripts\buildsystems\vcpkg.cmake ^
+  -DPKG_CONFIG_EXECUTABLE=C:\dev\vcpkg\installed\x64-windows\tools\pkgconf\pkgconf.exe
+
+cmake --build build-win-release
+```
+
+Run:
+
+```cmd
+set PATH=C:\Qt\6.11.1\msvc2022_64\bin;C:\dev\vcpkg\installed\x64-windows\bin;%PATH%
+build-win-release\dd-ssh.exe
+```
+
+Measure and record:
+
+```text
+- app cold start time
+- first xterm.js terminal open time
+- second xterm.js terminal open time
+- RAM after Welcome screen only
+- RAM after one xterm terminal
+- RAM after htop is running
+```
+
+Suggested notes format:
+
+```text
+Build type: Release
+Windows version:
+Qt version:
+CPU/RAM:
+Welcome startup:
+First terminal open:
+Second terminal open:
+RAM Welcome:
+RAM with terminal:
+Notes:
+```
+
+---
+
+## 7. First runtime tests on Windows
+
+Before testing SSH, verify UI basics:
+
+```text
+Help → About DD-SSH
+Tools → Settings
+File → Open Config Folder
+File → Export Config
+```
+
+Expected config path style:
+
+```text
+C:\Users\<user>\AppData\Local\DD-LAB\DD-SSH\dd-ssh.json
+```
+
+Then test SSH:
+
+```text
+Session → New Session
+```
+
+Suggested first test:
+
+```text
+password auth → save session → double-click saved session → xterm.js terminal opens
+```
+
+Terminal commands:
+
+```bash
+whoami
+hostname
+stty size
+htop
+exit
+```
+
+Also test:
+
+```text
+Disconnect
+Reconnect
+Settings → App theme System/Light/Dark
+Settings → font size applies to newly opened terminals
+```
+
+---
+
+## 8. Expected warnings and known quirks
+
+### WrapVulkanHeaders warning
+
+CMake may print:
+
+```text
+Could NOT find WrapVulkanHeaders (missing: Vulkan_INCLUDE_DIR)
+```
+
+If configure still reaches:
+
+```text
+Configuring done
+Generating done
+```
+
+then this warning is currently non-fatal for DD-SSH.
+
+### First terminal startup delay
+
+The first xterm terminal on Windows may take several seconds because Qt WebEngine initializes Chromium/WebEngine resources lazily. Later terminal tabs are much faster.
+
+Future polish may add:
+
+```text
+- clearer “Starting terminal engine...” message
+- optional WebEngine preload setting
+```
+
+### RAM usage
+
+Qt WebEngine embeds a Chromium-based engine. With one active xterm/WebEngine terminal, RAM usage can be hundreds of MB. This is expected for the current terminal architecture and should be documented for public alpha testers.
+
+### Qt cache folder
+
+Qt may create cache folders under:
+
+```text
+C:\Users\<user>\AppData\Local\DD-LAB\DD-SSH\cache\
+```
+
+This is runtime/cache data, not DD-SSH session/secrets config.
+
+---
+
+## 9. Deployment is not done yet
+
+This guide validates building and running from the build environment.
+
+A later checkpoint will test:
+
+```text
+windeployqt
+copying vcpkg DLLs
+running outside the build environment
+portable deployment folder
+Windows release artifact notes
+```
+
+Planned checkpoint:
+
+```text
+dev 0.1.5.4 — Windows deployment experiment
+```
+
+---
+
+## 10. Current Windows build checklist
+
+```text
+[ ] cl works in x64 Native Tools prompt
+[ ] Qt MSVC path exists
+[ ] Qt WebEngine exists
+[ ] Qt WebChannel exists
+[ ] Qt Positioning exists
+[ ] vcpkg libssh installed
+[ ] vcpkg pkgconf installed
+[ ] CMake Debug configure passes
+[ ] CMake Debug build passes
+[ ] app launches
+[ ] About shows expected version
+[ ] Settings opens
+[ ] config path is AppData/Local/DD-LAB/DD-SSH
+[ ] password SSH connection works
+[ ] xterm terminal opens
+[ ] htop works
+[ ] Release configure passes
+[ ] Release build passes
+[ ] startup/RAM notes recorded
+```

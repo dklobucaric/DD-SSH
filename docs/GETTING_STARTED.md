@@ -28,6 +28,12 @@ cmake --build build
 
 If CMake cannot find Qt WebEngine, install `qt6-webengine-dev`.
 
+## Windows build note
+
+A native Windows build path is documented separately because it requires MSVC, Qt MSVC, vcpkg `libssh`, and vcpkg `pkgconf`.
+
+See: [Windows Build Guide](WINDOWS_BUILD.md).
+
 ## 2. Confirm version
 
 Open:
@@ -39,7 +45,7 @@ Help → About DD-SSH
 Expected checkpoint:
 
 ```text
-Version: dev 0.1.4.9
+Version: dev 0.1.5.1
 Codename: Andromeda
 Milestone: MF 0.2 candidate
 ```
