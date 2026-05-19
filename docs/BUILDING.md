@@ -78,7 +78,7 @@ Linux remains the primary development platform. Windows native build/runtime val
 The About dialog reads version strings from `CMakeLists.txt`:
 
 ```cmake
-set(DD_SSH_VERSION_STRING "dev 0.1.5.1")
+set(DD_SSH_VERSION_STRING "dev 0.1.5.2")
 set(DD_SSH_CODENAME_STRING "Andromeda")
 set(DD_SSH_MILESTONE_STRING "MF 0.2 candidate")
 ```
@@ -109,3 +109,36 @@ cmake --build build-win
 ```
 
 Release build testing should use `build-win-release` and `-DCMAKE_BUILD_TYPE=Release`.
+
+
+## Icon resources
+
+DD-SSH icon assets live under:
+
+```text
+resources/icons/
+resources/windows/
+resources/macos/
+```
+
+The Qt app icon is embedded as a Qt resource and loaded from:
+
+```text
+:/icons/dd-ssh.png
+```
+
+Windows executable icon integration uses:
+
+```text
+resources/windows/dd-ssh.rc
+resources/windows/dd-ssh.ico
+```
+
+macOS bundle icon prep uses:
+
+```text
+resources/macos/dd-ssh.icns
+resources/macos/dd-ssh.iconset/
+```
+
+Linux packaging can later install the PNG size variants from `resources/icons/` into the appropriate hicolor icon theme directories.

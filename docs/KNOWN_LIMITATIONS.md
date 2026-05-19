@@ -1,6 +1,6 @@
 # DD-SSH Known Limitations
 
-**Checkpoint:** dev 0.1.5.1 — Andromeda
+**Checkpoint:** dev 0.1.5.2 — Andromeda
 
 This document lists limitations that should be visible to testers. Nothing here is hidden or sugar-coated.
 
@@ -20,7 +20,7 @@ This document lists limitations that should be visible to testers. Nothing here 
 ## Platform limitations
 
 - Linux is the primary tested platform.
-- Windows builds are planned but not fully validated.
+- Native Windows build has been validated for app launch and SSH/xterm workflows, but deployment packaging is not ready.
 - macOS builds are planned but not fully validated.
 - Packaging/installers are not ready.
 - Code signing/notarization is not ready.

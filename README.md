@@ -17,12 +17,12 @@ DD-SSH is designed for practical sysadmin use: saved sessions, one portable JSON
 
 ## Current status
 
-**Development checkpoint:** `dev 0.1.5.1`  
+**Development checkpoint:** `dev 0.1.5.2`  
 **Codename:** Andromeda  
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation  
-**Current phase:** Windows build documentation and release build test
+**Current phase:** App icon integration
 
-DD-SSH is now close to a **public alpha**. It is not a stable 1.0 release yet, but the core workflow is functional and tested on Linux. A native Windows build has also been validated with MSVC, Qt 6.11.1, Qt WebEngine/WebChannel/Positioning, vcpkg/libssh, and pkgconf:
+DD-SSH is now close to a **public alpha**. It is not a stable 1.0 release yet, but the core workflow is functional and tested on Linux. A native Windows build has also been validated with MSVC, Qt 6.11.1, Qt WebEngine/WebChannel/Positioning, vcpkg/libssh, and pkgconf. The app now includes cross-platform icon resources for Qt windows, Windows executable icons, Linux desktop packaging prep, and macOS bundle prep:
 
 ```text
 saved session → plaintext secret from dd-ssh.json → known_hosts check → SSH auth → xterm.js terminal → PTY resize → real shell
@@ -113,6 +113,11 @@ See [Security Notes](docs/SECURITY_NOTES.md).
 
 ### Settings and UI
 
+- Cross-platform app icon integration
+- Qt window icon resource
+- Windows `.ico` / `.rc` executable icon prep
+- Linux PNG icon resources for future `.desktop` packaging
+- macOS `.icns` and `.iconset` prep for future app bundles
 - App theme: System / Light / Dark
 - Terminal font family and size for newly opened terminal tabs
 - Optional quick action toolbar

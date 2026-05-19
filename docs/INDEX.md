@@ -31,10 +31,10 @@ This directory contains the working documentation for DD-SSH.
 ## Current checkpoint
 
 ```text
-Version: dev 0.1.5.1
+Version: dev 0.1.5.2
 Codename: Andromeda
 Milestone: MF 0.2 candidate
-Phase: Windows build documentation and release build test
+Phase: App icon integration
 ```
 
 

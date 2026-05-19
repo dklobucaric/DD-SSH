@@ -6,7 +6,7 @@ project(DD_SSH
     LANGUAGES CXX
 )
 
-set(DD_SSH_VERSION_STRING "dev 0.1.5.1")
+set(DD_SSH_VERSION_STRING "dev 0.1.5.2")
 set(DD_SSH_CODENAME_STRING "Andromeda")
 set(DD_SSH_MILESTONE_STRING "MF 0.2 candidate")
 
@@ -60,6 +60,38 @@ qt_add_resources(dd-ssh "xterm_assets"
         resources/xterm/THIRD_PARTY_NOTICES.md
 )
 
+qt_add_resources(dd-ssh "icon_assets"
+    PREFIX "/icons"
+    BASE "resources/icons"
+    FILES
+        resources/icons/dd-ssh.png
+        resources/icons/dd-ssh-16.png
+        resources/icons/dd-ssh-24.png
+        resources/icons/dd-ssh-32.png
+        resources/icons/dd-ssh-48.png
+        resources/icons/dd-ssh-64.png
+        resources/icons/dd-ssh-128.png
+        resources/icons/dd-ssh-256.png
+        resources/icons/dd-ssh-512.png
+        resources/icons/dd-ssh-1024.png
+)
+
+if(WIN32)
+    target_sources(dd-ssh PRIVATE
+        resources/windows/dd-ssh.rc
+    )
+endif()
+
+if(APPLE)
+    set(MACOSX_BUNDLE_ICON_FILE dd-ssh.icns)
+    set_source_files_properties(resources/macos/dd-ssh.icns PROPERTIES
+        MACOSX_PACKAGE_LOCATION "Resources"
+    )
+    target_sources(dd-ssh PRIVATE
+        resources/macos/dd-ssh.icns
+    )
+endif()
+
 target_include_directories(dd-ssh
     PRIVATE
         src
@@ -84,4 +116,5 @@ target_link_libraries(dd-ssh
 set_target_properties(dd-ssh PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
+    MACOSX_BUNDLE_ICON_FILE dd-ssh.icns
 )

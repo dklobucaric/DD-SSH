@@ -1,6 +1,6 @@
 # Windows Build Guide
 
-**Checkpoint:** dev 0.1.5.1 — Andromeda  
+**Checkpoint:** dev 0.1.5.2 — Andromeda  
 **Purpose:** document the first native Windows build path and release-build test procedure.
 
 This guide documents the Windows setup that was validated during the Andromeda line. It is intentionally practical and conservative: first get a native Windows build running, then test runtime behavior, then later experiment with deployment/installer packaging.
@@ -414,3 +414,15 @@ dev 0.1.5.4 — Windows deployment experiment
 [ ] Release build passes
 [ ] startup/RAM notes recorded
 ```
+
+
+## Windows icon resource
+
+From `dev 0.1.5.2`, DD-SSH includes a Windows `.rc` file and multi-size `.ico` generated from the project icon:
+
+```text
+resources/windows/dd-ssh.rc
+resources/windows/dd-ssh.ico
+```
+
+CMake includes the `.rc` file only on Windows, so the built `.exe` should use the DD-SSH icon instead of the default generic executable icon.

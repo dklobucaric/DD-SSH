@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=DD-SSH
+Comment=A clean cross-platform SSH client and session manager
+Exec=dd-ssh
+Icon=dd-ssh
+Terminal=false
+Categories=Network;RemoteAccess;Qt;

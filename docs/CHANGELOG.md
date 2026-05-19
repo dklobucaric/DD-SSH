@@ -1,5 +1,18 @@
 # DD-SSH Changelog
 
+## dev 0.1.5.2 — Andromeda
+
+App icon integration.
+
+- Added cross-platform icon resources generated from the uploaded DD-SSH master PNG.
+- Added Qt resource icons under `:/icons/`.
+- Set the Qt application/window icon from `:/icons/dd-ssh.png`.
+- Added Windows `.ico` and `.rc` resources for the `.exe` icon.
+- Added Linux PNG icon size variants for future desktop packaging.
+- Added macOS `.iconset` and `.icns` prep for future app bundle packaging.
+- Updated CMake integration for Windows and macOS icon resources.
+- No SSH/session/terminal runtime logic changes are intended in this checkpoint.
+
 ## dev 0.1.5.1 — Andromeda
 
 Windows build documentation and release build test preparation.

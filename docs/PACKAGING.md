@@ -47,3 +47,16 @@ Required first:
 - Cross-platform build validation
 - Clean release tag
 - Decision about plaintext secrets warning in release notes
+
+
+## Icons
+
+`dev 0.1.5.2` adds cross-platform icon resources:
+
+```text
+resources/icons/       Qt/Linux PNG icons
+resources/windows/     Windows .ico and .rc
+resources/macos/       macOS .icns and .iconset prep
+```
+
+Future packaging work should install Linux icons into the hicolor icon theme and reference `dd-ssh` from the `.desktop` file. A starter desktop-entry template lives at `resources/linux/dd-ssh.desktop.in`. Windows deployment should preserve the embedded `.exe` icon generated from `resources/windows/dd-ssh.rc`. macOS packaging should include `resources/macos/dd-ssh.icns` inside the app bundle.

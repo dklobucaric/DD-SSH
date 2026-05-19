@@ -1,6 +1,6 @@
 # DD-SSH Public Alpha Checklist
 
-**Checkpoint:** dev 0.1.5.1 — Andromeda  
+**Checkpoint:** dev 0.1.5.2 — Andromeda  
 **Milestone target:** v0.2.0-alpha — Real Terminal Foundation
 
 This checklist is the final pre-alpha gate. It is intentionally practical: run it on a real machine, with real saved sessions, before tagging a public alpha.
@@ -24,10 +24,10 @@ cmake --build build --clean-first
 - [ ] Help → About DD-SSH shows:
 
 ```text
-Version: dev 0.1.5.1
+Version: dev 0.1.5.2
 Codename: Andromeda
 Milestone: MF 0.2 candidate
-Current phase: Windows build documentation and release build test.
+Current phase: App icon integration.
 ```
 
 - [ ] Welcome tab opens and describes the current Andromeda status.
@@ -212,3 +212,10 @@ Minimum Windows public-alpha checklist:
 [ ] RAM usage observation is documented
 [ ] deployment with windeployqt is either tested or clearly marked pending
 ```
+
+
+## Icon validation
+
+- [ ] App/window icon appears on Linux window manager.
+- [ ] Windows `.exe` icon appears in Explorer/taskbar after build/deploy.
+- [ ] macOS `.icns` resource is available for future app bundle packaging.

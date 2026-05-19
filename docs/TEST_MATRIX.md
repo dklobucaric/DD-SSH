@@ -1,8 +1,8 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.5.1 — Andromeda  
+**Checkpoint:** dev 0.1.5.2 — Andromeda  
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation  
-**Phase:** Windows build documentation and release build test
+**Phase:** App icon integration
 
 This matrix tracks what has been confirmed manually, what is implemented but should be re-tested before a public alpha tag, and what is still planned.
 
@@ -30,6 +30,7 @@ TODO              Not implemented yet.
 | Version | About dialog | Shows current checkpoint version | PASS | Should be checked after every patch. |
 | Codename | About dialog | Shows `Andromeda` | PASS | Current 0.1.x codename line. |
 | Welcome screen | First tab on startup | Shows current status/dashboard, not old skeleton text | PASS | Updated during docs/welcome polish. |
+| App icon resources | Build includes Qt/Windows/macOS/Linux icon assets | Window/exe/bundle icon resources exist | IMPLEMENTED | Added in 0.1.5.2; needs visual verification on Windows taskbar/Explorer and future Linux/macOS packaging. |
 
 ## 2. Sessions and menus
 

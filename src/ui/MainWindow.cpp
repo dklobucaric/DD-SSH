@@ -232,7 +232,7 @@ MainWindow::MainWindow(QWidget *parent)
     applyQuickToolbarVisibility(startupSettings.showQuickToolbar);
     setupCentralLayout();
 
-    statusBar()->showMessage("DD-SSH Andromeda ready — public alpha release preparation");
+    statusBar()->showMessage("DD-SSH Andromeda ready — app icon integration");
 
     resize(1100, 700);
     showConfigRecoveryWarningIfNeeded();
@@ -669,7 +669,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: Windows build documentation and release build test.\n\n")
+            + QStringLiteral("Current phase: App icon integration.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n")
@@ -874,7 +874,7 @@ void MainWindow::addWelcomeTab()
         "A clean cross-platform SSH client and session manager.\n\n"
         "Double-click a saved session on the left to open the xterm.js terminal.\n\n"
         "Current milestone:\n"
-        "MF 0.2 candidate — Real Terminal Foundation / Windows build validation\n\n"
+        "MF 0.2 candidate — Real Terminal Foundation / app icon integration\n\n"
         "Working now:\n"
         "- saved sessions loaded from dd-ssh.json\n"
         "- portable plaintext secrets in dd-ssh.json\n"
@@ -888,7 +888,8 @@ void MainWindow::addWelcomeTab()
         "- reconnect after disconnect/reboot\n"
         "- settings foundation with app theme, font settings, backups, and toolbar visibility\n"
         "- config import/export/restore and corrupt config recovery\n"
-        "- native Windows build validated with Qt/MSVC/vcpkg/libssh\n\n"
+        "- native Windows build validated with Qt/MSVC/vcpkg/libssh\n"
+        "- cross-platform app icon resources for Qt, Windows, Linux, and macOS prep\n\n"
         "Main menus:\n"
         "- File: Open Config Folder, Export Config, Import Config, Restore Latest Backup, Exit\n"
         "- Session: New Session, Connect / Auth test, Edit selected session\n"
@@ -905,7 +906,6 @@ void MainWindow::addWelcomeTab()
         "- docs/TEST_MATRIX.md tracks current Andromeda validation\n"
         "- docs/ROADMAP.md tracks future versions\n\n"
         "Next milestone:\n"
-        "- app icon integration for Windows/Linux\n"
         "- WebEngine startup polish / first-terminal loading message\n"
         "- Windows deployment experiment with windeployqt\n"
         "- prepare v0.2.0-alpha milestone notes\n\n"
