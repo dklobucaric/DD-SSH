@@ -1,5 +1,14 @@
 # DD-SSH Changelog
 
+## dev 0.1.5.3 — Andromeda
+
+WebEngine startup polish.
+
+- Added a visible terminal startup notice while the local xterm.js / Qt WebEngine renderer is preparing.
+- Added clearer UI states for preparing/loading/ready/failed terminal renderer startup.
+- Documented the Windows first-terminal startup delay as expected Qt WebEngine initialization behavior.
+- Kept xterm.js terminal behavior, SSH/session logic, and icon resources otherwise unchanged.
+
 ## dev 0.1.5.2 — Andromeda
 
 App icon integration.

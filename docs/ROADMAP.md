@@ -131,7 +131,7 @@ Expected before Apollo:
 
 ## Current release-prep step
 
-`dev 0.1.5.2` is the app icon integration checkpoint. The 0.1.5.x line prepares the repository for `v0.2.0-alpha — Andromeda` with public alpha docs, Windows build validation, release notes, known limitations, issue templates, and cross-platform icon resources.
+`dev 0.1.5.3` is the WebEngine startup polish checkpoint. The 0.1.5.x line prepares the repository for `v0.2.0-alpha — Andromeda` with public alpha docs, Windows build validation, release notes, known limitations, issue templates, and cross-platform icon resources.
 
 
 ---
@@ -141,7 +141,7 @@ Expected before Apollo:
 ```text
 dev 0.1.5.0 — Public alpha release preparation
 dev 0.1.5.1 — Windows build documentation and release build test
-dev 0.1.5.2 — App icon integration
+dev 0.1.5.3 — WebEngine startup polish
 dev 0.1.5.3 — WebEngine startup polish
 dev 0.1.5.4 — Windows deployment experiment
 ```

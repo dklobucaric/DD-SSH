@@ -1,6 +1,6 @@
 # Windows Build Guide
 
-**Checkpoint:** dev 0.1.5.2 — Andromeda  
+**Checkpoint:** dev 0.1.5.3 — Andromeda  
 **Purpose:** document the first native Windows build path and release-build test procedure.
 
 This guide documents the Windows setup that was validated during the Andromeda line. It is intentionally practical and conservative: first get a native Windows build running, then test runtime behavior, then later experiment with deployment/installer packaging.
@@ -418,7 +418,7 @@ dev 0.1.5.4 — Windows deployment experiment
 
 ## Windows icon resource
 
-From `dev 0.1.5.2`, DD-SSH includes a Windows `.rc` file and multi-size `.ico` generated from the project icon:
+From `dev 0.1.5.3`, DD-SSH includes a Windows `.rc` file and multi-size `.ico` generated from the project icon:
 
 ```text
 resources/windows/dd-ssh.rc
@@ -426,3 +426,19 @@ resources/windows/dd-ssh.ico
 ```
 
 CMake includes the `.rc` file only on Windows, so the built `.exe` should use the DD-SSH icon instead of the default generic executable icon.
+
+## WebEngine startup note
+
+`dev 0.1.5.3` adds a clearer startup message inside new xterm.js terminal tabs. On Windows, the first terminal tab may take several seconds while Qt WebEngine initializes its Chromium-based runtime, JavaScript engine, WebChannel bridge, and graphics pipeline. This is expected for the current architecture. Later terminal tabs usually open much faster because the WebEngine runtime is already warm.
+
+For public-alpha testing, record:
+
+```text
+App startup time:
+First terminal tab startup time:
+Second terminal tab startup time:
+Task Manager RAM after app launch:
+Task Manager RAM after first terminal:
+```
+
+This is not currently treated as a release blocker unless the terminal fails to load, the app remains permanently not responding, or subsequent tabs remain slow after the first WebEngine initialization.

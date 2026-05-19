@@ -1,6 +1,6 @@
 # DD-SSH Public Alpha Checklist
 
-**Checkpoint:** dev 0.1.5.2 — Andromeda  
+**Checkpoint:** dev 0.1.5.3 — Andromeda  
 **Milestone target:** v0.2.0-alpha — Real Terminal Foundation
 
 This checklist is the final pre-alpha gate. It is intentionally practical: run it on a real machine, with real saved sessions, before tagging a public alpha.
@@ -24,10 +24,10 @@ cmake --build build --clean-first
 - [ ] Help → About DD-SSH shows:
 
 ```text
-Version: dev 0.1.5.2
+Version: dev 0.1.5.3
 Codename: Andromeda
 Milestone: MF 0.2 candidate
-Current phase: App icon integration.
+Current phase: WebEngine startup polish.
 ```
 
 - [ ] Welcome tab opens and describes the current Andromeda status.

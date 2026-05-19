@@ -58,7 +58,7 @@ WebTerminalTab::WebTerminalTab(
         + QStringLiteral(":")
         + QString::number(m_session.port);
 
-    m_statusLabel = new QLabel(QStringLiteral("State: starting | Target: ") + target, this);
+    m_statusLabel = new QLabel(QStringLiteral("State: preparing terminal engine | Target: ") + target, this);
     layout->addWidget(m_statusLabel);
 
     m_view = new QWebEngineView(this);
@@ -121,13 +121,34 @@ WebTerminalTab::WebTerminalTab(
     connect(m_reconnectButton, &QPushButton::clicked, this, &WebTerminalTab::reconnectShell);
     connect(m_disconnectButton, &QPushButton::clicked, this, &WebTerminalTab::disconnectShell);
 
-    connect(m_view, &QWebEngineView::loadFinished, this, [this](bool ok) {
-        if (ok) {
-            QTimer::singleShot(100, this, &WebTerminalTab::focusTerminal);
+    connect(m_view, &QWebEngineView::loadStarted, this, [this]() {
+        setConnectionUiState(QStringLiteral("loading terminal renderer"), false, false);
+        emit lifecycleStatusChanged(QStringLiteral("Loading terminal renderer for ") + displayName());
+    });
+
+    connect(m_view, &QWebEngineView::loadProgress, this, [this](int progress) {
+        if (m_statusLabel != nullptr && !m_shellStarted) {
+            m_statusLabel->setText(
+                QStringLiteral("State: loading terminal renderer (%1%) | Target: %2")
+                    .arg(progress)
+                    .arg(targetLabel())
+            );
         }
     });
 
-    setConnectionUiState(QStringLiteral("starting"), false, false);
+    connect(m_view, &QWebEngineView::loadFinished, this, [this](bool ok) {
+        if (ok) {
+            setConnectionUiState(QStringLiteral("terminal renderer ready"), false, false);
+            emit lifecycleStatusChanged(QStringLiteral("Terminal renderer ready for ") + displayName());
+            QTimer::singleShot(100, this, &WebTerminalTab::focusTerminal);
+            return;
+        }
+
+        setConnectionUiState(QStringLiteral("terminal renderer failed"), false, false);
+        emit lifecycleStatusChanged(QStringLiteral("Terminal renderer failed for ") + displayName());
+    });
+
+    setConnectionUiState(QStringLiteral("preparing terminal engine"), false, false);
 
     m_view->setHtml(terminalHtml(), QUrl(QStringLiteral("qrc:///")));
 }
@@ -273,12 +294,36 @@ QString WebTerminalTab::terminalHtml() const
         text-overflow: ellipsis;
     }
 
+    #startupNotice {
+        box-sizing: border-box;
+        width: 100%;
+        height: calc(100% - 35px);
+        padding: 24px;
+        background: #0b0f14;
+        color: #d7e0ea;
+        outline: none;
+        user-select: none;
+    }
+
+    #startupNotice .title {
+        font-weight: 700;
+        color: #ffffff;
+        margin-bottom: 10px;
+    }
+
+    #startupNotice .hint {
+        color: #9fb3c8;
+        line-height: 1.45;
+        max-width: 780px;
+    }
+
     #terminalHost {
         box-sizing: border-box;
         width: 100%;
         height: calc(100% - 35px);
         background: #0b0f14;
         outline: none;
+        display: none;
     }
 
     #fallbackTerminal {
@@ -308,7 +353,15 @@ QString WebTerminalTab::terminalHtml() const
 </head>
 <body>
     <div id="header">
-        DD-SSH Andromeda terminal for __TARGET__ · Renderer: loading · State: starting · PTY resize: on
+        DD-SSH Andromeda terminal for __TARGET__ · Renderer: loading · State: preparing terminal engine · PTY resize: on
+    </div>
+    <div id="startupNotice">
+        <div class="title">Starting DD-SSH terminal engine…</div>
+        <div class="hint">
+            Preparing the local xterm.js renderer and Qt WebEngine bridge for __TARGET__.<br>
+            On Windows, the first terminal tab can take a few seconds while Qt WebEngine initializes.
+            Later terminal tabs usually open much faster.
+        </div>
     </div>
     <div id="terminalHost"></div>
     <div id="fallbackTerminal" tabindex="0" spellcheck="false"></div>
@@ -317,6 +370,7 @@ QString WebTerminalTab::terminalHtml() const
 (function () {
     const terminalHost = document.getElementById('terminalHost');
     const fallbackTerminal = document.getElementById('fallbackTerminal');
+    const startupNotice = document.getElementById('startupNotice');
     let bridge = null;
     let term = null;
     let fitAddon = null;
@@ -343,6 +397,12 @@ QString WebTerminalTab::terminalHtml() const
     function setConnectionState(state) {
         connectionState = state || connectionState;
         updateHeader();
+    }
+
+    function hideStartupNotice() {
+        if (startupNotice) {
+            startupNotice.style.display = 'none';
+        }
     }
 
     function reportTerminalSize(columns, rows) {
@@ -443,6 +503,7 @@ QString WebTerminalTab::terminalHtml() const
     }
 
     function setupFallbackInput() {
+        hideStartupNotice();
         terminalHost.style.display = 'none';
         fallbackTerminal.style.display = 'block';
         reportTerminalSize(80, 24);
@@ -526,6 +587,7 @@ QString WebTerminalTab::terminalHtml() const
 
         usingXterm = true;
         setRendererStatus('xterm.js local');
+        hideStartupNotice();
         fallbackTerminal.style.display = 'none';
         terminalHost.style.display = 'block';
 

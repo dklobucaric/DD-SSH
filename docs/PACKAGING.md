@@ -51,7 +51,7 @@ Required first:
 
 ## Icons
 
-`dev 0.1.5.2` adds cross-platform icon resources:
+`dev 0.1.5.3` adds cross-platform icon resources:
 
 ```text
 resources/icons/       Qt/Linux PNG icons

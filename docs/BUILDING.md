@@ -78,7 +78,7 @@ Linux remains the primary development platform. Windows native build/runtime val
 The About dialog reads version strings from `CMakeLists.txt`:
 
 ```cmake
-set(DD_SSH_VERSION_STRING "dev 0.1.5.2")
+set(DD_SSH_VERSION_STRING "dev 0.1.5.3")
 set(DD_SSH_CODENAME_STRING "Andromeda")
 set(DD_SSH_MILESTONE_STRING "MF 0.2 candidate")
 ```
