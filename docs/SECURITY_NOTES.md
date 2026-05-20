@@ -49,8 +49,9 @@ Known-host verification is mandatory.
 Rules:
 
 - Unknown host must require user trust confirmation.
-- Trusted host can continue when fingerprint matches.
-- Changed host key must not be silently accepted.
+- Trusted host can continue when the current key type and fingerprint match a saved key.
+- A new legitimate host-key algorithm for the same `host:port` must be treated as an additional key, not as an automatic replacement.
+- Changed same-key-type fingerprint must not be silently accepted.
 - Deleting a saved session must not automatically delete `known_hosts`.
 
 Why not delete known_hosts with sessions?

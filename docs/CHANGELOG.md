@@ -1,5 +1,18 @@
 # DD-SSH Changelog
 
+## dev 0.1.5.7 — Andromeda
+
+Known-host multi-key portability polish.
+
+- Updated the project identity to `dev 0.1.5.7`.
+- Changed known-host storage from one key per `host:port` to multi-key storage under `keys`.
+- Preserved compatibility with the old `algorithm` / `fingerprint` known-host format and migrates it on the next save.
+- Added a separate **Additional SSH host key** decision path with **Trust additional key**, **Trust once**, and **Cancel**.
+- Kept the strong **SSH host key changed** warning for true same-key-type fingerprint mismatches.
+- Fixed the saved-session shell known-host decision flow so **Trust once** can continue the current shell-open attempt.
+- Replaced `scripts/windows-deploy-release.bat` with the simpler working BAT validated during the Windows standalone deployment test.
+- Added a dedicated known-host portability regression test note for the Windows 10 ECDSA vs Linux/Windows 11 ED25519 case.
+
 ## dev 0.1.5.6 — Andromeda
 
 Windows standalone deployment test.

@@ -11,6 +11,7 @@ public:
     {
         Unknown,
         Trusted,
+        AdditionalKeyType,
         Changed
     };
 
@@ -20,6 +21,7 @@ public:
         QString hostKey;
         QString storedKeyType;
         QString storedFingerprint;
+        QString storedKeysSummary;
     };
 
     KnownHostsManager();

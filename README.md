@@ -17,14 +17,21 @@ DD-SSH is designed for practical sysadmin use: saved sessions, one portable JSON
 
 ## Current status
 
-**Development checkpoint:** `dev 0.1.5.6`
+**Development checkpoint:** `dev 0.1.5.7`
 **Codename:** Andromeda
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
-**Current phase:** Windows standalone deployment test
+**Current phase:** Known-host multi-key portability polish
 
 DD-SSH is now close to a **public alpha**. It is not a stable 1.0 release yet, but the core workflow is functional and tested on Linux. Native Windows Debug and Release builds have also been validated with MSVC, Qt 6.11.1, Qt WebEngine/WebChannel/Positioning, vcpkg/libssh, and pkgconf.
 
-The current deployment pass focuses on creating a portable Windows release folder using `windeployqt`, copying the Qt/WebEngine/vcpkg/libssh/OpenSSL runtime files, and validating that `dist\windows-release\dd-ssh.exe` can run without manually extending `PATH`. The next proof point is copying that folder to a clean Windows 10 machine with no development environment installed.
+The current bugfix pass focuses on portable `known_hosts` behavior. A single shared `dd-ssh.json` must work across Linux, Windows 10, Windows 11, and later macOS even when libssh negotiates a different legitimate server host-key algorithm on each platform.
+
+The 0.1.5.7 known-host fix adds multi-key storage per `host:port`:
+
+- old single-key known-host entries are migrated when saved
+- a new legitimate key algorithm is offered as **Trust additional key** instead of forcing **Replace stored key**
+- true same-algorithm fingerprint mismatches still show the strong SSH host-key-changed warning
+- `Trust once` continues for the current attempt without saving the new key
 
 The previous polish pass added two user-safety clarifications:
 

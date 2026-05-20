@@ -214,6 +214,178 @@ QTabBar::tab:selected {
 }
 )DDSSH");
 }
+
+struct KnownHostDecisionResult
+{
+    bool allowed = false;
+    QString decision = QStringLiteral("Not checked");
+    QString extra;
+};
+
+QString hostPortLabel(const QString &host, int port)
+{
+    return host + QStringLiteral(":") + QString::number(port);
+}
+
+KnownHostDecisionResult promptKnownHostDecision(
+    QWidget *parent,
+    KnownHostsManager &knownHosts,
+    const KnownHostsManager::CheckResult &check,
+    const QString &host,
+    int port,
+    const QString &currentKeyType,
+    const QString &currentFingerprint,
+    bool beforeOpeningShell
+)
+{
+    KnownHostDecisionResult result;
+
+    if (check.status == KnownHostsManager::HostStatus::Trusted) {
+        result.allowed = true;
+        result.decision = QStringLiteral("TRUSTED - stored fingerprint matches current host key");
+
+        QString saveError;
+        knownHosts.trustHost(host, port, currentKeyType, currentFingerprint, &saveError);
+
+        if (!saveError.isEmpty()) {
+            result.extra = QStringLiteral("Warning while updating last_seen: ") + saveError;
+        }
+
+        return result;
+    }
+
+    if (check.status == KnownHostsManager::HostStatus::Unknown) {
+        QMessageBox messageBox(parent);
+        messageBox.setIcon(QMessageBox::Warning);
+        messageBox.setWindowTitle(QStringLiteral("Unknown SSH host"));
+        messageBox.setText(QStringLiteral("This SSH host is not trusted yet."));
+        messageBox.setInformativeText(
+            QStringLiteral("Host: ") + hostPortLabel(host, port) + QStringLiteral("\n")
+            + QStringLiteral("Key type: ") + currentKeyType + QStringLiteral("\n")
+            + QStringLiteral("Fingerprint: ") + currentFingerprint + QStringLiteral("\n\n")
+            + (beforeOpeningShell
+                ? QStringLiteral("Do you want to trust this host before opening a shell?")
+                : QStringLiteral("Do you want to trust this host?"))
+        );
+
+        QAbstractButton *trustOnceButton = messageBox.addButton(QStringLiteral("Trust once"), QMessageBox::AcceptRole);
+        QAbstractButton *trustPermanentlyButton = messageBox.addButton(QStringLiteral("Trust permanently"), QMessageBox::AcceptRole);
+        QAbstractButton *cancelButton = messageBox.addButton(QStringLiteral("Cancel"), QMessageBox::RejectRole);
+
+        messageBox.setDefaultButton(qobject_cast<QPushButton *>(cancelButton));
+        messageBox.exec();
+
+        if (messageBox.clickedButton() == trustOnceButton) {
+            result.allowed = true;
+            result.decision = QStringLiteral("UNKNOWN - trusted once only");
+        } else if (messageBox.clickedButton() == trustPermanentlyButton) {
+            QString saveError;
+
+            if (knownHosts.trustHost(host, port, currentKeyType, currentFingerprint, &saveError)) {
+                result.allowed = true;
+                result.decision = QStringLiteral("UNKNOWN - trusted permanently and saved to config");
+            } else {
+                result.allowed = false;
+                result.decision = QStringLiteral("UNKNOWN - could not save trusted host");
+                result.extra = saveError;
+
+                QMessageBox::warning(parent, QStringLiteral("Could not save known host"), saveError);
+            }
+        } else {
+            result.allowed = false;
+            result.decision = QStringLiteral("UNKNOWN - cancelled by user");
+        }
+
+        return result;
+    }
+
+    if (check.status == KnownHostsManager::HostStatus::AdditionalKeyType) {
+        QMessageBox messageBox(parent);
+        messageBox.setIcon(QMessageBox::Warning);
+        messageBox.setWindowTitle(QStringLiteral("Additional SSH host key"));
+        messageBox.setText(QStringLiteral("This host is trusted, but this key type is not saved yet."));
+        messageBox.setInformativeText(
+            QStringLiteral("Host: ") + hostPortLabel(host, port) + QStringLiteral("\n\n")
+            + QStringLiteral("Saved host keys:\n") + check.storedKeysSummary + QStringLiteral("\n\n")
+            + QStringLiteral("Current key type: ") + currentKeyType + QStringLiteral("\n")
+            + QStringLiteral("Current fingerprint: ") + currentFingerprint + QStringLiteral("\n\n")
+            + QStringLiteral("If you verified this fingerprint belongs to the same server, save it as an additional trusted key. This keeps one portable dd-ssh.json working across platforms that negotiate different SSH host-key algorithms.")
+        );
+
+        QAbstractButton *trustOnceButton = messageBox.addButton(QStringLiteral("Trust once"), QMessageBox::AcceptRole);
+        QAbstractButton *trustAdditionalButton = messageBox.addButton(QStringLiteral("Trust additional key"), QMessageBox::AcceptRole);
+        QAbstractButton *cancelButton = messageBox.addButton(QStringLiteral("Cancel"), QMessageBox::RejectRole);
+
+        messageBox.setDefaultButton(qobject_cast<QPushButton *>(cancelButton));
+        messageBox.exec();
+
+        if (messageBox.clickedButton() == trustOnceButton) {
+            result.allowed = true;
+            result.decision = QStringLiteral("ADDITIONAL KEY - trusted once only");
+        } else if (messageBox.clickedButton() == trustAdditionalButton) {
+            QString saveError;
+
+            if (knownHosts.trustHost(host, port, currentKeyType, currentFingerprint, &saveError)) {
+                result.allowed = true;
+                result.decision = QStringLiteral("ADDITIONAL KEY - trusted additional key type and saved to config");
+            } else {
+                result.allowed = false;
+                result.decision = QStringLiteral("ADDITIONAL KEY - could not save additional key type");
+                result.extra = saveError;
+
+                QMessageBox::warning(parent, QStringLiteral("Could not save additional known-host key"), saveError);
+            }
+        } else {
+            result.allowed = false;
+            result.decision = QStringLiteral("ADDITIONAL KEY - cancelled by user");
+        }
+
+        return result;
+    }
+
+    QMessageBox messageBox(parent);
+    messageBox.setIcon(QMessageBox::Critical);
+    messageBox.setWindowTitle(QStringLiteral("SSH host key changed"));
+    messageBox.setText(QStringLiteral("WARNING: The stored SSH host key does not match the current server key."));
+    messageBox.setInformativeText(
+        QStringLiteral("Host: ") + hostPortLabel(host, port) + QStringLiteral("\n\n")
+        + QStringLiteral("Stored key type: ") + check.storedKeyType + QStringLiteral("\n")
+        + QStringLiteral("Stored fingerprint: ") + check.storedFingerprint + QStringLiteral("\n\n")
+        + QStringLiteral("Current key type: ") + currentKeyType + QStringLiteral("\n")
+        + QStringLiteral("Current fingerprint: ") + currentFingerprint + QStringLiteral("\n\n")
+        + QStringLiteral("This may mean the server was reinstalled, DNS/IP changed, or a man-in-the-middle attack is possible.")
+    );
+
+    QAbstractButton *replaceButton = messageBox.addButton(QStringLiteral("Replace stored key"), QMessageBox::DestructiveRole);
+    QAbstractButton *trustOnceButton = messageBox.addButton(QStringLiteral("Trust once"), QMessageBox::AcceptRole);
+    QAbstractButton *cancelButton = messageBox.addButton(QStringLiteral("Cancel"), QMessageBox::RejectRole);
+
+    messageBox.setDefaultButton(qobject_cast<QPushButton *>(cancelButton));
+    messageBox.exec();
+
+    if (messageBox.clickedButton() == replaceButton) {
+        QString saveError;
+
+        if (knownHosts.trustHost(host, port, currentKeyType, currentFingerprint, &saveError)) {
+            result.allowed = true;
+            result.decision = QStringLiteral("CHANGED - stored key replaced by user");
+        } else {
+            result.allowed = false;
+            result.decision = QStringLiteral("CHANGED - could not replace stored key");
+            result.extra = saveError;
+
+            QMessageBox::warning(parent, QStringLiteral("Could not replace known host"), saveError);
+        }
+    } else if (messageBox.clickedButton() == trustOnceButton) {
+        result.allowed = true;
+        result.decision = QStringLiteral("CHANGED - trusted once only");
+    } else {
+        result.allowed = false;
+        result.decision = QStringLiteral("CHANGED - cancelled by user");
+    }
+
+    return result;
+}
 }
 
 MainWindow::MainWindow(QWidget *parent)
@@ -773,7 +945,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: Windows standalone deployment test.\n\n")
+            + QStringLiteral("Current phase: Known-host multi-key portability polish.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n")
@@ -978,12 +1150,12 @@ void MainWindow::addWelcomeTab()
         "A clean cross-platform SSH client and session manager.\n\n"
         "Double-click a saved session on the left to open the xterm.js terminal.\n\n"
         "Current milestone:\n"
-        "MF 0.2 candidate — Real Terminal Foundation / Windows standalone deployment test\n\n"
+        "MF 0.2 candidate — Real Terminal Foundation / known-host multi-key portability polish\n\n"
         "Working now:\n"
         "- saved sessions loaded from dd-ssh.json\n"
         "- portable plaintext secrets in dd-ssh.json\n"
         "- password and private-key authentication\n"
-        "- known_hosts trust handling\n"
+        "- known_hosts trust handling with multi-key host entries\n"
         "- create/edit/delete saved sessions\n"
         "- duplicate saved-session warning\n"
         "- xterm.js terminal renderer with local bundled assets\n"
@@ -994,7 +1166,7 @@ void MainWindow::addWelcomeTab()
         "- config import/export/restore and corrupt config recovery\n"
         "- native Windows Debug and Release builds validated with Qt/MSVC/vcpkg/libssh\n"
         "- cross-platform app icon resources for Qt, Windows, Linux, and macOS prep\n"
-        "- Windows standalone deployment helper and clean-machine test plan\n"
+        "- Windows standalone deployment helper validated on real Windows 10/11 machines\n"
         "- app exit protection when active SSH terminals are still connected\n\n"
         "Main menus:\n"
         "- File: Open Config Folder, Export Config, Import Config, Restore Latest Backup, Exit\n"
@@ -1012,11 +1184,11 @@ void MainWindow::addWelcomeTab()
         "- docs/SECURITY_NOTES.md explains plaintext secrets and known_hosts rules\n"
         "- docs/TEST_MATRIX.md tracks current Andromeda validation\n"
         "- docs/ROADMAP.md tracks future versions\n\n"
-        "Current release-prep focus:\n"
-        "- create dist/windows-release with windeployqt\n"
-        "- copy Qt/WebEngine/vcpkg/libssh/OpenSSL runtime files\n"
-        "- run dd-ssh.exe without manual PATH setup\n"
-        "- validate the folder on a clean Windows 10 machine\n\n"
+        "Current bugfix focus:\n"
+        "- store multiple legitimate host-key algorithms per host:port\n"
+        "- keep one portable dd-ssh.json working across Linux, Windows 10, Windows 11, and future macOS\n"
+        "- offer Trust additional key for new algorithms instead of forcing Replace stored key\n"
+        "- keep the strong warning for true same-algorithm fingerprint changes\n\n"
         "Codename roadmap:\n"
         "- 0.0.x — Launchpad / early prototype history\n"
         "- 0.1.x — Andromeda / current MF 0.2 candidate line\n"
@@ -1397,75 +1569,21 @@ void MainWindow::openSavedSessionShellInternal(const QString &sessionId, bool us
         handshake.hostKeyFingerprint
     );
 
-    bool knownHostAllowed = false;
+    const KnownHostDecisionResult knownHostResult = promptKnownHostDecision(
+        this,
+        knownHosts,
+        check,
+        session.host,
+        session.port,
+        handshake.hostKeyType,
+        handshake.hostKeyFingerprint,
+        true
+    );
 
-    if (check.status == KnownHostsManager::HostStatus::Trusted) {
-        knownHostAllowed = true;
+    const bool knownHostAllowed = knownHostResult.allowed;
 
-        QString saveError;
-        knownHosts.trustHost(
-            session.host,
-            session.port,
-            handshake.hostKeyType,
-            handshake.hostKeyFingerprint,
-            &saveError
-        );
-
-        if (!saveError.isEmpty()) {
-            statusBar()->showMessage("Shell known-host trusted, but last_seen update warning: " + saveError);
-        }
-    } else if (check.status == KnownHostsManager::HostStatus::Unknown) {
-        QMessageBox messageBox(this);
-        messageBox.setIcon(QMessageBox::Warning);
-        messageBox.setWindowTitle("Unknown SSH host");
-        messageBox.setText("This SSH host is not trusted yet.");
-        messageBox.setInformativeText(
-            "Host: " + session.host + ":" + QString::number(session.port) + "\n"
-            "Key type: " + handshake.hostKeyType + "\n"
-            "Fingerprint: " + handshake.hostKeyFingerprint + "\n\n"
-            "Do you want to trust this host before opening a shell?"
-        );
-
-        QAbstractButton *trustOnceButton = messageBox.addButton("Trust once", QMessageBox::AcceptRole);
-        QAbstractButton *trustPermanentlyButton = messageBox.addButton("Trust permanently", QMessageBox::AcceptRole);
-        QAbstractButton *cancelButton = messageBox.addButton("Cancel", QMessageBox::RejectRole);
-
-        messageBox.setDefaultButton(qobject_cast<QPushButton *>(cancelButton));
-        messageBox.exec();
-
-        if (messageBox.clickedButton() == trustOnceButton) {
-            knownHostAllowed = true;
-        } else if (messageBox.clickedButton() == trustPermanentlyButton) {
-            QString saveError;
-
-            if (knownHosts.trustHost(
-                    session.host,
-                    session.port,
-                    handshake.hostKeyType,
-                    handshake.hostKeyFingerprint,
-                    &saveError
-                )) {
-                knownHostAllowed = true;
-            } else {
-                QMessageBox::warning(
-                    this,
-                    "Could not save known host",
-                    saveError
-                );
-            }
-        }
-    } else {
-        QMessageBox::critical(
-            this,
-            "SSH host key changed",
-            "WARNING: the SSH host key changed.\n\n"
-            "Host: " + session.host + ":" + QString::number(session.port) + "\n\n"
-            "Stored key type: " + check.storedKeyType + "\n"
-            "Stored fingerprint: " + check.storedFingerprint + "\n\n"
-            "Current key type: " + handshake.hostKeyType + "\n"
-            "Current fingerprint: " + handshake.hostKeyFingerprint + "\n\n"
-            "Shell was NOT opened."
-        );
+    if (!knownHostResult.extra.isEmpty()) {
+        statusBar()->showMessage("Shell known-host warning: " + knownHostResult.extra);
     }
 
     if (!knownHostAllowed) {
@@ -1651,123 +1769,20 @@ void MainWindow::testSavedSession(const QString &sessionId)
             handshake.hostKeyFingerprint
         );
 
-        if (check.status == KnownHostsManager::HostStatus::Trusted) {
-            knownHostAllowed = true;
-            knownHostDecision = QStringLiteral("TRUSTED - stored fingerprint matches current host key");
+        const KnownHostDecisionResult knownHostResult = promptKnownHostDecision(
+            this,
+            knownHosts,
+            check,
+            session.host,
+            session.port,
+            handshake.hostKeyType,
+            handshake.hostKeyFingerprint,
+            false
+        );
 
-            QString saveError;
-            knownHosts.trustHost(
-                session.host,
-                session.port,
-                handshake.hostKeyType,
-                handshake.hostKeyFingerprint,
-                &saveError
-            );
-
-            if (!saveError.isEmpty()) {
-                knownHostExtra = QStringLiteral("Warning while updating last_seen: ") + saveError;
-            }
-        } else if (check.status == KnownHostsManager::HostStatus::Unknown) {
-            QMessageBox messageBox(this);
-            messageBox.setIcon(QMessageBox::Warning);
-            messageBox.setWindowTitle("Unknown SSH host");
-            messageBox.setText("This SSH host is not trusted yet.");
-            messageBox.setInformativeText(
-                "Host: " + session.host + ":" + QString::number(session.port) + "\n"
-                "Key type: " + handshake.hostKeyType + "\n"
-                "Fingerprint: " + handshake.hostKeyFingerprint + "\n\n"
-                "Do you want to trust this host?"
-            );
-
-            QAbstractButton *trustOnceButton = messageBox.addButton("Trust once", QMessageBox::AcceptRole);
-            QAbstractButton *trustPermanentlyButton = messageBox.addButton("Trust permanently", QMessageBox::AcceptRole);
-            QAbstractButton *cancelButton = messageBox.addButton("Cancel", QMessageBox::RejectRole);
-
-            messageBox.setDefaultButton(qobject_cast<QPushButton *>(cancelButton));
-            messageBox.exec();
-
-            if (messageBox.clickedButton() == trustOnceButton) {
-                knownHostAllowed = true;
-                knownHostDecision = QStringLiteral("UNKNOWN - trusted once only");
-            } else if (messageBox.clickedButton() == trustPermanentlyButton) {
-                QString saveError;
-
-                if (knownHosts.trustHost(
-                        session.host,
-                        session.port,
-                        handshake.hostKeyType,
-                        handshake.hostKeyFingerprint,
-                        &saveError
-                    )) {
-                    knownHostAllowed = true;
-                    knownHostDecision = QStringLiteral("UNKNOWN - trusted permanently and saved to config");
-                } else {
-                    knownHostAllowed = false;
-                    knownHostDecision = QStringLiteral("UNKNOWN - could not save trusted host");
-                    knownHostExtra = saveError;
-
-                    QMessageBox::warning(
-                        this,
-                        "Could not save known host",
-                        saveError
-                    );
-                }
-            } else {
-                knownHostAllowed = false;
-                knownHostDecision = QStringLiteral("UNKNOWN - cancelled by user");
-            }
-        } else {
-            QMessageBox messageBox(this);
-            messageBox.setIcon(QMessageBox::Critical);
-            messageBox.setWindowTitle("SSH host key changed");
-            messageBox.setText("WARNING: The stored SSH host key does not match the current server key.");
-            messageBox.setInformativeText(
-                "Host: " + session.host + ":" + QString::number(session.port) + "\n\n"
-                "Stored key type: " + check.storedKeyType + "\n"
-                "Stored fingerprint: " + check.storedFingerprint + "\n\n"
-                "Current key type: " + handshake.hostKeyType + "\n"
-                "Current fingerprint: " + handshake.hostKeyFingerprint + "\n\n"
-                "This may mean the server was reinstalled, DNS/IP changed, or a man-in-the-middle attack is possible."
-            );
-
-            QAbstractButton *replaceButton = messageBox.addButton("Replace stored key", QMessageBox::DestructiveRole);
-            QAbstractButton *trustOnceButton = messageBox.addButton("Trust once", QMessageBox::AcceptRole);
-            QAbstractButton *cancelButton = messageBox.addButton("Cancel", QMessageBox::RejectRole);
-
-            messageBox.setDefaultButton(qobject_cast<QPushButton *>(cancelButton));
-            messageBox.exec();
-
-            if (messageBox.clickedButton() == replaceButton) {
-                QString saveError;
-
-                if (knownHosts.trustHost(
-                        session.host,
-                        session.port,
-                        handshake.hostKeyType,
-                        handshake.hostKeyFingerprint,
-                        &saveError
-                    )) {
-                    knownHostAllowed = true;
-                    knownHostDecision = QStringLiteral("CHANGED - stored key replaced by user");
-                } else {
-                    knownHostAllowed = false;
-                    knownHostDecision = QStringLiteral("CHANGED - could not replace stored key");
-                    knownHostExtra = saveError;
-
-                    QMessageBox::warning(
-                        this,
-                        "Could not replace known host",
-                        saveError
-                    );
-                }
-            } else if (messageBox.clickedButton() == trustOnceButton) {
-                knownHostAllowed = true;
-                knownHostDecision = QStringLiteral("CHANGED - trusted once only");
-            } else {
-                knownHostAllowed = false;
-                knownHostDecision = QStringLiteral("CHANGED - cancelled by user");
-            }
-        }
+        knownHostAllowed = knownHostResult.allowed;
+        knownHostDecision = knownHostResult.decision;
+        knownHostExtra = knownHostResult.extra;
     }
 
     output += QStringLiteral("SSH handshake result:\n");
@@ -2037,123 +2052,20 @@ void MainWindow::showConnectDialog(bool newSavedSessionMode)
             handshake.hostKeyFingerprint
         );
 
-        if (check.status == KnownHostsManager::HostStatus::Trusted) {
-            knownHostAllowed = true;
-            knownHostDecision = QStringLiteral("TRUSTED - stored fingerprint matches current host key");
+        const KnownHostDecisionResult knownHostResult = promptKnownHostDecision(
+            this,
+            knownHosts,
+            check,
+            dialog.host(),
+            dialog.port(),
+            handshake.hostKeyType,
+            handshake.hostKeyFingerprint,
+            false
+        );
 
-            QString saveError;
-            knownHosts.trustHost(
-                dialog.host(),
-                dialog.port(),
-                handshake.hostKeyType,
-                handshake.hostKeyFingerprint,
-                &saveError
-            );
-
-            if (!saveError.isEmpty()) {
-                knownHostExtra = QStringLiteral("Warning while updating last_seen: ") + saveError;
-            }
-        } else if (check.status == KnownHostsManager::HostStatus::Unknown) {
-            QMessageBox messageBox(this);
-            messageBox.setIcon(QMessageBox::Warning);
-            messageBox.setWindowTitle("Unknown SSH host");
-            messageBox.setText("This SSH host is not trusted yet.");
-            messageBox.setInformativeText(
-                "Host: " + dialog.host() + ":" + QString::number(dialog.port()) + "\n"
-                "Key type: " + handshake.hostKeyType + "\n"
-                "Fingerprint: " + handshake.hostKeyFingerprint + "\n\n"
-                "Do you want to trust this host?"
-            );
-
-            QAbstractButton *trustOnceButton = messageBox.addButton("Trust once", QMessageBox::AcceptRole);
-            QAbstractButton *trustPermanentlyButton = messageBox.addButton("Trust permanently", QMessageBox::AcceptRole);
-            QAbstractButton *cancelButton = messageBox.addButton("Cancel", QMessageBox::RejectRole);
-
-            messageBox.setDefaultButton(qobject_cast<QPushButton *>(cancelButton));
-            messageBox.exec();
-
-            if (messageBox.clickedButton() == trustOnceButton) {
-                knownHostAllowed = true;
-                knownHostDecision = QStringLiteral("UNKNOWN - trusted once only");
-            } else if (messageBox.clickedButton() == trustPermanentlyButton) {
-                QString saveError;
-
-                if (knownHosts.trustHost(
-                        dialog.host(),
-                        dialog.port(),
-                        handshake.hostKeyType,
-                        handshake.hostKeyFingerprint,
-                        &saveError
-                    )) {
-                    knownHostAllowed = true;
-                    knownHostDecision = QStringLiteral("UNKNOWN - trusted permanently and saved to config");
-                } else {
-                    knownHostAllowed = false;
-                    knownHostDecision = QStringLiteral("UNKNOWN - could not save trusted host");
-                    knownHostExtra = saveError;
-
-                    QMessageBox::warning(
-                        this,
-                        "Could not save known host",
-                        saveError
-                    );
-                }
-            } else {
-                knownHostAllowed = false;
-                knownHostDecision = QStringLiteral("UNKNOWN - cancelled by user");
-            }
-        } else {
-            QMessageBox messageBox(this);
-            messageBox.setIcon(QMessageBox::Critical);
-            messageBox.setWindowTitle("SSH host key changed");
-            messageBox.setText("WARNING: The stored SSH host key does not match the current server key.");
-            messageBox.setInformativeText(
-                "Host: " + dialog.host() + ":" + QString::number(dialog.port()) + "\n\n"
-                "Stored key type: " + check.storedKeyType + "\n"
-                "Stored fingerprint: " + check.storedFingerprint + "\n\n"
-                "Current key type: " + handshake.hostKeyType + "\n"
-                "Current fingerprint: " + handshake.hostKeyFingerprint + "\n\n"
-                "This may mean the server was reinstalled, DNS/IP changed, or a man-in-the-middle attack is possible."
-            );
-
-            QAbstractButton *replaceButton = messageBox.addButton("Replace stored key", QMessageBox::DestructiveRole);
-            QAbstractButton *trustOnceButton = messageBox.addButton("Trust once", QMessageBox::AcceptRole);
-            QAbstractButton *cancelButton = messageBox.addButton("Cancel", QMessageBox::RejectRole);
-
-            messageBox.setDefaultButton(qobject_cast<QPushButton *>(cancelButton));
-            messageBox.exec();
-
-            if (messageBox.clickedButton() == replaceButton) {
-                QString saveError;
-
-                if (knownHosts.trustHost(
-                        dialog.host(),
-                        dialog.port(),
-                        handshake.hostKeyType,
-                        handshake.hostKeyFingerprint,
-                        &saveError
-                    )) {
-                    knownHostAllowed = true;
-                    knownHostDecision = QStringLiteral("CHANGED - stored key replaced by user");
-                } else {
-                    knownHostAllowed = false;
-                    knownHostDecision = QStringLiteral("CHANGED - could not replace stored key");
-                    knownHostExtra = saveError;
-
-                    QMessageBox::warning(
-                        this,
-                        "Could not replace known host",
-                        saveError
-                    );
-                }
-            } else if (messageBox.clickedButton() == trustOnceButton) {
-                knownHostAllowed = true;
-                knownHostDecision = QStringLiteral("CHANGED - trusted once only");
-            } else {
-                knownHostAllowed = false;
-                knownHostDecision = QStringLiteral("CHANGED - cancelled by user");
-            }
-        }
+        knownHostAllowed = knownHostResult.allowed;
+        knownHostDecision = knownHostResult.decision;
+        knownHostExtra = knownHostResult.extra;
     }
 
     QString output;

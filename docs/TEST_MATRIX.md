@@ -1,8 +1,8 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.5.6 — Andromeda
+**Checkpoint:** dev 0.1.5.7 — Andromeda
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
-**Phase:** Windows standalone deployment test
+**Phase:** Known-host multi-key portability polish
 
 This matrix tracks what has been confirmed manually, what is implemented but should be re-tested before a public alpha tag, and what is still planned.
 
@@ -25,10 +25,10 @@ TODO              Not implemented yet.
 | Windows configure | CMake with MSVC/Qt/vcpkg/pkgconf | Configure completes | PASS | Confirmed on native Windows branch. |
 | Windows Debug build | `cmake --build build-win` | `dd-ssh.exe` builds | PASS | Confirmed on native Windows. |
 | Windows launch | `build-win\dd-ssh.exe` with Qt/vcpkg DLL paths | App opens | PASS | Confirmed; Welcome screen and UI visible. |
-| Windows Release build | `build-win-release` | Release exe builds | PASS | Confirmed on native Windows before the 0.1.5.6 deployment pass. |
-| Windows deployment script | `scripts\windows-deploy-release.bat` after Release build | Creates `dist\windows-release` and performs sanity checks | IMPLEMENTED | Hardened in 0.1.5.6; needs runtime test on Windows. |
-| Windows deployed launch | `dist\windows-release\dd-ssh.exe` from normal Command Prompt | App starts without Qt/vcpkg PATH | NOT TESTED | Main validation target for 0.1.5.6. |
-| Clean Windows 10 deploy-folder test | Copy `dist\windows-release` to a clean Windows 10 machine | App launches without dev tools installed | NOT TESTED | Final pass criterion for the standalone deployment checkpoint. |
+| Windows Release build | `build-win-release` | Release exe builds | PASS | Confirmed on native Windows before the deployment pass. |
+| Windows deployment script | `scripts\windows-deploy-release.bat` after Release build | Creates `dist\windows-release` and starts deployed exe | PASS | Simple working BAT from the successful Windows standalone deployment test is now checked in. |
+| Windows deployed launch | `dist\windows-release\dd-ssh.exe` from normal Command Prompt | App starts without Qt/vcpkg PATH | PASS | Confirmed on real Windows 10/11 machines during standalone deployment testing. |
+| Clean Windows 10 deploy-folder test | Copy `dist\windows-release` to a clean Windows 10 machine | App launches without dev tools installed | PASS | App launches, icon appears, import/connect works, and xterm terminal is fast. |
 | About | Help → About DD-SSH | Shows version/codename/milestone/config path | PASS | Verified after version/codename work. |
 | Version | About dialog | Shows current checkpoint version | PASS | Should be checked after every patch. |
 | Codename | About dialog | Shows `Andromeda` | PASS | Current 0.1.x codename line. |
@@ -60,7 +60,10 @@ TODO              Not implemented yet.
 | Private-key auth | Saved key session | Auth succeeds | PASS | Tested with embedded plaintext private key from JSON. |
 | Known host | Reconnect to same host | TRUSTED when fingerprint matches | PASS | Confirmed after known_hosts save/load. |
 | Unknown host | First connect to new host | Prompts/trust flow works | PASS | Confirmed during first-connect tests. |
-| Changed host | Changed fingerprint | Must not silently accept | NOT TESTED | Needs deliberate host-key-change test before stable release. |
+| Multi-key known host A | ED25519-only config on Windows 10 where libssh negotiates ECDSA | Offers Trust additional key, connects, saves both keys | TODO | Regression case: 138.2.166.222:223. |
+| Multi-key known host B | ECDSA-only config on Linux/Windows 11 where libssh negotiates ED25519 | Offers Trust additional key, connects, saves both keys | TODO | Reverse regression case for portable JSON. |
+| Trust once additional key | Additional key type prompt → Trust once | Opens shell/auth flow without saving JSON | TODO | Confirms transient trust path. |
+| Changed host | Same key type with different fingerprint | Must show strong host-key-changed warning | TODO | Needs deliberate edited-copy config test before stable release. |
 
 ## 4. Terminal renderer and shell behavior
 
@@ -88,7 +91,7 @@ TODO              Not implemented yet.
 | Remote reboot | Reboot server externally | DD-SSH detects disconnect and cleans up | PASS | Confirmed with real reboot test. |
 | Reconnect | Click Reconnect after disconnect | Same tab reconnects using saved session | PASS | Confirmed after 0.1.3.7. |
 | Close active tab | Click tab close while connected | Confirms before disconnecting | PASS | Confirmed in lifecycle polish. |
-| Close active app window | Window close button / X while connected tabs exist | Confirms before disconnecting all active sessions and exiting | IMPLEMENTED | Added in dev 0.1.5.5; include this in the 0.1.5.6 deployed-folder test. |
+| Close active app window | Window close button / X while connected tabs exist | Confirms before disconnecting all active sessions and exiting | IMPLEMENTED | Added in dev 0.1.5.5; confirmed during deployed-folder testing. |
 | File Exit with active sessions | `File → Exit` while connected tabs exist | Uses the same active-session confirmation as window close | IMPLEMENTED | Added in dev 0.1.5.5 via main window close event; include this in deployed-folder testing. |
 | Close disconnected tab | Close after disconnect | Closes without active-session warning | IMPLEMENTED | Should be included in next final pass. |
 
@@ -160,7 +163,7 @@ TODO              Not implemented yet.
 | Windows terminal | Saved session opens xterm | SSH terminal opens | PASS | Confirmed with real SSH session. |
 | Windows htop | `htop` in terminal | Fullscreen terminal app renders | PASS | Confirmed by screenshot/test. |
 | Windows startup/RAM | Task Manager observation | Record initial metrics | PARTIAL | Debug build showed several-second first terminal startup and ~350–380 MB RAM with WebEngine terminal. Release-build measurement should be recorded during deployment testing. |
-| Windows deploy | Run outside build environment | App starts without developer PATH | NOT TESTED | Main 0.1.5.6 standalone deployment target using `windeployqt`. |
+| Windows deploy | Run outside build environment | App starts without developer PATH | PASS | Confirmed on real Windows 10/11 machines. |
 
 ## 10. Public alpha readiness summary
 

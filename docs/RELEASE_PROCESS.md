@@ -102,7 +102,7 @@ Deployment/installer artifacts are not required for the first internal Windows v
 
 ## Windows deployment folder test
 
-Current deployment-prep checkpoint: `dev 0.1.5.6 — Windows standalone deployment test`.
+Current bugfix checkpoint: `dev 0.1.5.7 — Known-host multi-key portability polish`.
 
 Before a public alpha release that includes Windows notes:
 

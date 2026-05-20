@@ -26,6 +26,36 @@ int clampBackupCount(int value)
 
     return value;
 }
+
+QJsonObject normalizedKeysForHost(const QJsonObject &storedHost)
+{
+    QJsonObject keys = storedHost.value(QStringLiteral("keys")).toObject();
+
+    const QString legacyAlgorithm = storedHost.value(QStringLiteral("algorithm")).toString().trimmed();
+    const QString legacyFingerprint = storedHost.value(QStringLiteral("fingerprint")).toString().trimmed();
+
+    if (!legacyAlgorithm.isEmpty() && !legacyFingerprint.isEmpty() && !keys.contains(legacyAlgorithm)) {
+        keys.insert(legacyAlgorithm, legacyFingerprint);
+    }
+
+    return keys;
+}
+
+QString keysSummary(const QJsonObject &keys)
+{
+    QStringList entries;
+
+    const QStringList algorithms = keys.keys();
+    for (const QString &algorithm : algorithms) {
+        const QString fingerprint = keys.value(algorithm).toString();
+
+        if (!algorithm.trimmed().isEmpty() && !fingerprint.trimmed().isEmpty()) {
+            entries.append(algorithm + QStringLiteral(" = ") + fingerprint);
+        }
+    }
+
+    return entries.join(QStringLiteral("\n"));
+}
 }
 
 KnownHostsManager::KnownHostsManager() = default;
@@ -73,10 +103,11 @@ KnownHostsManager::CheckResult KnownHostsManager::checkHost(
         return result;
     }
 
-    const QJsonDocument document = QJsonDocument::fromJson(file.readAll());
+    QJsonParseError parseError;
+    const QJsonDocument document = QJsonDocument::fromJson(file.readAll(), &parseError);
     file.close();
 
-    if (!document.isObject()) {
+    if (parseError.error != QJsonParseError::NoError || !document.isObject()) {
         result.status = HostStatus::Unknown;
         return result;
     }
@@ -90,16 +121,31 @@ KnownHostsManager::CheckResult KnownHostsManager::checkHost(
     }
 
     const QJsonObject storedHost = knownHosts.value(result.hostKey).toObject();
+    const QJsonObject keys = normalizedKeysForHost(storedHost);
 
-    result.storedKeyType = storedHost.value(QStringLiteral("algorithm")).toString();
-    result.storedFingerprint = storedHost.value(QStringLiteral("fingerprint")).toString();
+    result.storedKeysSummary = keysSummary(keys);
 
-    if (result.storedKeyType == keyType && result.storedFingerprint == fingerprint) {
-        result.status = HostStatus::Trusted;
+    if (keys.isEmpty()) {
+        result.status = HostStatus::Unknown;
         return result;
     }
 
-    result.status = HostStatus::Changed;
+    if (keys.contains(keyType)) {
+        result.storedKeyType = keyType;
+        result.storedFingerprint = keys.value(keyType).toString();
+
+        if (result.storedFingerprint == fingerprint) {
+            result.status = HostStatus::Trusted;
+            return result;
+        }
+
+        result.status = HostStatus::Changed;
+        return result;
+    }
+
+    result.status = HostStatus::AdditionalKeyType;
+    result.storedKeyType = keys.keys().join(QStringLiteral(", "));
+    result.storedFingerprint = result.storedKeysSummary;
     return result;
 }
 
@@ -188,6 +234,10 @@ bool KnownHostsManager::trustHost(
     QString *errorMessage
 ) const
 {
+    if (errorMessage != nullptr) {
+        *errorMessage = QString();
+    }
+
     QDir directory(configDirectoryPath());
 
     if (!directory.exists() && !directory.mkpath(QStringLiteral("."))) {
@@ -251,27 +301,28 @@ bool KnownHostsManager::trustHost(
     QJsonObject knownHosts = root.value(QStringLiteral("known_hosts")).toObject();
 
     const QString hostKey = makeHostKey(host, port);
-    QJsonObject existingHost = knownHosts.value(hostKey).toObject();
+    QJsonObject hostObject = knownHosts.value(hostKey).toObject();
+    QJsonObject keys = normalizedKeysForHost(hostObject);
 
     const QString nowUtc = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
 
-    QJsonObject hostObject;
-    hostObject.insert(QStringLiteral("algorithm"), keyType);
-    hostObject.insert(QStringLiteral("fingerprint"), fingerprint);
+    keys.insert(keyType, fingerprint);
 
-    if (existingHost.contains(QStringLiteral("first_seen"))) {
-        hostObject.insert(QStringLiteral("first_seen"), existingHost.value(QStringLiteral("first_seen")).toString());
-    } else {
+    if (!hostObject.contains(QStringLiteral("first_seen"))) {
         hostObject.insert(QStringLiteral("first_seen"), nowUtc);
     }
 
     hostObject.insert(QStringLiteral("last_seen"), nowUtc);
+    hostObject.insert(QStringLiteral("keys"), keys);
+    hostObject.remove(QStringLiteral("algorithm"));
+    hostObject.remove(QStringLiteral("fingerprint"));
 
     knownHosts.insert(hostKey, hostObject);
     root.insert(QStringLiteral("known_hosts"), knownHosts);
 
     QJsonObject metadata = root.value(QStringLiteral("metadata")).toObject();
     metadata.insert(QStringLiteral("last_modified"), nowUtc);
+    metadata.insert(QStringLiteral("known_hosts_format"), QStringLiteral("multi-key-v1"));
     root.insert(QStringLiteral("metadata"), metadata);
 
     if (!createConfigBackupIfNeeded(root, errorMessage)) {
@@ -299,10 +350,12 @@ bool KnownHostsManager::trustHost(
         return false;
     }
 
+#if !defined(Q_OS_WIN)
     QFile::setPermissions(
         configFilePath(),
         QFileDevice::ReadOwner | QFileDevice::WriteOwner
     );
+#endif
 
     return true;
 }

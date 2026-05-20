@@ -66,7 +66,7 @@ Future packaging work should install Linux icons into the hicolor icon theme and
 
 ## Windows standalone deployment test
 
-`dev 0.1.5.6` focuses the Windows standalone deployment test using `windeployqt`, vcpkg runtime DLL copying, deployment sanity checks, and clean-machine validation.
+`dev 0.1.5.7` focuses known-host multi-key portability so one shared `dd-ssh.json` can work across Linux, Windows 10, Windows 11, and future macOS even when different SSH host-key algorithms are negotiated.
 
 See:
 

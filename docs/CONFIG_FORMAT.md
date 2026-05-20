@@ -70,8 +70,10 @@ Windows and macOS use Qt's platform-specific application config location through
   ],
   "known_hosts": {
     "192.168.1.237:223": {
-      "algorithm": "ssh-ed25519",
-      "fingerprint": "SHA256:example",
+      "keys": {
+        "ssh-ed25519": "SHA256:example-ed25519",
+        "ecdsa-sha2-nistp256": "SHA256:example-ecdsa"
+      },
       "first_seen": "2026-05-17T12:00:00Z",
       "last_seen": "2026-05-17T12:30:00Z"
     }
@@ -143,6 +145,43 @@ When enabled, DD-SSH creates rotating `dd-ssh.json.bak-*` backups before saves.
 ```
 
 `double_click_action` is currently expected to be `open_terminal`.
+
+## Known hosts
+
+Starting with `dev 0.1.5.7`, DD-SSH stores known hosts as **multiple trusted host keys per `host:port`**. This is required for one portable `dd-ssh.json` to work across platforms because different libssh/OS combinations may negotiate different legitimate server host-key algorithms.
+
+Current format:
+
+```json
+"known_hosts": {
+  "138.2.166.222:223": {
+    "keys": {
+      "ssh-ed25519": "SHA256:b2bVKCQSkPXuvXn4blGPV91iuJ5ySA8PqrBsI/8i5hs",
+      "ecdsa-sha2-nistp256": "SHA256:tXwRSs3yDB71wdVX8Cnj57dmCszCgtU1kIHnDS9i19w"
+    },
+    "first_seen": "2026-05-20T20:00:00Z",
+    "last_seen": "2026-05-20T20:30:00Z"
+  }
+}
+```
+
+Legacy format is still accepted and migrated on save:
+
+```json
+"known_hosts": {
+  "138.2.166.222:223": {
+    "algorithm": "ssh-ed25519",
+    "fingerprint": "SHA256:b2bVKCQSkPXuvXn4blGPV91iuJ5ySA8PqrBsI/8i5hs"
+  }
+}
+```
+
+Decision rules:
+
+- no entry for `host:port` → unknown host prompt
+- same key type and same fingerprint → trusted
+- new key type for an already-known `host:port` → **Trust additional key** prompt
+- same key type but different fingerprint → strong **SSH host key changed** warning
 
 ## Sessions
 

@@ -1,6 +1,6 @@
 # DD-SSH Known Limitations
 
-**Checkpoint:** dev 0.1.5.6 — Andromeda
+**Checkpoint:** dev 0.1.5.7 — Andromeda
 
 This document lists limitations that should be visible to testers. Nothing here is hidden or sugar-coated.
 
@@ -20,7 +20,7 @@ This document lists limitations that should be visible to testers. Nothing here 
 ## Platform limitations
 
 - Linux is the primary tested platform.
-- Native Windows Debug and Release builds have been validated for app launch and SSH/xterm workflows. Standalone deployment-folder validation is the current 0.1.5.6 focus.
+- Native Windows Debug and Release builds have been validated for app launch and SSH/xterm workflows. Standalone deployment-folder validation passed on real Windows 10/11 machines; current 0.1.5.7 focus is known-host multi-key portability.
 - macOS builds are planned but not fully validated.
 - Installers are not ready; the current Windows target is a copied `dist\windows-release` folder.
 - Code signing/notarization is not ready.
@@ -77,3 +77,9 @@ Known Windows alpha notes:
 - RAM usage can be hundreds of MB with an active xterm/WebEngine terminal because Qt WebEngine embeds Chromium components.
 - Qt may create a cache folder under the DD-SSH AppData directory.
 - `windeployqt` deployment helper exists; clean Windows 10 machine validation is still required before calling the deploy-folder checkpoint passed.
+
+## Known-host portability note
+
+`dev 0.1.5.7` fixes the single-key known-host portability limitation found during Windows standalone testing. DD-SSH now accepts the legacy one-key format but saves known-host entries with a `keys` object so ED25519 and ECDSA host keys for the same `host:port` can coexist.
+
+A true same-algorithm fingerprint mismatch is still treated as a strong host-key-changed warning.
