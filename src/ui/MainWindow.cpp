@@ -773,7 +773,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: Exit safety and user guide polish.\n\n")
+            + QStringLiteral("Current phase: Windows standalone deployment test.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n")
@@ -978,7 +978,7 @@ void MainWindow::addWelcomeTab()
         "A clean cross-platform SSH client and session manager.\n\n"
         "Double-click a saved session on the left to open the xterm.js terminal.\n\n"
         "Current milestone:\n"
-        "MF 0.2 candidate — Real Terminal Foundation / exit safety polish\n\n"
+        "MF 0.2 candidate — Real Terminal Foundation / Windows standalone deployment test\n\n"
         "Working now:\n"
         "- saved sessions loaded from dd-ssh.json\n"
         "- portable plaintext secrets in dd-ssh.json\n"
@@ -992,9 +992,9 @@ void MainWindow::addWelcomeTab()
         "- reconnect after disconnect/reboot\n"
         "- settings foundation with app theme, font settings, backups, and toolbar visibility\n"
         "- config import/export/restore and corrupt config recovery\n"
-        "- native Windows build validated with Qt/MSVC/vcpkg/libssh\n"
+        "- native Windows Debug and Release builds validated with Qt/MSVC/vcpkg/libssh\n"
         "- cross-platform app icon resources for Qt, Windows, Linux, and macOS prep\n"
-        "- Windows deployment experiment docs and helper script\n"
+        "- Windows standalone deployment helper and clean-machine test plan\n"
         "- app exit protection when active SSH terminals are still connected\n\n"
         "Main menus:\n"
         "- File: Open Config Folder, Export Config, Import Config, Restore Latest Backup, Exit\n"
@@ -1005,7 +1005,7 @@ void MainWindow::addWelcomeTab()
         "- README.md is the public-alpha entry point\n"
         "- docs/GETTING_STARTED.md explains first build and first connection\n"
         "- docs/WINDOWS_BUILD.md explains native Windows build and release build testing\n"
-        "- docs/WINDOWS_DEPLOYMENT.md explains windeployqt deployment experiments\n"
+        "- docs/WINDOWS_DEPLOYMENT.md explains windeployqt standalone deployment tests\n"
         "- docs/USER_GUIDE.md explains menus and workflows\n"
         "- docs/USE_CASES.md explains practical usage scenarios\n"
         "- docs/CONFIG_MANAGEMENT.md explains backups/import/export/recovery\n"
@@ -1013,9 +1013,10 @@ void MainWindow::addWelcomeTab()
         "- docs/TEST_MATRIX.md tracks current Andromeda validation\n"
         "- docs/ROADMAP.md tracks future versions\n\n"
         "Current release-prep focus:\n"
-        "- exit safety and user guide polish\n"
-        "- confirm app close / File → Exit disconnect protection\n"
-        "- continue 0.1.5.x bugfix/stabilization pass\n\n"
+        "- create dist/windows-release with windeployqt\n"
+        "- copy Qt/WebEngine/vcpkg/libssh/OpenSSL runtime files\n"
+        "- run dd-ssh.exe without manual PATH setup\n"
+        "- validate the folder on a clean Windows 10 machine\n\n"
         "Codename roadmap:\n"
         "- 0.0.x — Launchpad / early prototype history\n"
         "- 0.1.x — Andromeda / current MF 0.2 candidate line\n"

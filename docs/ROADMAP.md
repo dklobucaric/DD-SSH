@@ -132,7 +132,7 @@ Expected before Apollo:
 
 ## Current release-prep step
 
-`dev 0.1.5.4` is the Windows deployment experiment checkpoint. The 0.1.5.x line prepares the repository for `v0.2.0-alpha — Andromeda` with public alpha docs, Windows build validation, release notes, known limitations, issue templates, cross-platform icon resources, WebEngine startup polish, and first Windows deployment packaging notes.
+`dev 0.1.5.6` is the Windows standalone deployment test checkpoint. The 0.1.5.x line prepares the repository for `v0.2.0-alpha — Andromeda` with public alpha docs, Windows Debug/Release build validation, release notes, known limitations, issue templates, cross-platform icon resources, WebEngine startup polish, exit safety, and first Windows deploy-folder validation.
 
 ---
 
@@ -144,7 +144,8 @@ dev 0.1.5.1 — Windows build documentation and release build test
 dev 0.1.5.2 — App icon integration
 dev 0.1.5.3 — WebEngine startup polish
 dev 0.1.5.4 — Windows deployment experiment
-dev 0.1.5.5 — Public alpha bugfix/stabilization pass
+dev 0.1.5.5 — Exit safety and user guide polish
+dev 0.1.5.6 — Windows standalone deployment test
 ```
 
 Windows/public-alpha scope:

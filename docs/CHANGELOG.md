@@ -1,5 +1,16 @@
 # DD-SSH Changelog
 
+## dev 0.1.5.6 — Andromeda
+
+Windows standalone deployment test.
+
+- Updated the project identity to `dev 0.1.5.6`.
+- Hardened `scripts/windows-deploy-release.bat` for the standalone Windows release-folder test.
+- Added deployment sanity checks for the deployed executable, Qt platform plugin, Qt WebEngine runtime hints, libssh, OpenSSL, and zlib DLLs.
+- Updated Windows deployment documentation for `dist\windows-release`, no-manual-`PATH` launch testing, and clean Windows 10 validation.
+- Updated README, About/Welcome text, roadmap, known limitations, public alpha checklist, build docs, packaging notes, and test matrix for the 0.1.5.6 focus.
+- Kept SSH authentication, terminal runtime, config import/export/recovery, icon resources, and exit-safety behavior unchanged.
+
 ## dev 0.1.5.5 — Andromeda
 
 Exit safety and user guide polish.

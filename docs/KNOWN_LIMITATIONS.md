@@ -1,6 +1,6 @@
 # DD-SSH Known Limitations
 
-**Checkpoint:** dev 0.1.5.4 — Andromeda
+**Checkpoint:** dev 0.1.5.6 — Andromeda
 
 This document lists limitations that should be visible to testers. Nothing here is hidden or sugar-coated.
 
@@ -20,9 +20,9 @@ This document lists limitations that should be visible to testers. Nothing here 
 ## Platform limitations
 
 - Linux is the primary tested platform.
-- Native Windows build has been validated for app launch and SSH/xterm workflows, but deployment packaging is not ready.
+- Native Windows Debug and Release builds have been validated for app launch and SSH/xterm workflows. Standalone deployment-folder validation is the current 0.1.5.6 focus.
 - macOS builds are planned but not fully validated.
-- Packaging/installers are not ready.
+- Installers are not ready; the current Windows target is a copied `dist\windows-release` folder.
 - Code signing/notarization is not ready.
 
 ---
@@ -67,7 +67,7 @@ Always keep backups before testing import/export/recovery behavior.
 
 ## Windows-specific alpha notes
 
-The native Windows build is confirmed to launch and run SSH/xterm workflows, but Windows is not packaged yet.
+The native Windows build is confirmed to launch and run SSH/xterm workflows. The current Windows work is validating a standalone deploy folder, not a full installer.
 
 Known Windows alpha notes:
 
@@ -76,4 +76,4 @@ Known Windows alpha notes:
 - Subsequent terminal tabs are much faster.
 - RAM usage can be hundreds of MB with an active xterm/WebEngine terminal because Qt WebEngine embeds Chromium components.
 - Qt may create a cache folder under the DD-SSH AppData directory.
-- `windeployqt` deployment has not been completed yet.
+- `windeployqt` deployment helper exists; clean Windows 10 machine validation is still required before calling the deploy-folder checkpoint passed.

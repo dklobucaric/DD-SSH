@@ -102,6 +102,8 @@ Deployment/installer artifacts are not required for the first internal Windows v
 
 ## Windows deployment folder test
 
+Current deployment-prep checkpoint: `dev 0.1.5.6 — Windows standalone deployment test`.
+
 Before a public alpha release that includes Windows notes:
 
 ```text

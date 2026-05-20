@@ -1,6 +1,6 @@
 # DD-SSH Public Alpha Checklist
 
-**Checkpoint:** dev 0.1.5.5 — Andromeda
+**Checkpoint:** dev 0.1.5.6 — Andromeda
 **Milestone target:** v0.2.0-alpha — Real Terminal Foundation
 
 This checklist is the final pre-alpha gate. It is intentionally practical: run it on a real machine, with real saved sessions, before tagging a public alpha.
@@ -24,10 +24,10 @@ cmake --build build --clean-first
 - [ ] Help → About DD-SSH shows:
 
 ```text
-Version: dev 0.1.5.5
+Version: dev 0.1.5.6
 Codename: Andromeda
 Milestone: MF 0.2 candidate
-Current phase: Windows deployment experiment.
+Current phase: Windows standalone deployment test.
 ```
 
 - [ ] Welcome tab opens and describes the current Andromeda status.
@@ -219,6 +219,13 @@ Minimum Windows public-alpha checklist:
 - [ ] App/window icon appears on Linux window manager.
 - [ ] Windows `.exe` icon appears in Explorer/taskbar after build/deploy.
 - [ ] macOS `.icns` resource is available for future app bundle packaging.
+
+## Windows standalone deployment validation
+
+- [ ] `scripts\windows-deploy-release.bat` creates `dist\windows-release`.
+- [ ] `dist\windows-release\dd-ssh.exe` launches from a new normal Command Prompt without manually adding Qt/vcpkg to `PATH`.
+- [ ] The whole `dist\windows-release` folder launches on a clean Windows 10 machine without Qt/vcpkg/MSVC dev tools installed.
+- [ ] On the clean machine, About, Settings, saved session creation, password SSH login, xterm.js terminal, `whoami`, `htop`, app icon, and exit safety are tested.
 
 ## Exit safety validation
 

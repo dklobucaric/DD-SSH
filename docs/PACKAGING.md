@@ -64,9 +64,9 @@ Future packaging work should install Linux icons into the hicolor icon theme and
 
 ---
 
-## Windows deployment experiment
+## Windows standalone deployment test
 
-`dev 0.1.5.4` adds the first Windows deployment experiment using `windeployqt` and vcpkg runtime DLL copying.
+`dev 0.1.5.6` focuses the Windows standalone deployment test using `windeployqt`, vcpkg runtime DLL copying, deployment sanity checks, and clean-machine validation.
 
 See:
 
@@ -75,4 +75,4 @@ docs/WINDOWS_DEPLOYMENT.md
 scripts/windows-deploy-release.bat
 ```
 
-This is not a final installer. It is a deploy-folder experiment for public-alpha readiness.
+This is not a final installer. It is a deploy-folder validation step for public-alpha readiness.

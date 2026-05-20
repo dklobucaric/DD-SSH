@@ -1,8 +1,8 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.5.5 — Andromeda
+**Checkpoint:** dev 0.1.5.6 — Andromeda
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
-**Phase:** Exit safety and user guide polish
+**Phase:** Windows standalone deployment test
 
 This matrix tracks what has been confirmed manually, what is implemented but should be re-tested before a public alpha tag, and what is still planned.
 
@@ -25,9 +25,10 @@ TODO              Not implemented yet.
 | Windows configure | CMake with MSVC/Qt/vcpkg/pkgconf | Configure completes | PASS | Confirmed on native Windows branch. |
 | Windows Debug build | `cmake --build build-win` | `dd-ssh.exe` builds | PASS | Confirmed on native Windows. |
 | Windows launch | `build-win\dd-ssh.exe` with Qt/vcpkg DLL paths | App opens | PASS | Confirmed; Welcome screen and UI visible. |
-| Windows Release build | `build-win-release` | Release exe builds | NOT TESTED | Next focused performance test. |
-| Windows deployment script | `scripts\windows-deploy-release.bat` after Release build | Creates `dist\windows-release` | IMPLEMENTED | Added in 0.1.5.4; needs Windows runtime deployment test. |
-| Windows deployed launch | `dist\windows-release\dd-ssh.exe` from normal Command Prompt | App starts without Qt/vcpkg PATH | NOT TESTED | Main validation target for 0.1.5.4. |
+| Windows Release build | `build-win-release` | Release exe builds | PASS | Confirmed on native Windows before the 0.1.5.6 deployment pass. |
+| Windows deployment script | `scripts\windows-deploy-release.bat` after Release build | Creates `dist\windows-release` and performs sanity checks | IMPLEMENTED | Hardened in 0.1.5.6; needs runtime test on Windows. |
+| Windows deployed launch | `dist\windows-release\dd-ssh.exe` from normal Command Prompt | App starts without Qt/vcpkg PATH | NOT TESTED | Main validation target for 0.1.5.6. |
+| Clean Windows 10 deploy-folder test | Copy `dist\windows-release` to a clean Windows 10 machine | App launches without dev tools installed | NOT TESTED | Final pass criterion for the standalone deployment checkpoint. |
 | About | Help → About DD-SSH | Shows version/codename/milestone/config path | PASS | Verified after version/codename work. |
 | Version | About dialog | Shows current checkpoint version | PASS | Should be checked after every patch. |
 | Codename | About dialog | Shows `Andromeda` | PASS | Current 0.1.x codename line. |
@@ -87,8 +88,8 @@ TODO              Not implemented yet.
 | Remote reboot | Reboot server externally | DD-SSH detects disconnect and cleans up | PASS | Confirmed with real reboot test. |
 | Reconnect | Click Reconnect after disconnect | Same tab reconnects using saved session | PASS | Confirmed after 0.1.3.7. |
 | Close active tab | Click tab close while connected | Confirms before disconnecting | PASS | Confirmed in lifecycle polish. |
-| Close active app window | Window close button / X while connected tabs exist | Confirms before disconnecting all active sessions and exiting | IMPLEMENTED | Added in dev 0.1.5.5; needs focused manual test on Linux and Windows. |
-| File Exit with active sessions | `File → Exit` while connected tabs exist | Uses the same active-session confirmation as window close | IMPLEMENTED | Added in dev 0.1.5.5 via main window close event. |
+| Close active app window | Window close button / X while connected tabs exist | Confirms before disconnecting all active sessions and exiting | IMPLEMENTED | Added in dev 0.1.5.5; include this in the 0.1.5.6 deployed-folder test. |
+| File Exit with active sessions | `File → Exit` while connected tabs exist | Uses the same active-session confirmation as window close | IMPLEMENTED | Added in dev 0.1.5.5 via main window close event; include this in deployed-folder testing. |
 | Close disconnected tab | Close after disconnect | Closes without active-session warning | IMPLEMENTED | Should be included in next final pass. |
 
 ## 6. Settings and app UI
@@ -141,7 +142,7 @@ TODO              Not implemented yet.
 | Platform | Status | Notes |
 |---|---|---|
 | Linux | PASS | Primary tested platform. |
-| Windows | PARTIAL | Native Windows build launches and SSH/xterm/htop work. Release build, deployment, and installer are not validated yet. |
+| Windows | PARTIAL | Native Windows Debug/Release builds launch and SSH/xterm/htop work. Deploy-folder and installer validation are not complete yet. |
 | macOS | TODO | Build/runtime not validated yet. |
 
 
@@ -158,8 +159,8 @@ TODO              Not implemented yet.
 | AppData config | First Windows launch | Config stored under AppData/Local/DD-LAB/DD-SSH | PASS | Windows path verified by app launch behavior. |
 | Windows terminal | Saved session opens xterm | SSH terminal opens | PASS | Confirmed with real SSH session. |
 | Windows htop | `htop` in terminal | Fullscreen terminal app renders | PASS | Confirmed by screenshot/test. |
-| Windows startup/RAM | Task Manager observation | Record initial metrics | PARTIAL | Debug build showed several-second first terminal startup and ~350–380 MB RAM with WebEngine terminal. Release build measurement pending. |
-| Windows deploy | Run outside build environment | App starts without developer PATH | TODO | Planned for deployment experiment with `windeployqt`. |
+| Windows startup/RAM | Task Manager observation | Record initial metrics | PARTIAL | Debug build showed several-second first terminal startup and ~350–380 MB RAM with WebEngine terminal. Release-build measurement should be recorded during deployment testing. |
+| Windows deploy | Run outside build environment | App starts without developer PATH | NOT TESTED | Main 0.1.5.6 standalone deployment target using `windeployqt`. |
 
 ## 10. Public alpha readiness summary
 
@@ -171,7 +172,7 @@ TODO              Not implemented yet.
 | Config import/export | IMPLEMENTED | Needs final focused pass before public alpha tag. |
 | Settings foundation | PASS | Font/app settings exist; theme needs final confirmation if not already done. |
 | Security posture documented | PASS | Plaintext secrets warning exists. |
-| Windows/macOS validation | PARTIAL | Windows native Debug build validated; Windows Release/deployment and macOS remain pending. |
+| Windows/macOS validation | PARTIAL | Windows native Debug and Release builds are validated; Windows deploy-folder and macOS remain pending. |
 | Packaging/installers | TODO | Not part of current dev line. |
 
 ## 11. Suggested final pre-alpha test pass

@@ -17,17 +17,19 @@ DD-SSH is designed for practical sysadmin use: saved sessions, one portable JSON
 
 ## Current status
 
-**Development checkpoint:** `dev 0.1.5.5`
+**Development checkpoint:** `dev 0.1.5.6`
 **Codename:** Andromeda
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
-**Current phase:** Exit safety and user guide polish
+**Current phase:** Windows standalone deployment test
 
-DD-SSH is now close to a **public alpha**. It is not a stable 1.0 release yet, but the core workflow is functional and tested on Linux. A native Windows build has also been validated with MSVC, Qt 6.11.1, Qt WebEngine/WebChannel/Positioning, vcpkg/libssh, and pkgconf. The app now includes cross-platform icon resources, a clearer terminal startup/loading path, and a first Windows deployment experiment based on `windeployqt`.
+DD-SSH is now close to a **public alpha**. It is not a stable 1.0 release yet, but the core workflow is functional and tested on Linux. Native Windows Debug and Release builds have also been validated with MSVC, Qt 6.11.1, Qt WebEngine/WebChannel/Positioning, vcpkg/libssh, and pkgconf.
 
-The current bugfix/polish pass adds two user-safety clarifications:
+The current deployment pass focuses on creating a portable Windows release folder using `windeployqt`, copying the Qt/WebEngine/vcpkg/libssh/OpenSSL runtime files, and validating that `dist\windows-release\dd-ssh.exe` can run without manually extending `PATH`. The next proof point is copying that folder to a clean Windows 10 machine with no development environment installed.
+
+The previous polish pass added two user-safety clarifications:
 
 - new saved sessions are stored only after a successful SSH authentication test
-- closing DD-SSH with active SSH terminal tabs now asks for confirmation before disconnecting them
+- closing DD-SSH with active SSH terminal tabs asks for confirmation before disconnecting them
 
 On Windows, the first xterm.js terminal tab may take a few seconds while Qt WebEngine initializes; DD-SSH reports that startup state more clearly:
 

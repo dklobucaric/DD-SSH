@@ -18,7 +18,7 @@ This directory contains the working documentation for DD-SSH.
 - [Security Notes](SECURITY_NOTES.md) — plaintext secrets, known_hosts, future encryption
 - [Building](BUILDING.md) — local build instructions
 - [Windows Build Guide](WINDOWS_BUILD.md) — native Windows MSVC/Qt/vcpkg build notes
-- [Windows Deployment Guide](WINDOWS_DEPLOYMENT.md) — first windeployqt-based deployment experiment
+- [Windows Deployment Guide](WINDOWS_DEPLOYMENT.md) — first windeployqt-based standalone deployment test
 - [Packaging](PACKAGING.md) — future distribution notes
 
 ## Project management docs
@@ -32,10 +32,10 @@ This directory contains the working documentation for DD-SSH.
 ## Current checkpoint
 
 ```text
-Version: dev 0.1.5.4
+Version: dev 0.1.5.6
 Codename: Andromeda
 Milestone: MF 0.2 candidate
-Phase: Windows deployment experiment
+Phase: Windows standalone deployment test
 ```
 
 

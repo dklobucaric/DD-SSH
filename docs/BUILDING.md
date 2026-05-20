@@ -71,14 +71,14 @@ No CDN should be required for terminal rendering.
 
 ## Current tested platform
 
-Linux remains the primary development platform. Windows native build/runtime validation has started and is documented in `docs/WINDOWS_BUILD.md`. macOS still needs dedicated validation.
+Linux remains the primary development platform. Windows native Debug and Release build/runtime validation is documented in `docs/WINDOWS_BUILD.md`; standalone deploy-folder validation is documented in `docs/WINDOWS_DEPLOYMENT.md`. macOS still needs dedicated validation.
 
 ## Version identity
 
 The About dialog reads version strings from `CMakeLists.txt`:
 
 ```cmake
-set(DD_SSH_VERSION_STRING "dev 0.1.5.4")
+set(DD_SSH_VERSION_STRING "dev 0.1.5.6")
 set(DD_SSH_CODENAME_STRING "Andromeda")
 set(DD_SSH_MILESTONE_STRING "MF 0.2 candidate")
 ```
@@ -148,7 +148,7 @@ Linux packaging can later install the PNG size variants from `resources/icons/` 
 
 ## Windows deployment
 
-After a Release build succeeds, see [Windows Deployment Guide](WINDOWS_DEPLOYMENT.md) for the first `windeployqt`-based deployment experiment and the helper script:
+After a Release build succeeds, see [Windows Deployment Guide](WINDOWS_DEPLOYMENT.md) for the first `windeployqt`-based standalone deployment test and helper script:
 
 ```text
 scripts/windows-deploy-release.bat

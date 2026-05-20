@@ -1,7 +1,7 @@
 # Windows Build Guide
 
-**Checkpoint:** dev 0.1.5.4 — Andromeda  
-**Purpose:** document the first native Windows build path and release-build test procedure.
+**Checkpoint:** dev 0.1.5.6 — Andromeda  
+**Purpose:** document the native Windows build path, confirmed Release build procedure, and handoff to the standalone deployment test.
 
 This guide documents the Windows setup that was validated during the Andromeda line. It is intentionally practical and conservative: first get a native Windows build running, then test runtime behavior, then later experiment with deployment/installer packaging.
 
@@ -21,9 +21,10 @@ Confirmed during the first native Windows test pass:
 [x] SSH connection works
 [x] xterm.js local renderer works through Qt WebEngine
 [x] htop runs inside the Windows-built DD-SSH terminal
+[x] Release build succeeds with build-win-release
 ```
 
-Known Windows observations from the first Debug build test:
+Known Windows observations from the first Windows build tests:
 
 ```text
 - app startup is slower than Linux
@@ -33,7 +34,7 @@ Known Windows observations from the first Debug build test:
 - Qt may create a cache folder under the DD-SSH AppData location
 ```
 
-These are not currently treated as fatal bugs. They are expected side effects of using Qt WebEngine/xterm.js, especially in Debug builds.
+These are not currently treated as fatal bugs. They are expected side effects of using Qt WebEngine/xterm.js. Release builds should be used for standalone deployment testing.
 
 ---
 
@@ -369,25 +370,17 @@ This is runtime/cache data, not DD-SSH session/secrets config.
 
 ---
 
-## 9. Deployment is not done yet
+## 9. Deployment handoff
 
-This guide validates building and running from the build environment.
+This guide validates building and running from the Windows build environment. Standalone deploy-folder testing is tracked separately in `docs/WINDOWS_DEPLOYMENT.md`.
 
-A later checkpoint will test:
-
-```text
-windeployqt
-copying vcpkg DLLs
-running outside the build environment
-portable deployment folder
-Windows release artifact notes
-```
-
-Planned checkpoint:
+Current deployment checkpoint:
 
 ```text
-dev 0.1.5.4 — Windows deployment experiment
+dev 0.1.5.6 — Windows standalone deployment test
 ```
+
+That checkpoint covers `windeployqt`, copying vcpkg DLLs, running without manually extending `PATH`, and copying the finished `dist\windows-release` folder to a clean Windows 10 machine.
 
 ---
 
@@ -410,8 +403,8 @@ dev 0.1.5.4 — Windows deployment experiment
 [ ] password SSH connection works
 [ ] xterm terminal opens
 [ ] htop works
-[ ] Release configure passes
-[ ] Release build passes
+[x] Release configure passes
+[x] Release build passes
 [ ] startup/RAM notes recorded
 ```
 
@@ -445,9 +438,9 @@ This is not currently treated as a release blocker unless the terminal fails to 
 
 ---
 
-## Windows deployment experiment
+## Windows standalone deployment test
 
-`dev 0.1.5.4` adds the first deployment experiment for Windows.
+`dev 0.1.5.6` focuses the first standalone deployment test for Windows.
 
 See:
 
@@ -456,7 +449,7 @@ docs/WINDOWS_DEPLOYMENT.md
 scripts/windows-deploy-release.bat
 ```
 
-The deployment experiment uses `windeployqt`, copies vcpkg runtime DLLs, and creates:
+The standalone deployment test uses `windeployqt`, copies vcpkg runtime DLLs, and creates:
 
 ```text
 dist\windows-release\

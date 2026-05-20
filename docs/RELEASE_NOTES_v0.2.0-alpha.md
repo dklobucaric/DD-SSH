@@ -110,7 +110,7 @@ Before tagging this alpha, complete:
 
 ## Windows validation notes
 
-During the Andromeda preparation line, DD-SSH was successfully built and launched natively on Windows using MSVC, Qt 6.11.1, Qt WebEngine/WebChannel/Positioning, vcpkg `libssh`, and vcpkg `pkgconf`.
+During the Andromeda preparation line, DD-SSH was successfully built and launched natively on Windows using MSVC, Qt 6.11.1, Qt WebEngine/WebChannel/Positioning, vcpkg `libssh`, and vcpkg `pkgconf`. The dev 0.1.5.6 standalone deployment pass tracks `windeployqt`, vcpkg runtime DLL copying, no-manual-`PATH` launch testing, and clean Windows 10 deploy-folder validation.
 
 The Windows build was able to open an SSH/xterm terminal and run `htop`.
 
