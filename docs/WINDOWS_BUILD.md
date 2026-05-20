@@ -1,6 +1,6 @@
 # Windows Build Guide
 
-**Checkpoint:** dev 0.1.5.3 — Andromeda  
+**Checkpoint:** dev 0.1.5.4 — Andromeda  
 **Purpose:** document the first native Windows build path and release-build test procedure.
 
 This guide documents the Windows setup that was validated during the Andromeda line. It is intentionally practical and conservative: first get a native Windows build running, then test runtime behavior, then later experiment with deployment/installer packaging.
@@ -418,7 +418,7 @@ dev 0.1.5.4 — Windows deployment experiment
 
 ## Windows icon resource
 
-From `dev 0.1.5.3`, DD-SSH includes a Windows `.rc` file and multi-size `.ico` generated from the project icon:
+From `dev 0.1.5.2`, DD-SSH includes a Windows `.rc` file and multi-size `.ico` generated from the project icon:
 
 ```text
 resources/windows/dd-ssh.rc
@@ -442,3 +442,24 @@ Task Manager RAM after first terminal:
 ```
 
 This is not currently treated as a release blocker unless the terminal fails to load, the app remains permanently not responding, or subsequent tabs remain slow after the first WebEngine initialization.
+
+---
+
+## Windows deployment experiment
+
+`dev 0.1.5.4` adds the first deployment experiment for Windows.
+
+See:
+
+```text
+docs/WINDOWS_DEPLOYMENT.md
+scripts/windows-deploy-release.bat
+```
+
+The deployment experiment uses `windeployqt`, copies vcpkg runtime DLLs, and creates:
+
+```text
+dist\windows-release\
+```
+
+The goal is to run `dd-ssh.exe` from that folder without manually adding Qt or vcpkg paths to `PATH`.

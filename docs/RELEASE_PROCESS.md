@@ -96,3 +96,19 @@ Record:
 ```
 
 Deployment/installer artifacts are not required for the first internal Windows validation, but public releases should eventually use `windeployqt` and a clean machine/runtime test.
+
+
+---
+
+## Windows deployment folder test
+
+Before a public alpha release that includes Windows notes:
+
+```text
+1. Build Release on Windows.
+2. Run scripts\windows-deploy-release.bat.
+3. Start dist\windows-release\dd-ssh.exe from a normal Command Prompt.
+4. Confirm About, Settings, xterm terminal, SSH login, htop, Disconnect, and Reconnect.
+```
+
+See `docs/WINDOWS_DEPLOYMENT.md` for details.

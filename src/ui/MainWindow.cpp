@@ -669,7 +669,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: WebEngine startup polish.\n\n")
+            + QStringLiteral("Current phase: Windows deployment experiment.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n")
@@ -889,7 +889,8 @@ void MainWindow::addWelcomeTab()
         "- settings foundation with app theme, font settings, backups, and toolbar visibility\n"
         "- config import/export/restore and corrupt config recovery\n"
         "- native Windows build validated with Qt/MSVC/vcpkg/libssh\n"
-        "- cross-platform app icon resources for Qt, Windows, Linux, and macOS prep\n\n"
+        "- cross-platform app icon resources for Qt, Windows, Linux, and macOS prep\n"
+        "- Windows deployment experiment docs and helper script\n\n"
         "Main menus:\n"
         "- File: Open Config Folder, Export Config, Import Config, Restore Latest Backup, Exit\n"
         "- Session: New Session, Connect / Auth test, Edit selected session\n"
@@ -899,16 +900,17 @@ void MainWindow::addWelcomeTab()
         "- README.md is the public-alpha entry point\n"
         "- docs/GETTING_STARTED.md explains first build and first connection\n"
         "- docs/WINDOWS_BUILD.md explains native Windows build and release build testing\n"
+        "- docs/WINDOWS_DEPLOYMENT.md explains windeployqt deployment experiments\n"
         "- docs/USER_GUIDE.md explains menus and workflows\n"
         "- docs/USE_CASES.md explains practical usage scenarios\n"
         "- docs/CONFIG_MANAGEMENT.md explains backups/import/export/recovery\n"
         "- docs/SECURITY_NOTES.md explains plaintext secrets and known_hosts rules\n"
         "- docs/TEST_MATRIX.md tracks current Andromeda validation\n"
         "- docs/ROADMAP.md tracks future versions\n\n"
-        "Next milestone:\n"
-        "- WebEngine startup polish / first-terminal loading message\n"
+        "Current release-prep focus:\n"
         "- Windows deployment experiment with windeployqt\n"
-        "- prepare v0.2.0-alpha milestone notes\n\n"
+        "- standalone deployment folder test outside the build environment\n"
+        "- prepare 0.1.5.5 bugfix/stabilization pass\n\n"
         "Codename roadmap:\n"
         "- 0.0.x — Launchpad / early prototype history\n"
         "- 0.1.x — Andromeda / current MF 0.2 candidate line\n"

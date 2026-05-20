@@ -131,8 +131,7 @@ Expected before Apollo:
 
 ## Current release-prep step
 
-`dev 0.1.5.3` is the WebEngine startup polish checkpoint. The 0.1.5.x line prepares the repository for `v0.2.0-alpha — Andromeda` with public alpha docs, Windows build validation, release notes, known limitations, issue templates, and cross-platform icon resources.
-
+`dev 0.1.5.4` is the Windows deployment experiment checkpoint. The 0.1.5.x line prepares the repository for `v0.2.0-alpha — Andromeda` with public alpha docs, Windows build validation, release notes, known limitations, issue templates, cross-platform icon resources, WebEngine startup polish, and first Windows deployment packaging notes.
 
 ---
 
@@ -141,16 +140,20 @@ Expected before Apollo:
 ```text
 dev 0.1.5.0 — Public alpha release preparation
 dev 0.1.5.1 — Windows build documentation and release build test
-dev 0.1.5.3 — WebEngine startup polish
+dev 0.1.5.2 — App icon integration
 dev 0.1.5.3 — WebEngine startup polish
 dev 0.1.5.4 — Windows deployment experiment
+dev 0.1.5.5 — Public alpha bugfix/stabilization pass
 ```
 
-Planned Windows-related scope:
+Windows/public-alpha scope:
 
 - document native Windows MSVC/Qt/vcpkg build
 - test Release build separately from Debug
 - document first-terminal startup delay from Qt WebEngine
 - document RAM expectations caused by Qt WebEngine/Chromium
-- app/window/exe icons added in 0.1.5.2
-- later test `windeployqt` and standalone deployment folder
+- integrate app/window/exe icons
+- test `windeployqt` deployment folder
+- copy vcpkg runtime DLLs into the deployment folder
+- run deployed app outside the build environment
+- collect bugfixes before `v0.2.0-alpha`

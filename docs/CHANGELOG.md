@@ -1,5 +1,16 @@
 # DD-SSH Changelog
 
+## dev 0.1.5.4 — Andromeda
+
+Windows deployment experiment.
+
+- Added `docs/WINDOWS_DEPLOYMENT.md` with the first `windeployqt`-based deployment workflow.
+- Added `scripts/windows-deploy-release.bat` as an experimental helper for creating a standalone Windows release folder.
+- Documented copying vcpkg runtime DLLs such as libssh/OpenSSL/zlib into the deployment folder.
+- Documented testing the deployed app outside the build tree and without Qt/vcpkg PATH setup.
+- Updated Windows build/release docs, roadmap, test matrix, and public-alpha checklist for deployment validation.
+- Kept SSH/session/terminal runtime behavior and the updated icon resources unchanged.
+
 ## dev 0.1.5.3 — Andromeda
 
 WebEngine startup polish.

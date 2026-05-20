@@ -1,8 +1,8 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.5.3 — Andromeda  
+**Checkpoint:** dev 0.1.5.4 — Andromeda  
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation  
-**Phase:** WebEngine startup polish
+**Phase:** Windows deployment experiment
 
 This matrix tracks what has been confirmed manually, what is implemented but should be re-tested before a public alpha tag, and what is still planned.
 
@@ -26,6 +26,8 @@ TODO              Not implemented yet.
 | Windows Debug build | `cmake --build build-win` | `dd-ssh.exe` builds | PASS | Confirmed on native Windows. |
 | Windows launch | `build-win\dd-ssh.exe` with Qt/vcpkg DLL paths | App opens | PASS | Confirmed; Welcome screen and UI visible. |
 | Windows Release build | `build-win-release` | Release exe builds | NOT TESTED | Next focused performance test. |
+| Windows deployment script | `scripts\windows-deploy-release.bat` after Release build | Creates `dist\windows-release` | IMPLEMENTED | Added in 0.1.5.4; needs Windows runtime deployment test. |
+| Windows deployed launch | `dist\windows-release\dd-ssh.exe` from normal Command Prompt | App starts without Qt/vcpkg PATH | NOT TESTED | Main validation target for 0.1.5.4. |
 | About | Help → About DD-SSH | Shows version/codename/milestone/config path | PASS | Verified after version/codename work. |
 | Version | About dialog | Shows current checkpoint version | PASS | Should be checked after every patch. |
 | Codename | About dialog | Shows `Andromeda` | PASS | Current 0.1.x codename line. |

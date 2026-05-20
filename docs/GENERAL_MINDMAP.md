@@ -10,10 +10,10 @@ Clean cross-platform SSH client and session manager
 ## Current identity
 
 ```text
-Version: dev 0.1.5.3
+Version: dev 0.1.5.4
 Codename: Andromeda
 Milestone: MF 0.2 candidate
-Phase: WebEngine startup polish
+Phase: Windows deployment experiment
 ```
 
 ## Main branches

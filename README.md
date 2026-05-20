@@ -17,12 +17,12 @@ DD-SSH is designed for practical sysadmin use: saved sessions, one portable JSON
 
 ## Current status
 
-**Development checkpoint:** `dev 0.1.5.3`  
+**Development checkpoint:** `dev 0.1.5.4`  
 **Codename:** Andromeda  
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation  
-**Current phase:** WebEngine startup polish
+**Current phase:** Windows deployment experiment
 
-DD-SSH is now close to a **public alpha**. It is not a stable 1.0 release yet, but the core workflow is functional and tested on Linux. A native Windows build has also been validated with MSVC, Qt 6.11.1, Qt WebEngine/WebChannel/Positioning, vcpkg/libssh, and pkgconf. The app now includes cross-platform icon resources and a clearer terminal startup/loading path. On Windows, the first xterm.js terminal tab may take a few seconds while Qt WebEngine initializes; DD-SSH now reports that startup state more clearly:
+DD-SSH is now close to a **public alpha**. It is not a stable 1.0 release yet, but the core workflow is functional and tested on Linux. A native Windows build has also been validated with MSVC, Qt 6.11.1, Qt WebEngine/WebChannel/Positioning, vcpkg/libssh, and pkgconf. The app now includes cross-platform icon resources, a clearer terminal startup/loading path, and a first Windows deployment experiment based on `windeployqt`. On Windows, the first xterm.js terminal tab may take a few seconds while Qt WebEngine initializes; DD-SSH reports that startup state more clearly:
 
 ```text
 saved session → plaintext secret from dd-ssh.json → known_hosts check → SSH auth → xterm.js terminal → PTY resize → real shell
@@ -44,6 +44,7 @@ Before tagging, run:
 - [Public Alpha Checklist](docs/PUBLIC_ALPHA_CHECKLIST.md)
 - [Test Matrix](docs/TEST_MATRIX.md)
 - [Windows Build Guide](docs/WINDOWS_BUILD.md)
+- [Windows Deployment Guide](docs/WINDOWS_DEPLOYMENT.md)
 - [Release Notes Draft](docs/RELEASE_NOTES_v0.2.0-alpha.md)
 
 GitHub issue templates are included for bug reports, terminal issues, config/recovery issues, and feature requests.
@@ -296,6 +297,7 @@ Start here:
 - [Architecture](docs/ARCHITECTURE.md)
 - [Building](docs/BUILDING.md)
 - [Windows Build Guide](docs/WINDOWS_BUILD.md)
+- [Windows Deployment Guide](docs/WINDOWS_DEPLOYMENT.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Test Matrix](docs/TEST_MATRIX.md)
 - [Public Alpha Checklist](docs/PUBLIC_ALPHA_CHECKLIST.md)

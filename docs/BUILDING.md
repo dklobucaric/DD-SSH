@@ -78,7 +78,7 @@ Linux remains the primary development platform. Windows native build/runtime val
 The About dialog reads version strings from `CMakeLists.txt`:
 
 ```cmake
-set(DD_SSH_VERSION_STRING "dev 0.1.5.3")
+set(DD_SSH_VERSION_STRING "dev 0.1.5.4")
 set(DD_SSH_CODENAME_STRING "Andromeda")
 set(DD_SSH_MILESTONE_STRING "MF 0.2 candidate")
 ```
@@ -142,3 +142,14 @@ resources/macos/dd-ssh.iconset/
 ```
 
 Linux packaging can later install the PNG size variants from `resources/icons/` into the appropriate hicolor icon theme directories.
+
+
+---
+
+## Windows deployment
+
+After a Release build succeeds, see [Windows Deployment Guide](WINDOWS_DEPLOYMENT.md) for the first `windeployqt`-based deployment experiment and the helper script:
+
+```text
+scripts/windows-deploy-release.bat
+```
