@@ -1,4 +1,5 @@
 #include "SshShellWorker.h"
+#include "SshCompatibility.h"
 
 #include <libssh/libssh.h>
 
@@ -108,7 +109,7 @@ void SshShellWorker::start()
     const QByteArray hostUtf8 = m_host.toUtf8();
     const QByteArray usernameUtf8 = m_username.toUtf8();
 
-    int verbosity = SSH_LOG_NOLOG;
+    int verbosity = SshCompatibility::defaultLogVerbosity();
     long timeoutSeconds = 10;
 
     ssh_options_set(session, SSH_OPTIONS_HOST, hostUtf8.constData());
@@ -116,6 +117,7 @@ void SshShellWorker::start()
     ssh_options_set(session, SSH_OPTIONS_USER, usernameUtf8.constData());
     ssh_options_set(session, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
     ssh_options_set(session, SSH_OPTIONS_TIMEOUT, &timeoutSeconds);
+    SshCompatibility::applySessionCompatibility(session);
 
     emit stateChanged(QStringLiteral("Connecting to SSH server..."));
 

@@ -1,6 +1,6 @@
 # Windows Build Guide
 
-**Checkpoint:** dev 0.1.5.7 — Andromeda  
+**Checkpoint:** dev 0.1.5.8 — Andromeda  
 **Purpose:** document the native Windows build path, confirmed Release build procedure, and handoff to the standalone deployment test.
 
 This guide documents the Windows setup that was validated during the Andromeda line. It is intentionally practical and conservative: first get a native Windows build running, then test runtime behavior, then later experiment with deployment/installer packaging.
@@ -378,6 +378,7 @@ Current deployment checkpoint:
 
 ```text
 dev 0.1.5.7 — Known-host multi-key portability polish
+dev 0.1.5.8 — Windows libssh handshake compatibility polish
 ```
 
 That checkpoint covers `windeployqt`, copying vcpkg DLLs, running without manually extending `PATH`, and copying the finished `dist\windows-release` folder to a clean Windows 10 machine.
@@ -440,7 +441,7 @@ This is not currently treated as a release blocker unless the terminal fails to 
 
 ## Windows standalone deployment test
 
-`dev 0.1.5.7` keeps the successful standalone Windows deployment flow and focuses on known-host multi-key portability for one shared config across platforms.
+`dev 0.1.5.8` keeps the successful standalone Windows deployment flow, retains the known-host multi-key portability fix, and adds a Windows-only libssh KEX compatibility override for newer OpenSSH servers.
 
 See:
 

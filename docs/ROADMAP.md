@@ -132,7 +132,7 @@ Expected before Apollo:
 
 ## Current release-prep step
 
-`dev 0.1.5.7` is the known-host multi-key portability polish checkpoint. The 0.1.5.x line prepares the repository for `v0.2.0-alpha — Andromeda` with public alpha docs, Windows Debug/Release build validation, release notes, known limitations, issue templates, cross-platform icon resources, WebEngine startup polish, exit safety, and first Windows deploy-folder validation.
+`dev 0.1.5.8` is the Windows libssh handshake compatibility polish checkpoint. It follows the 0.1.5.7 known-host multi-key portability fix and targets Windows-only libssh KEX failures against newer OpenSSH servers. The 0.1.5.x line prepares the repository for `v0.2.0-alpha — Andromeda` with public alpha docs, Windows Debug/Release build validation, release notes, known limitations, issue templates, cross-platform icon resources, WebEngine startup polish, exit safety, and first Windows deploy-folder validation.
 
 ---
 
@@ -147,6 +147,7 @@ dev 0.1.5.4 — Windows deployment experiment
 dev 0.1.5.5 — Exit safety and user guide polish
 dev 0.1.5.6 — Windows standalone deployment test
 dev 0.1.5.7 — Known-host multi-key portability polish
+dev 0.1.5.8 — Windows libssh handshake compatibility polish
 ```
 
 Windows/public-alpha scope:

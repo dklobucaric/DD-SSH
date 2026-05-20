@@ -1,6 +1,6 @@
 # DD-SSH Known Limitations
 
-**Checkpoint:** dev 0.1.5.7 — Andromeda
+**Checkpoint:** dev 0.1.5.8 — Andromeda
 
 This document lists limitations that should be visible to testers. Nothing here is hidden or sugar-coated.
 
@@ -20,7 +20,7 @@ This document lists limitations that should be visible to testers. Nothing here 
 ## Platform limitations
 
 - Linux is the primary tested platform.
-- Native Windows Debug and Release builds have been validated for app launch and SSH/xterm workflows. Standalone deployment-folder validation passed on real Windows 10/11 machines; current 0.1.5.7 focus is known-host multi-key portability.
+- Native Windows Debug and Release builds have been validated for app launch and SSH/xterm workflows. Standalone deployment-folder validation passed on real Windows 10/11 machines; current 0.1.5.8 focus is Windows libssh handshake compatibility while retaining the 0.1.5.7 known-host portability fix.
 - macOS builds are planned but not fully validated.
 - Installers are not ready; the current Windows target is a copied `dist\windows-release` folder.
 - Code signing/notarization is not ready.

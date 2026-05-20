@@ -1,6 +1,6 @@
 # DD-SSH Known-host Portability Regression Test
 
-**Checkpoint:** dev 0.1.5.7 — Andromeda  
+**Checkpoint:** dev 0.1.5.8 — Andromeda  
 **Focus:** multi-key known-host storage for one portable `dd-ssh.json`
 
 This test documents the real cross-platform issue found during the Windows standalone deployment test.

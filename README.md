@@ -17,16 +17,18 @@ DD-SSH is designed for practical sysadmin use: saved sessions, one portable JSON
 
 ## Current status
 
-**Development checkpoint:** `dev 0.1.5.7`
+**Development checkpoint:** `dev 0.1.5.8`
 **Codename:** Andromeda
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
-**Current phase:** Known-host multi-key portability polish
+**Current phase:** Windows libssh handshake compatibility polish
 
 DD-SSH is now close to a **public alpha**. It is not a stable 1.0 release yet, but the core workflow is functional and tested on Linux. Native Windows Debug and Release builds have also been validated with MSVC, Qt 6.11.1, Qt WebEngine/WebChannel/Positioning, vcpkg/libssh, and pkgconf.
 
 The current bugfix pass focuses on portable `known_hosts` behavior. A single shared `dd-ssh.json` must work across Linux, Windows 10, Windows 11, and later macOS even when libssh negotiates a different legitimate server host-key algorithm on each platform.
 
-The 0.1.5.7 known-host fix adds multi-key storage per `host:port`:
+The 0.1.5.8 compatibility fix adds a Windows-only libssh KEX override for newer OpenSSH servers that advertise ML-KEM/SNTRUP algorithms before classic curve25519/ecdh algorithms. This keeps Windows DD-SSH from failing during `ssh_connect()` with `Failed to construct client init buffer` while preserving the 0.1.5.7 multi-key known-host portability model.
+
+The 0.1.5.7 known-host fix added multi-key storage per `host:port`:
 
 - old single-key known-host entries are migrated when saved
 - a new legitimate key algorithm is offered as **Trust additional key** instead of forcing **Replace stored key**

@@ -32,10 +32,10 @@ This directory contains the working documentation for DD-SSH.
 ## Current checkpoint
 
 ```text
-Version: dev 0.1.5.7
+Version: dev 0.1.5.8
 Codename: Andromeda
 Milestone: MF 0.2 candidate
-Phase: Known-host multi-key portability polish
+Phase: Windows libssh handshake compatibility polish
 ```
 
 
@@ -48,3 +48,5 @@ Phase: Known-host multi-key portability polish
 - [Known Limitations](KNOWN_LIMITATIONS.md)
 
 GitHub issue templates live under `.github/ISSUE_TEMPLATE/`.
+
+- [Windows libssh handshake compatibility test](WINDOWS_LIBSSH_HANDSHAKE_COMPATIBILITY.md)

@@ -113,6 +113,26 @@ Check:
 - Server has matching public key in `authorized_keys`
 - Key content was saved correctly if using portable plaintext key storage
 
+### Windows handshake fails with "Failed to construct client init buffer"
+
+`dev 0.1.5.8` adds a Windows-only libssh KEX compatibility override for newer OpenSSH servers that advertise ML-KEM/SNTRUP key-exchange algorithms before classic curve25519/ecdh algorithms.
+
+If you need to compare behavior, run from CMD:
+
+```cmd
+set DD_SSH_DISABLE_WINDOWS_KEX_COMPAT=1
+dd-ssh.exe
+```
+
+To enable libssh protocol verbosity while debugging:
+
+```cmd
+set DD_SSH_LIBSSH_DEBUG=1
+dd-ssh.exe
+```
+
+Normal users should not need either variable.
+
 ### Known-host warning
 
 If host is unknown, DD-SSH asks for trust confirmation.

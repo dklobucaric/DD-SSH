@@ -1,8 +1,8 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.5.7 — Andromeda
+**Checkpoint:** dev 0.1.5.8 — Andromeda
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
-**Phase:** Known-host multi-key portability polish
+**Phase:** Windows libssh handshake compatibility polish
 
 This matrix tracks what has been confirmed manually, what is implemented but should be re-tested before a public alpha tag, and what is still planned.
 
@@ -26,6 +26,7 @@ TODO              Not implemented yet.
 | Windows Debug build | `cmake --build build-win` | `dd-ssh.exe` builds | PASS | Confirmed on native Windows. |
 | Windows launch | `build-win\dd-ssh.exe` with Qt/vcpkg DLL paths | App opens | PASS | Confirmed; Welcome screen and UI visible. |
 | Windows Release build | `build-win-release` | Release exe builds | PASS | Confirmed on native Windows before the deployment pass. |
+| Windows libssh KEX compatibility | OpenSSH 10 server advertising ML-KEM/SNTRUP KEX first | DD-SSH reaches auth/shell flow on Windows 10/11 | PENDING | Regression target: `lab.dd-lab.hr:2231`; server-side KEX workaround proved root cause before app-side fix. |
 | Windows deployment script | `scripts\windows-deploy-release.bat` after Release build | Creates `dist\windows-release` and starts deployed exe | PASS | Simple working BAT from the successful Windows standalone deployment test is now checked in. |
 | Windows deployed launch | `dist\windows-release\dd-ssh.exe` from normal Command Prompt | App starts without Qt/vcpkg PATH | PASS | Confirmed on real Windows 10/11 machines during standalone deployment testing. |
 | Clean Windows 10 deploy-folder test | Copy `dist\windows-release` to a clean Windows 10 machine | App launches without dev tools installed | PASS | App launches, icon appears, import/connect works, and xterm terminal is fast. |

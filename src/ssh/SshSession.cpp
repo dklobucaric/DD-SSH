@@ -1,4 +1,5 @@
 #include "SshSession.h"
+#include "SshCompatibility.h"
 
 #include <libssh/libssh.h>
 
@@ -35,7 +36,7 @@ SshHandshakeResult SshSession::testHandshake(
     const QByteArray hostUtf8 = host.toUtf8();
     const QByteArray usernameUtf8 = username.toUtf8();
 
-    int verbosity = SSH_LOG_NOLOG;
+    int verbosity = SshCompatibility::defaultLogVerbosity();
     long timeoutSeconds = 10;
 
     ssh_options_set(session, SSH_OPTIONS_HOST, hostUtf8.constData());
@@ -43,6 +44,7 @@ SshHandshakeResult SshSession::testHandshake(
     ssh_options_set(session, SSH_OPTIONS_USER, usernameUtf8.constData());
     ssh_options_set(session, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
     ssh_options_set(session, SSH_OPTIONS_TIMEOUT, &timeoutSeconds);
+    SshCompatibility::applySessionCompatibility(session);
 
     const int rc = ssh_connect(session);
 
@@ -142,7 +144,7 @@ SshAuthResult SshSession::testAuthentication(
     const QByteArray hostUtf8 = host.toUtf8();
     const QByteArray usernameUtf8 = username.toUtf8();
 
-    int verbosity = SSH_LOG_NOLOG;
+    int verbosity = SshCompatibility::defaultLogVerbosity();
     long timeoutSeconds = 10;
 
     ssh_options_set(session, SSH_OPTIONS_HOST, hostUtf8.constData());
@@ -150,6 +152,7 @@ SshAuthResult SshSession::testAuthentication(
     ssh_options_set(session, SSH_OPTIONS_USER, usernameUtf8.constData());
     ssh_options_set(session, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
     ssh_options_set(session, SSH_OPTIONS_TIMEOUT, &timeoutSeconds);
+    SshCompatibility::applySessionCompatibility(session);
 
     const int connectRc = ssh_connect(session);
 

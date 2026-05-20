@@ -1,5 +1,17 @@
 # DD-SSH Changelog
 
+## dev 0.1.5.8 — Andromeda
+
+Windows libssh handshake compatibility polish.
+
+- Updated the project identity to `dev 0.1.5.8`.
+- Added a Windows-only libssh key-exchange compatibility override before `ssh_connect()`.
+- The Windows override limits libssh KEX negotiation to conservative algorithms already validated with Windows OpenSSH against OpenSSH 10 servers: `curve25519-sha256`, `curve25519-sha256@libssh.org`, `ecdh-sha2-nistp256`, `ecdh-sha2-nistp384`, `ecdh-sha2-nistp521`, and `diffie-hellman-group14-sha256`.
+- Applied the compatibility override consistently to handshake tests, authentication tests, and real shell sessions.
+- Added `DD_SSH_LIBSSH_DEBUG=1` as a local diagnostic switch for libssh protocol verbosity.
+- Added `DD_SSH_DISABLE_WINDOWS_KEX_COMPAT=1` as a local escape hatch for comparing behavior with the compatibility override disabled.
+- Added dedicated documentation for the real `lab.dd-lab.hr:2231` regression case where Windows libssh failed with `Failed to construct client init buffer` while Linux DD-SSH and Windows OpenSSH worked.
+
 ## dev 0.1.5.7 — Andromeda
 
 Known-host multi-key portability polish.

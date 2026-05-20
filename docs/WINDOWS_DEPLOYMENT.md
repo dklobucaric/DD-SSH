@@ -1,6 +1,6 @@
 # Windows Standalone Deployment Test
 
-**Checkpoint:** dev 0.1.5.7 — Andromeda  
+**Checkpoint:** dev 0.1.5.8 — Andromeda  
 **Purpose:** create and validate a standalone Windows deployment folder that can run outside the build tree and without manually extending `PATH`.
 
 This is still **not a final installer**. It is a portable release-folder test for the Andromeda public-alpha line. The goal is to prove that a Windows-built DD-SSH can be copied into one folder with the required Qt, Qt WebEngine, libssh, OpenSSL, compiler runtime, and helper DLLs.
@@ -140,7 +140,7 @@ Expected:
 
 ```text
 - DD-SSH opens
-- Help → About shows dev 0.1.5.7
+- Help → About shows dev 0.1.5.8
 - app icon appears
 - Settings opens
 - config path points to AppData\Local\DD-LAB\DD-SSH
@@ -171,7 +171,7 @@ Minimum test pass:
 
 ```text
 [ ] app launches
-[ ] Help → About opens and shows dev 0.1.5.7
+[ ] Help → About opens and shows dev 0.1.5.8
 [ ] Settings opens
 [ ] config path is under AppData\Local\DD-LAB\DD-SSH
 [ ] new saved password session can be created after successful auth
@@ -282,7 +282,7 @@ Mark this checkpoint as passed when:
 [x] Release build succeeds
 [x] deployment folder is created
 [x] app starts from deployment folder without Qt/vcpkg PATH
-[x] About shows dev 0.1.5.7
+[x] About shows dev 0.1.5.8
 [x] app icon appears in Explorer/taskbar/window
 [x] Settings opens and saves
 [x] xterm terminal opens

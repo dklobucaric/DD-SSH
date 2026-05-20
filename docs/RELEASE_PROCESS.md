@@ -102,7 +102,7 @@ Deployment/installer artifacts are not required for the first internal Windows v
 
 ## Windows deployment folder test
 
-Current bugfix checkpoint: `dev 0.1.5.7 — Known-host multi-key portability polish`.
+Current bugfix checkpoint: `dev 0.1.5.8 — Windows libssh handshake compatibility polish`.
 
 Before a public alpha release that includes Windows notes:
 
