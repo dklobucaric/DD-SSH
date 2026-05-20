@@ -3,7 +3,9 @@
 #include <QMainWindow>
 #include <QPoint>
 #include <QString>
+#include <QStringList>
 
+class QCloseEvent;
 class QListWidget;
 class QTabWidget;
 class QToolBar;
@@ -13,6 +15,9 @@ class MainWindow : public QMainWindow
 {
 public:
     explicit MainWindow(QWidget *parent = nullptr);
+
+protected:
+    void closeEvent(QCloseEvent *event) override;
 
 private:
     void setupMenus();
@@ -28,6 +33,9 @@ private:
     void exportConfig();
     void importConfig();
     void restoreLatestConfigBackup();
+    QStringList activeSshTerminalNames() const;
+    bool confirmExitWithActiveSshTerminals();
+    void requestDisconnectForActiveSshTerminals();
     void showNewSessionDialog();
     void showManualConnectDialog();
     void showConnectDialog(bool newSavedSessionMode);

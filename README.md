@@ -17,18 +17,39 @@ DD-SSH is designed for practical sysadmin use: saved sessions, one portable JSON
 
 ## Current status
 
-**Development checkpoint:** `dev 0.1.5.4`  
-**Codename:** Andromeda  
-**Milestone:** MF 0.2 candidate — Real Terminal Foundation  
-**Current phase:** Windows deployment experiment
+**Development checkpoint:** `dev 0.1.5.5`
+**Codename:** Andromeda
+**Milestone:** MF 0.2 candidate — Real Terminal Foundation
+**Current phase:** Exit safety and user guide polish
 
-DD-SSH is now close to a **public alpha**. It is not a stable 1.0 release yet, but the core workflow is functional and tested on Linux. A native Windows build has also been validated with MSVC, Qt 6.11.1, Qt WebEngine/WebChannel/Positioning, vcpkg/libssh, and pkgconf. The app now includes cross-platform icon resources, a clearer terminal startup/loading path, and a first Windows deployment experiment based on `windeployqt`. On Windows, the first xterm.js terminal tab may take a few seconds while Qt WebEngine initializes; DD-SSH reports that startup state more clearly:
+DD-SSH is now close to a **public alpha**. It is not a stable 1.0 release yet, but the core workflow is functional and tested on Linux. A native Windows build has also been validated with MSVC, Qt 6.11.1, Qt WebEngine/WebChannel/Positioning, vcpkg/libssh, and pkgconf. The app now includes cross-platform icon resources, a clearer terminal startup/loading path, and a first Windows deployment experiment based on `windeployqt`.
+
+The current bugfix/polish pass adds two user-safety clarifications:
+
+- new saved sessions are stored only after a successful SSH authentication test
+- closing DD-SSH with active SSH terminal tabs now asks for confirmation before disconnecting them
+
+On Windows, the first xterm.js terminal tab may take a few seconds while Qt WebEngine initializes; DD-SSH reports that startup state more clearly:
 
 ```text
 saved session → plaintext secret from dd-ssh.json → known_hosts check → SSH auth → xterm.js terminal → PTY resize → real shell
 ```
 
+### Important session-save behavior
+
+DD-SSH saves a new session only after a successful SSH authentication test.
+
+If the host is unreachable, the port is wrong, the username/password is wrong, the private key is invalid, or the known-host check does not allow continuing, the session is not written to `dd-ssh.json`.
+
+This prevents broken or unverified sessions from being saved as normal connection profiles.
+
+### Exit safety
+
+If one or more SSH terminal tabs are still connected, closing the app with the window close button or `File → Exit` asks for confirmation before disconnecting them.
+
 ---
+
+
 
 ## Public alpha preparation
 
@@ -72,8 +93,8 @@ under:
 
 This is convenient for portability, but it is **not secure for untrusted machines**.
 
-Do not commit your real `dd-ssh.json` to Git.  
-Do not share it publicly.  
+Do not commit your real `dd-ssh.json` to Git.
+Do not share it publicly.
 Use this mode only on trusted computers.
 
 Future versions may add encrypted/master-password storage while preserving the current session reference structure.

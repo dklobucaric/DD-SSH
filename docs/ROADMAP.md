@@ -36,6 +36,7 @@ Remaining before public alpha tag:
 
 - Final README/docs polish
 - Confirm latest test matrix
+- Finalize exit-safety and session-save behavior docs
 - Optional screenshots
 - Known limitations review
 - GitHub issue template maybe

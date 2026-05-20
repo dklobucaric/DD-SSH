@@ -59,6 +59,8 @@ Creates a saved session after successful authentication.
 
 Use this when adding a server you want to keep.
 
+DD-SSH intentionally saves a new session only after the SSH handshake, known-host decision, and authentication test succeed. If the connection/authentication fails, the session is not saved. This keeps `dd-ssh.json` from filling with broken or unverified connection profiles.
+
 ### Connect / Auth test
 
 Runs a manual connection/authentication test. Saving is optional.
@@ -75,6 +77,21 @@ For password/private-key secrets:
 Leave password/key empty to keep the existing saved secret.
 Enter a new password/key to replace the saved secret.
 ```
+
+## Exit safety
+
+If you close DD-SSH while one or more terminal tabs are still connected, the app asks before disconnecting them.
+
+This applies to:
+
+```text
+Window close button / X
+File → Exit
+```
+
+If you choose `Cancel`, DD-SSH stays open and all sessions remain connected.
+
+If you choose `Disconnect and Exit`, DD-SSH requests disconnect on the active terminal sessions and then closes.
 
 ## Sidebar context menu
 

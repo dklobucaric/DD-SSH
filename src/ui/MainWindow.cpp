@@ -12,6 +12,7 @@
 #include <QAction>
 #include <QApplication>
 #include <QCoreApplication>
+#include <QCloseEvent>
 #include <QDesktopServices>
 #include <QFile>
 #include <QFileDevice>
@@ -27,6 +28,7 @@
 #include <QSplitter>
 #include <QStatusBar>
 #include <QTabWidget>
+#include <QStringList>
 #include <QTemporaryFile>
 #include <QTextEdit>
 #include <QToolBar>
@@ -232,7 +234,7 @@ MainWindow::MainWindow(QWidget *parent)
     applyQuickToolbarVisibility(startupSettings.showQuickToolbar);
     setupCentralLayout();
 
-    statusBar()->showMessage("DD-SSH Andromeda ready — app icon integration");
+    statusBar()->showMessage("DD-SSH Andromeda ready — exit safety enabled");
 
     resize(1100, 700);
     showConfigRecoveryWarningIfNeeded();
@@ -443,6 +445,108 @@ void MainWindow::restoreLatestConfigBackup()
 
     loadSavedSessionsToSidebar();
     statusBar()->showMessage(QStringLiteral("Latest config backup restored. Saved sessions and settings reloaded."));
+}
+
+
+QStringList MainWindow::activeSshTerminalNames() const
+{
+    QStringList names;
+
+    if (m_tabs == nullptr) {
+        return names;
+    }
+
+    for (int i = 0; i < m_tabs->count(); ++i) {
+        QWidget *widget = m_tabs->widget(i);
+
+        if (auto *webTerminal = dynamic_cast<WebTerminalTab *>(widget)) {
+            if (webTerminal->hasActiveShell()) {
+                names.append(webTerminal->displayName());
+            }
+        } else if (auto *basicTerminal = dynamic_cast<BasicTerminalTab *>(widget)) {
+            if (basicTerminal->hasActiveShell()) {
+                names.append(basicTerminal->displayName());
+            }
+        }
+    }
+
+    return names;
+}
+
+bool MainWindow::confirmExitWithActiveSshTerminals()
+{
+    const QStringList activeTerminals = activeSshTerminalNames();
+
+    if (activeTerminals.isEmpty()) {
+        return true;
+    }
+
+    QString message = QStringLiteral("DD-SSH has %1 active SSH terminal session(s).\n\nClosing the application will disconnect:")
+        .arg(activeTerminals.size());
+
+    const int maxShownSessions = 10;
+
+    for (int i = 0; i < activeTerminals.size() && i < maxShownSessions; ++i) {
+        message += QStringLiteral("\n- ") + activeTerminals.at(i);
+    }
+
+    if (activeTerminals.size() > maxShownSessions) {
+        message += QStringLiteral("\n- ...");
+    }
+
+    message += QStringLiteral("\n\nDisconnect these sessions and exit DD-SSH?");
+
+    QMessageBox dialog(this);
+    dialog.setIcon(QMessageBox::Warning);
+    dialog.setWindowTitle(QStringLiteral("Active SSH sessions — DD-SSH"));
+    dialog.setText(message);
+
+    QPushButton *disconnectAndExitButton = dialog.addButton(
+        QStringLiteral("Disconnect and Exit"),
+        QMessageBox::AcceptRole
+    );
+    QPushButton *cancelButton = dialog.addButton(
+        QStringLiteral("Cancel"),
+        QMessageBox::RejectRole
+    );
+
+    dialog.setDefaultButton(cancelButton);
+    dialog.exec();
+
+    return dialog.clickedButton() == disconnectAndExitButton;
+}
+
+void MainWindow::requestDisconnectForActiveSshTerminals()
+{
+    if (m_tabs == nullptr) {
+        return;
+    }
+
+    for (int i = 0; i < m_tabs->count(); ++i) {
+        QWidget *widget = m_tabs->widget(i);
+
+        if (auto *webTerminal = dynamic_cast<WebTerminalTab *>(widget)) {
+            if (webTerminal->hasActiveShell()) {
+                webTerminal->requestDisconnect();
+            }
+        } else if (auto *basicTerminal = dynamic_cast<BasicTerminalTab *>(widget)) {
+            if (basicTerminal->hasActiveShell()) {
+                basicTerminal->requestDisconnect();
+            }
+        }
+    }
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    if (!confirmExitWithActiveSshTerminals()) {
+        statusBar()->showMessage(QStringLiteral("Exit cancelled because SSH sessions are still active"));
+        event->ignore();
+        return;
+    }
+
+    requestDisconnectForActiveSshTerminals();
+    event->accept();
 }
 
 void MainWindow::showConfigRecoveryWarningIfNeeded()
@@ -669,7 +773,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: Windows deployment experiment.\n\n")
+            + QStringLiteral("Current phase: Exit safety and user guide polish.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n")
@@ -874,7 +978,7 @@ void MainWindow::addWelcomeTab()
         "A clean cross-platform SSH client and session manager.\n\n"
         "Double-click a saved session on the left to open the xterm.js terminal.\n\n"
         "Current milestone:\n"
-        "MF 0.2 candidate — Real Terminal Foundation / app icon integration\n\n"
+        "MF 0.2 candidate — Real Terminal Foundation / exit safety polish\n\n"
         "Working now:\n"
         "- saved sessions loaded from dd-ssh.json\n"
         "- portable plaintext secrets in dd-ssh.json\n"
@@ -890,7 +994,8 @@ void MainWindow::addWelcomeTab()
         "- config import/export/restore and corrupt config recovery\n"
         "- native Windows build validated with Qt/MSVC/vcpkg/libssh\n"
         "- cross-platform app icon resources for Qt, Windows, Linux, and macOS prep\n"
-        "- Windows deployment experiment docs and helper script\n\n"
+        "- Windows deployment experiment docs and helper script\n"
+        "- app exit protection when active SSH terminals are still connected\n\n"
         "Main menus:\n"
         "- File: Open Config Folder, Export Config, Import Config, Restore Latest Backup, Exit\n"
         "- Session: New Session, Connect / Auth test, Edit selected session\n"
@@ -908,9 +1013,9 @@ void MainWindow::addWelcomeTab()
         "- docs/TEST_MATRIX.md tracks current Andromeda validation\n"
         "- docs/ROADMAP.md tracks future versions\n\n"
         "Current release-prep focus:\n"
-        "- Windows deployment experiment with windeployqt\n"
-        "- standalone deployment folder test outside the build environment\n"
-        "- prepare 0.1.5.5 bugfix/stabilization pass\n\n"
+        "- exit safety and user guide polish\n"
+        "- confirm app close / File → Exit disconnect protection\n"
+        "- continue 0.1.5.x bugfix/stabilization pass\n\n"
         "Codename roadmap:\n"
         "- 0.0.x — Launchpad / early prototype history\n"
         "- 0.1.x — Andromeda / current MF 0.2 candidate line\n"

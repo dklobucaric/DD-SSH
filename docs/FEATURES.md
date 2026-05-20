@@ -40,6 +40,7 @@
 - Paste
 - Ctrl+C
 - Reconnect after disconnect
+- App exit warning when active SSH terminal sessions are still connected
 - Tested full-screen apps: `htop`, `nano`, `vim`, `top`
 
 ### Config
@@ -53,6 +54,7 @@
 - metadata block
 - Rotating backups
 - Import/export
+- New sessions are saved only after successful authentication
 - Restore latest backup
 - Corrupt config recovery
 

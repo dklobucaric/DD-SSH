@@ -1,8 +1,8 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.5.4 — Andromeda  
-**Milestone:** MF 0.2 candidate — Real Terminal Foundation  
-**Phase:** Windows deployment experiment
+**Checkpoint:** dev 0.1.5.5 — Andromeda
+**Milestone:** MF 0.2 candidate — Real Terminal Foundation
+**Phase:** Exit safety and user guide polish
 
 This matrix tracks what has been confirmed manually, what is implemented but should be re-tested before a public alpha tag, and what is still planned.
 
@@ -41,6 +41,7 @@ TODO              Not implemented yet.
 |---|---|---|---|---|
 | Load sessions | Start app with valid config | Sidebar loads saved sessions | PASS | Tested repeatedly with real saved sessions. |
 | New session | Session → New Session | Creates saved session after successful auth | PASS | Uses plaintext portable secret storage. |
+| Failed new session save | Attempt New Session with failed auth | Session is not saved | IMPLEMENTED | Documented in dev 0.1.5.5; final pass should confirm wrong password/port does not create a sidebar entry. |
 | Manual auth | Session → Connect / Auth test | Runs auth test; save optional | PASS | Old auth-test flow preserved. |
 | Edit session | Session → Edit selected session / context menu | Edits selected saved session | PASS | Password/key can be kept or replaced. |
 | Delete session | Context menu → Delete | Deletes session, preserves known_hosts | PASS | Orphan secret cleanup implemented. |
@@ -86,6 +87,8 @@ TODO              Not implemented yet.
 | Remote reboot | Reboot server externally | DD-SSH detects disconnect and cleans up | PASS | Confirmed with real reboot test. |
 | Reconnect | Click Reconnect after disconnect | Same tab reconnects using saved session | PASS | Confirmed after 0.1.3.7. |
 | Close active tab | Click tab close while connected | Confirms before disconnecting | PASS | Confirmed in lifecycle polish. |
+| Close active app window | Window close button / X while connected tabs exist | Confirms before disconnecting all active sessions and exiting | IMPLEMENTED | Added in dev 0.1.5.5; needs focused manual test on Linux and Windows. |
+| File Exit with active sessions | `File → Exit` while connected tabs exist | Uses the same active-session confirmation as window close | IMPLEMENTED | Added in dev 0.1.5.5 via main window close event. |
 | Close disconnected tab | Close after disconnect | Closes without active-session warning | IMPLEMENTED | Should be included in next final pass. |
 
 ## 6. Settings and app UI

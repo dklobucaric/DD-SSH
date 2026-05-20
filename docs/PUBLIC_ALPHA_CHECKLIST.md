@@ -1,6 +1,6 @@
 # DD-SSH Public Alpha Checklist
 
-**Checkpoint:** dev 0.1.5.4 — Andromeda  
+**Checkpoint:** dev 0.1.5.5 — Andromeda
 **Milestone target:** v0.2.0-alpha — Real Terminal Foundation
 
 This checklist is the final pre-alpha gate. It is intentionally practical: run it on a real machine, with real saved sessions, before tagging a public alpha.
@@ -24,7 +24,7 @@ cmake --build build --clean-first
 - [ ] Help → About DD-SSH shows:
 
 ```text
-Version: dev 0.1.5.4
+Version: dev 0.1.5.5
 Codename: Andromeda
 Milestone: MF 0.2 candidate
 Current phase: Windows deployment experiment.
@@ -219,3 +219,11 @@ Minimum Windows public-alpha checklist:
 - [ ] App/window icon appears on Linux window manager.
 - [ ] Windows `.exe` icon appears in Explorer/taskbar after build/deploy.
 - [ ] macOS `.icns` resource is available for future app bundle packaging.
+
+## Exit safety validation
+
+- [ ] Close main window with an active xterm terminal and confirm warning appears.
+- [ ] Choose Cancel and confirm the SSH session remains connected.
+- [ ] Choose Disconnect and Exit and confirm the app closes cleanly.
+- [ ] Repeat through File → Exit.
+- [ ] Confirm README/USER_GUIDE explain that failed authentication does not save a new session.

@@ -94,6 +94,15 @@ Session → Connect / Auth test
 
 Verify host, port, username, and password.
 
+### New session was not saved
+
+DD-SSH saves a new session only after successful SSH authentication.
+
+If the host is unreachable, the port is wrong, credentials are wrong, the private key fails, or the known-host decision does not allow continuing, DD-SSH will not write that session to `dd-ssh.json`.
+
+This is expected behavior. First make the connection test pass, then save the session.
+
+
 ### Private key auth fails
 
 Check:

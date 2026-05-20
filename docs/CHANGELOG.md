@@ -1,5 +1,16 @@
 # DD-SSH Changelog
 
+## dev 0.1.5.5 — Andromeda
+
+Exit safety and user guide polish.
+
+- Added application-level exit safety for active SSH terminal sessions.
+- Closing the main window with active SSH connections now asks before disconnecting them.
+- `File → Exit` now uses the same close protection as the window close button.
+- Added user-facing documentation explaining that new sessions are saved only after successful SSH authentication.
+- Updated README, user guide, troubleshooting, feature list, test matrix, and release-prep notes.
+- Kept SSH authentication, xterm.js terminal runtime, config import/export, icons, and Windows deployment logic unchanged.
+
 ## dev 0.1.5.4 — Andromeda
 
 Windows deployment experiment.
