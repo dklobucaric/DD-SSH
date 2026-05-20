@@ -1,8 +1,8 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.5.8 — Andromeda
+**Checkpoint:** dev 0.1.5.9 — Andromeda
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
-**Phase:** Windows libssh handshake compatibility polish
+**Phase:** stabilization docs and release polish
 
 This matrix tracks what has been confirmed manually, what is implemented but should be re-tested before a public alpha tag, and what is still planned.
 
@@ -26,7 +26,7 @@ TODO              Not implemented yet.
 | Windows Debug build | `cmake --build build-win` | `dd-ssh.exe` builds | PASS | Confirmed on native Windows. |
 | Windows launch | `build-win\dd-ssh.exe` with Qt/vcpkg DLL paths | App opens | PASS | Confirmed; Welcome screen and UI visible. |
 | Windows Release build | `build-win-release` | Release exe builds | PASS | Confirmed on native Windows before the deployment pass. |
-| Windows libssh KEX compatibility | OpenSSH 10 server advertising ML-KEM/SNTRUP KEX first | DD-SSH reaches auth/shell flow on Windows 10/11 | PENDING | Regression target: `lab.dd-lab.hr:2231`; server-side KEX workaround proved root cause before app-side fix. |
+| Windows libssh KEX compatibility | OpenSSH 10 server advertising ML-KEM/SNTRUP KEX first | DD-SSH reaches auth/shell flow on Windows 10/11 | PASS | Validated on two Windows machines and one Linux machine after dev 0.1.5.8; server-side KEX workaround no longer required. |
 | Windows deployment script | `scripts\windows-deploy-release.bat` after Release build | Creates `dist\windows-release` and starts deployed exe | PASS | Simple working BAT from the successful Windows standalone deployment test is now checked in. |
 | Windows deployed launch | `dist\windows-release\dd-ssh.exe` from normal Command Prompt | App starts without Qt/vcpkg PATH | PASS | Confirmed on real Windows 10/11 machines during standalone deployment testing. |
 | Clean Windows 10 deploy-folder test | Copy `dist\windows-release` to a clean Windows 10 machine | App launches without dev tools installed | PASS | App launches, icon appears, import/connect works, and xterm terminal is fast. |
@@ -61,9 +61,9 @@ TODO              Not implemented yet.
 | Private-key auth | Saved key session | Auth succeeds | PASS | Tested with embedded plaintext private key from JSON. |
 | Known host | Reconnect to same host | TRUSTED when fingerprint matches | PASS | Confirmed after known_hosts save/load. |
 | Unknown host | First connect to new host | Prompts/trust flow works | PASS | Confirmed during first-connect tests. |
-| Multi-key known host A | ED25519-only config on Windows 10 where libssh negotiates ECDSA | Offers Trust additional key, connects, saves both keys | TODO | Regression case: 138.2.166.222:223. |
-| Multi-key known host B | ECDSA-only config on Linux/Windows 11 where libssh negotiates ED25519 | Offers Trust additional key, connects, saves both keys | TODO | Reverse regression case for portable JSON. |
-| Trust once additional key | Additional key type prompt → Trust once | Opens shell/auth flow without saving JSON | TODO | Confirms transient trust path. |
+| Multi-key known host A | ED25519-only config on Windows 10 where libssh negotiates ECDSA | Offers Trust additional key, connects, saves both keys | PASS | Regression case: 138.2.166.222:223; confirms portable JSON works after adding ECDSA. |
+| Multi-key known host B | ECDSA-only config on Linux/Windows 11 where libssh negotiates ED25519 | Offers Trust additional key, connects, saves both keys | PASS | Reverse regression confirmed; same JSON works across Windows 10, Windows 11, and Linux after both keys are stored. |
+| Trust once additional key | Additional key type prompt → Trust once | Opens shell/auth flow without saving JSON | IMPLEMENTED | Keep in final regression pass; primary Trust additional key path is validated. |
 | Changed host | Same key type with different fingerprint | Must show strong host-key-changed warning | TODO | Needs deliberate edited-copy config test before stable release. |
 
 ## 4. Terminal renderer and shell behavior
@@ -146,7 +146,7 @@ TODO              Not implemented yet.
 | Platform | Status | Notes |
 |---|---|---|
 | Linux | PASS | Primary tested platform. |
-| Windows | PARTIAL | Native Windows Debug/Release builds launch and SSH/xterm/htop work. Deploy-folder and installer validation are not complete yet. |
+| Windows | PASS | Native Windows Debug/Release builds, copied standalone deploy folder, SSH/xterm/htop, config import, exit safety, known-host portability, and libssh KEX compatibility have been validated on Windows 10/11. Installer packaging remains future work. |
 | macOS | TODO | Build/runtime not validated yet. |
 
 
@@ -164,7 +164,7 @@ TODO              Not implemented yet.
 | Windows terminal | Saved session opens xterm | SSH terminal opens | PASS | Confirmed with real SSH session. |
 | Windows htop | `htop` in terminal | Fullscreen terminal app renders | PASS | Confirmed by screenshot/test. |
 | Windows startup/RAM | Task Manager observation | Record initial metrics | PARTIAL | Debug build showed several-second first terminal startup and ~350–380 MB RAM with WebEngine terminal. Release-build measurement should be recorded during deployment testing. |
-| Windows deploy | Run outside build environment | App starts without developer PATH | PASS | Confirmed on real Windows 10/11 machines. |
+| Windows deploy | Run outside build environment | App starts without developer PATH | PASS | Confirmed on real Windows 10/11 machines; app icon, config import, SSH connect, xterm terminal, `whoami`/`htop`, and exit safety validated. |
 
 ## 10. Public alpha readiness summary
 
@@ -176,7 +176,7 @@ TODO              Not implemented yet.
 | Config import/export | IMPLEMENTED | Needs final focused pass before public alpha tag. |
 | Settings foundation | PASS | Font/app settings exist; theme needs final confirmation if not already done. |
 | Security posture documented | PASS | Plaintext secrets warning exists. |
-| Windows/macOS validation | PARTIAL | Windows native Debug and Release builds are validated; Windows deploy-folder and macOS remain pending. |
+| Windows/macOS validation | PARTIAL | Windows native Debug/Release/deploy-folder validation is now PASS; macOS remains pending. |
 | Packaging/installers | TODO | Not part of current dev line. |
 
 ## 11. Suggested final pre-alpha test pass

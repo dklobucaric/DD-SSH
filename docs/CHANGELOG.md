@@ -1,5 +1,16 @@
 # DD-SSH Changelog
 
+## dev 0.1.5.9 — Andromeda
+
+Stabilization docs and release polish.
+
+- Updated the project identity to `dev 0.1.5.9`.
+- Consolidated the successful Windows standalone deployment, known-host multi-key portability, and Windows libssh KEX compatibility results into the documentation set.
+- Updated README, roadmap, test matrix, public alpha checklist, Windows build/deployment docs, troubleshooting, and known limitations to reflect the validated Windows 10 / Windows 11 / Linux status.
+- Added a dedicated stabilization checkpoint report for the 0.1.5.6 → 0.1.5.8 validation sequence.
+- Added a focused release checklist for future Andromeda public-alpha preparation.
+- Kept SSH/session/terminal/config runtime behavior unchanged in this documentation checkpoint.
+
 ## dev 0.1.5.8 — Andromeda
 
 Windows libssh handshake compatibility polish.

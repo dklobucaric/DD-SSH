@@ -1,6 +1,6 @@
 # DD-SSH Known Limitations
 
-**Checkpoint:** dev 0.1.5.8 — Andromeda
+**Checkpoint:** dev 0.1.5.9 — Andromeda
 
 This document lists limitations that should be visible to testers. Nothing here is hidden or sugar-coated.
 
@@ -20,7 +20,7 @@ This document lists limitations that should be visible to testers. Nothing here 
 ## Platform limitations
 
 - Linux is the primary tested platform.
-- Native Windows Debug and Release builds have been validated for app launch and SSH/xterm workflows. Standalone deployment-folder validation passed on real Windows 10/11 machines; current 0.1.5.8 focus is Windows libssh handshake compatibility while retaining the 0.1.5.7 known-host portability fix.
+- Native Windows Debug and Release builds have been validated for app launch and SSH/xterm workflows. Standalone deployment-folder validation passed on real Windows 10/11 machines. Known-host multi-key portability and Windows libssh KEX compatibility have also been validated.
 - macOS builds are planned but not fully validated.
 - Installers are not ready; the current Windows target is a copied `dist\windows-release` folder.
 - Code signing/notarization is not ready.
@@ -67,7 +67,7 @@ Always keep backups before testing import/export/recovery behavior.
 
 ## Windows-specific alpha notes
 
-The native Windows build is confirmed to launch and run SSH/xterm workflows. The current Windows work is validating a standalone deploy folder, not a full installer.
+The native Windows build and copied standalone deploy folder are confirmed to launch and run SSH/xterm workflows on Windows 10 and Windows 11. The current Windows work is still a deploy-folder workflow, not a full installer.
 
 Known Windows alpha notes:
 
@@ -76,7 +76,7 @@ Known Windows alpha notes:
 - Subsequent terminal tabs are much faster.
 - RAM usage can be hundreds of MB with an active xterm/WebEngine terminal because Qt WebEngine embeds Chromium components.
 - Qt may create a cache folder under the DD-SSH AppData directory.
-- `windeployqt` deployment helper exists; clean Windows 10 machine validation is still required before calling the deploy-folder checkpoint passed.
+- The `windeployqt` deployment helper is validated for the current alpha workflow. A final installer is still future work.
 
 ## Known-host portability note
 

@@ -1,7 +1,7 @@
 # Windows Standalone Deployment Test
 
-**Checkpoint:** dev 0.1.5.8 — Andromeda  
-**Purpose:** create and validate a standalone Windows deployment folder that can run outside the build tree and without manually extending `PATH`.
+**Checkpoint:** dev 0.1.5.9 — Andromeda  
+**Purpose:** document the validated standalone Windows deployment folder that can run outside the build tree and without manually extending `PATH`.
 
 This is still **not a final installer**. It is a portable release-folder test for the Andromeda public-alpha line. The goal is to prove that a Windows-built DD-SSH can be copied into one folder with the required Qt, Qt WebEngine, libssh, OpenSSL, compiler runtime, and helper DLLs.
 
@@ -97,13 +97,13 @@ The script does this:
 ```text
 1. removes and recreates dist\windows-release
 2. copies dd-ssh.exe
-3. runs windeployqt with --release --compiler-runtime --webengine
+3. runs windeployqt with --release
 4. copies vcpkg runtime DLLs from C:\dev\vcpkg\installed\x64-windows\bin
-5. runs sanity checks for key runtime files/folders
-6. prints the exact launch command for a clean Command Prompt
+5. verifies the deployed executable exists
+6. starts the deployed app from dist\windows-release
 ```
 
-The script is intentionally broad for this alpha checkpoint: it copies all vcpkg runtime DLLs from the vcpkg runtime bin folder. Later packaging can reduce this to the exact required DLL set.
+The checked-in BAT is intentionally simple because that version was validated during the Windows standalone deployment test. It copies all vcpkg runtime DLLs from the vcpkg runtime bin folder. Later packaging can reduce this to the exact required DLL set. Avoid reintroducing complex batch blocks unless the change is tested on Windows 10 and Windows 11.
 
 ---
 
@@ -117,7 +117,7 @@ rmdir /s /q dist\windows-release
 mkdir dist\windows-release
 copy build-win-release\dd-ssh.exe dist\windows-release\
 
-C:\Qt\6.11.1\msvc2022_64\bin\windeployqt.exe --release --compiler-runtime --webengine dist\windows-release\dd-ssh.exe
+C:\Qt\6.11.1\msvc2022_64\bin\windeployqt.exe --release dist\windows-release\dd-ssh.exe
 copy C:\dev\vcpkg\installed\x64-windows\bin\*.dll dist\windows-release\
 ```
 
@@ -140,7 +140,7 @@ Expected:
 
 ```text
 - DD-SSH opens
-- Help → About shows dev 0.1.5.8
+- Help → About shows dev 0.1.5.9
 - app icon appears
 - Settings opens
 - config path points to AppData\Local\DD-LAB\DD-SSH
@@ -171,7 +171,7 @@ Minimum test pass:
 
 ```text
 [ ] app launches
-[ ] Help → About opens and shows dev 0.1.5.8
+[ ] Help → About opens and shows dev 0.1.5.9
 [ ] Settings opens
 [ ] config path is under AppData\Local\DD-LAB\DD-SSH
 [ ] new saved password session can be created after successful auth
@@ -271,6 +271,7 @@ Exact filenames depend on Qt and vcpkg versions.
 - This deployment test does not create an installer yet.
 - This deployment test is not code-signed.
 - If the clean machine reports a missing DLL, add that DLL to the deployment script notes before calling the checkpoint passed.
+- If a modern OpenSSH server fails only on Windows with `Failed to construct client init buffer`, review `docs/WINDOWS_LIBSSH_HANDSHAKE_COMPATIBILITY.md`. The dev 0.1.5.8+ Windows KEX compatibility override should handle the validated regression case.
 
 ---
 
@@ -282,7 +283,7 @@ Mark this checkpoint as passed when:
 [x] Release build succeeds
 [x] deployment folder is created
 [x] app starts from deployment folder without Qt/vcpkg PATH
-[x] About shows dev 0.1.5.8
+[x] About shows dev 0.1.5.9
 [x] app icon appears in Explorer/taskbar/window
 [x] Settings opens and saves
 [x] xterm terminal opens

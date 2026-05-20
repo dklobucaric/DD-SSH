@@ -1,6 +1,6 @@
 # DD-SSH Known-host Portability Regression Test
 
-**Checkpoint:** dev 0.1.5.8 — Andromeda  
+**Checkpoint:** dev 0.1.5.9 — Andromeda  
 **Focus:** multi-key known-host storage for one portable `dd-ssh.json`
 
 This test documents the real cross-platform issue found during the Windows standalone deployment test.
@@ -90,6 +90,19 @@ Expected dev 0.1.5.7 behavior on Linux / Windows 11:
 5. JSON now stores both keys.
 6. Copy the same JSON back to Windows 10.
 7. Windows 10 connects without a reverse host-key warning.
+
+
+## Validation result
+
+Current validated result as of dev 0.1.5.9 docs:
+
+```text
+ED25519-only starting config → Trust additional ECDSA on Windows 10: PASS
+ECDSA-only starting config → Trust additional ED25519 on Linux/Windows 11: PASS
+Final multi-key JSON reused across Windows 10, Windows 11, and Linux: PASS
+```
+
+This confirms the shared `dd-ssh.json` portability goal for this regression case.
 
 ## Trust once test
 

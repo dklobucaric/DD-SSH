@@ -18,7 +18,8 @@ This directory contains the working documentation for DD-SSH.
 - [Security Notes](SECURITY_NOTES.md) — plaintext secrets, known_hosts, future encryption
 - [Building](BUILDING.md) — local build instructions
 - [Windows Build Guide](WINDOWS_BUILD.md) — native Windows MSVC/Qt/vcpkg build notes
-- [Windows Deployment Guide](WINDOWS_DEPLOYMENT.md) — first windeployqt-based standalone deployment test
+- [Windows Deployment Guide](WINDOWS_DEPLOYMENT.md) — standalone Windows deploy-folder test
+- [Windows libssh Handshake Compatibility Test](WINDOWS_LIBSSH_HANDSHAKE_COMPATIBILITY.md) — Windows KEX compatibility regression notes
 - [Packaging](PACKAGING.md) — future distribution notes
 
 ## Project management docs
@@ -28,14 +29,16 @@ This directory contains the working documentation for DD-SSH.
 - [Test Matrix](TEST_MATRIX.md) — manual validation checklist
 - [Changelog](CHANGELOG.md) — checkpoint history
 - [Release Process](RELEASE_PROCESS.md) — future release checklist
+- [Release Checklist](RELEASE_CHECKLIST.md) — focused checkpoint smoke-test checklist
+- [Stabilization Checkpoint 0.1.5.9](STABILIZATION_CHECKPOINT_0.1.5.9.md) — validated stabilization summary
 
 ## Current checkpoint
 
 ```text
-Version: dev 0.1.5.8
+Version: dev 0.1.5.9
 Codename: Andromeda
 Milestone: MF 0.2 candidate
-Phase: Windows libssh handshake compatibility polish
+Phase: stabilization docs and release polish
 ```
 
 
@@ -46,6 +49,8 @@ Phase: Windows libssh handshake compatibility polish
 - [Windows Build Guide](WINDOWS_BUILD.md)
 - [Windows Deployment Guide](WINDOWS_DEPLOYMENT.md)
 - [Known Limitations](KNOWN_LIMITATIONS.md)
+- [Stabilization Checkpoint 0.1.5.9](STABILIZATION_CHECKPOINT_0.1.5.9.md)
+- [Release Checklist](RELEASE_CHECKLIST.md)
 
 GitHub issue templates live under `.github/ISSUE_TEMPLATE/`.
 

@@ -9,10 +9,10 @@ DD-SSH is a cross-platform SSH client and session manager.
 Current checkpoint:
 
 ```text
-Version: dev 0.1.5.7
+Version: dev 0.1.5.9
 Codename: Andromeda
 Milestone: MF 0.2 candidate
-Phase: Known-host multi-key portability polish
+Phase: stabilization docs and release polish
 ```
 
 ## Stack

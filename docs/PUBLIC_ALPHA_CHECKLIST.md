@@ -1,6 +1,6 @@
 # DD-SSH Public Alpha Checklist
 
-**Checkpoint:** dev 0.1.5.8 — Andromeda
+**Checkpoint:** dev 0.1.5.9 — Andromeda
 **Milestone target:** v0.2.0-alpha — Real Terminal Foundation
 
 This checklist is the final pre-alpha gate. It is intentionally practical: run it on a real machine, with real saved sessions, before tagging a public alpha.
@@ -24,10 +24,10 @@ cmake --build build --clean-first
 - [ ] Help → About DD-SSH shows:
 
 ```text
-Version: dev 0.1.5.8
+Version: dev 0.1.5.9
 Codename: Andromeda
 Milestone: MF 0.2 candidate
-Current phase: Windows libssh handshake compatibility polish.
+Current phase: stabilization docs and release polish.
 ```
 
 - [ ] Welcome tab opens and describes the current Andromeda status.
@@ -194,6 +194,20 @@ If yes, Andromeda is ready for public alpha.
 
 ---
 
+## Windows regression validation
+
+Before tagging public alpha, re-run or review the two Windows regressions fixed in the 0.1.5.x line:
+
+```text
+[ ] Known-host multi-key portability: final JSON works on Windows 10, Windows 11, and Linux
+[ ] Windows libssh KEX compatibility: lab.dd-lab.hr:2231 connects without server-side workaround
+```
+
+See:
+
+- [Known-host Portability Regression Test](KNOWN_HOSTS_PORTABILITY_TEST.md)
+- [Windows libssh Handshake Compatibility Test](WINDOWS_LIBSSH_HANDSHAKE_COMPATIBILITY.md)
+
 ## Windows build validation
 
 Before tagging public alpha, run or review the Windows path in [Windows Build Guide](WINDOWS_BUILD.md).
@@ -210,7 +224,7 @@ Minimum Windows public-alpha checklist:
 [ ] htop works
 [ ] first terminal startup delay is documented
 [ ] RAM usage observation is documented
-[ ] deployment with windeployqt is either tested or clearly marked pending
+[ ] deployment with the checked-in BAT script is tested from a copied `dist\windows-release` folder
 ```
 
 

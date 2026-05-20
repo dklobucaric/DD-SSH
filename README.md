@@ -17,25 +17,29 @@ DD-SSH is designed for practical sysadmin use: saved sessions, one portable JSON
 
 ## Current status
 
-**Development checkpoint:** `dev 0.1.5.8`
+**Development checkpoint:** `dev 0.1.5.9`
 **Codename:** Andromeda
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
-**Current phase:** Windows libssh handshake compatibility polish
+**Current phase:** stabilization docs and release polish
 
-DD-SSH is now close to a **public alpha**. It is not a stable 1.0 release yet, but the core workflow is functional and tested on Linux. Native Windows Debug and Release builds have also been validated with MSVC, Qt 6.11.1, Qt WebEngine/WebChannel/Positioning, vcpkg/libssh, and pkgconf.
+DD-SSH is now close to a **public alpha**. It is not a stable 1.0 release yet, but the core workflow is functional and has been validated on Linux, Windows 10, and Windows 11. Native Windows Debug/Release builds and a copied standalone Windows deployment folder have been tested with MSVC, Qt 6.11.1, Qt WebEngine/WebChannel/Positioning, vcpkg/libssh, and pkgconf.
 
-The current bugfix pass focuses on portable `known_hosts` behavior. A single shared `dd-ssh.json` must work across Linux, Windows 10, Windows 11, and later macOS even when libssh negotiates a different legitimate server host-key algorithm on each platform.
+The current documentation checkpoint consolidates three important Andromeda stabilization wins:
 
-The 0.1.5.8 compatibility fix adds a Windows-only libssh KEX override for newer OpenSSH servers that advertise ML-KEM/SNTRUP algorithms before classic curve25519/ecdh algorithms. This keeps Windows DD-SSH from failing during `ssh_connect()` with `Failed to construct client init buffer` while preserving the 0.1.5.7 multi-key known-host portability model.
+- `dev 0.1.5.6` proved the Windows standalone deployment folder can run outside the build tree without manually extending `PATH`.
+- `dev 0.1.5.7` fixed portable `known_hosts` behavior so one shared `dd-ssh.json` can carry multiple legitimate host-key algorithms per `host:port`.
+- `dev 0.1.5.8` fixed a Windows/libssh handshake failure against newer OpenSSH servers that advertise ML-KEM/SNTRUP key-exchange algorithms before classic curve25519/ecdh algorithms.
 
-The 0.1.5.7 known-host fix added multi-key storage per `host:port`:
+The portable known-host model now supports multi-key storage per `host:port`:
 
 - old single-key known-host entries are migrated when saved
 - a new legitimate key algorithm is offered as **Trust additional key** instead of forcing **Replace stored key**
 - true same-algorithm fingerprint mismatches still show the strong SSH host-key-changed warning
 - `Trust once` continues for the current attempt without saving the new key
 
-The previous polish pass added two user-safety clarifications:
+On Windows builds, DD-SSH applies a conservative libssh KEX override before `ssh_connect()` so affected Windows/vcpkg/libssh builds can connect to modern OpenSSH servers where the default algorithm proposal previously failed with `Failed to construct client init buffer`. The server-side workaround used during debugging is no longer required for the validated regression case.
+
+The previous polish pass also added two user-safety clarifications:
 
 - new saved sessions are stored only after a successful SSH authentication test
 - closing DD-SSH with active SSH terminal tabs asks for confirmation before disconnecting them

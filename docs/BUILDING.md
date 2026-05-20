@@ -71,14 +71,14 @@ No CDN should be required for terminal rendering.
 
 ## Current tested platform
 
-Linux remains the primary development platform. Windows native Debug and Release build/runtime validation is documented in `docs/WINDOWS_BUILD.md`; standalone deploy-folder validation is documented in `docs/WINDOWS_DEPLOYMENT.md`. macOS still needs dedicated validation.
+Linux remains the primary development platform. Windows native Debug/Release build validation, standalone deploy-folder validation, known-host portability, and Windows libssh KEX compatibility have been validated on real Windows 10/11 machines. macOS still needs dedicated validation.
 
 ## Version identity
 
 The About dialog reads version strings from `CMakeLists.txt`:
 
 ```cmake
-set(DD_SSH_VERSION_STRING "dev 0.1.5.8")
+set(DD_SSH_VERSION_STRING "dev 0.1.5.9")
 set(DD_SSH_CODENAME_STRING "Andromeda")
 set(DD_SSH_MILESTONE_STRING "MF 0.2 candidate")
 ```

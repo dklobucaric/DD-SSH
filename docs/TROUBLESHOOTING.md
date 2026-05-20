@@ -115,7 +115,7 @@ Check:
 
 ### Windows handshake fails with "Failed to construct client init buffer"
 
-`dev 0.1.5.8` adds a Windows-only libssh KEX compatibility override for newer OpenSSH servers that advertise ML-KEM/SNTRUP key-exchange algorithms before classic curve25519/ecdh algorithms.
+`dev 0.1.5.8+` includes a Windows-only libssh KEX compatibility override for newer OpenSSH servers that advertise ML-KEM/SNTRUP key-exchange algorithms before classic curve25519/ecdh algorithms.
 
 If you need to compare behavior, run from CMD:
 

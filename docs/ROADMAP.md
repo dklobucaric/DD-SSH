@@ -34,12 +34,11 @@ Already implemented:
 
 Remaining before public alpha tag:
 
-- Final README/docs polish
-- Confirm latest test matrix
-- Finalize exit-safety and session-save behavior docs
+- Final public-alpha checklist pass
+- Confirm latest test matrix on Linux and Windows
 - Optional screenshots
 - Known limitations review
-- GitHub issue template maybe
+- Decide whether to tag `dev-0.1.5.9` as an internal stabilization marker
 
 Potential tag:
 
@@ -132,7 +131,7 @@ Expected before Apollo:
 
 ## Current release-prep step
 
-`dev 0.1.5.8` is the Windows libssh handshake compatibility polish checkpoint. It follows the 0.1.5.7 known-host multi-key portability fix and targets Windows-only libssh KEX failures against newer OpenSSH servers. The 0.1.5.x line prepares the repository for `v0.2.0-alpha — Andromeda` with public alpha docs, Windows Debug/Release build validation, release notes, known limitations, issue templates, cross-platform icon resources, WebEngine startup polish, exit safety, and first Windows deploy-folder validation.
+`dev 0.1.5.9` is the stabilization docs and release polish checkpoint. It consolidates the 0.1.5.6 Windows standalone deployment pass, the 0.1.5.7 known-host multi-key portability fix, and the 0.1.5.8 Windows libssh KEX compatibility fix. The 0.1.5.x line prepares the repository for `v0.2.0-alpha — Andromeda` with public alpha docs, Windows Debug/Release/deploy-folder validation, release notes, known limitations, issue templates, cross-platform icon resources, WebEngine startup polish, and exit safety.
 
 ---
 
@@ -148,6 +147,7 @@ dev 0.1.5.5 — Exit safety and user guide polish
 dev 0.1.5.6 — Windows standalone deployment test
 dev 0.1.5.7 — Known-host multi-key portability polish
 dev 0.1.5.8 — Windows libssh handshake compatibility polish
+dev 0.1.5.9 — Stabilization docs and release polish
 ```
 
 Windows/public-alpha scope:

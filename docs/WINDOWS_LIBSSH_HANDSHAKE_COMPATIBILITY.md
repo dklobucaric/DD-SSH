@@ -1,6 +1,6 @@
 # DD-SSH Windows libssh Handshake Compatibility Test
 
-**Checkpoint:** dev 0.1.5.8 — Andromeda  
+**Checkpoint:** dev 0.1.5.9 — Andromeda  
 **Focus:** Windows libssh KEX compatibility with newer OpenSSH servers
 
 ## Real regression case
@@ -51,7 +51,7 @@ Windows libssh/vcpkg failed before authentication with:
 Failed to construct client init buffer
 ```
 
-## dev 0.1.5.8 behavior
+## dev 0.1.5.8+ behavior
 
 On Windows builds only, DD-SSH sets a conservative KEX list before `ssh_connect()`:
 
@@ -71,6 +71,18 @@ This applies to:
 - Real shell sessions
 
 Linux and future macOS builds do not apply this Windows-only override.
+
+
+## Validation result
+
+Current validated result as of dev 0.1.5.9 docs:
+
+```text
+Windows 10 DD-SSH: PASS
+Windows 11 DD-SSH: PASS
+Linux DD-SSH: PASS
+Server-side KEX workaround: no longer required for this DD-SSH regression case
+```
 
 ## Diagnostic switches
 
@@ -92,7 +104,7 @@ Do not ship normal user runs with these variables set unless debugging.
 
 ## Expected test
 
-1. Build DD-SSH dev 0.1.5.8 on Windows.
+1. Build DD-SSH dev 0.1.5.9 on Windows.
 2. Deploy with `scripts\windows-deploy-release.bat`.
 3. Open the problematic saved session to `lab.dd-lab.hr:2231`.
 4. Expected result: handshake succeeds and DD-SSH reaches known-host/auth/shell flow.
@@ -106,4 +118,4 @@ This temporary server config made Windows DD-SSH work before the app-side fix:
 KexAlgorithms curve25519-sha256,curve25519-sha256@libssh.org,ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521,diffie-hellman-group14-sha256
 ```
 
-Once dev 0.1.5.8 is validated, the server-side compatibility file should no longer be needed for DD-SSH.
+Validated after dev 0.1.5.8 on two Windows machines and one Linux machine: the server-side compatibility file is no longer needed for DD-SSH in this regression case.
