@@ -1,5 +1,17 @@
 # DD-SSH Changelog
 
+## dev 0.1.6.1.1 — Andromeda
+
+README screenshots and Debian packaging tutorial polish.
+
+- Updated the project identity to `dev 0.1.6.1.1`.
+- Added a README screenshot gallery using the Linux `.deb` validation screenshots.
+- Added `docs/SCREENSHOTS.md` with descriptions for the Welcome screen, connected terminal, edit-session dialog, settings dialog, dark theme terminal, and About dialog.
+- Added `docs/DEBIAN_PACKAGE_TUTORIAL.md` with a copy/paste workflow for building, inspecting, installing, testing, and removing the local `.deb`.
+- Updated Linux packaging docs and test matrix to reflect that the first Debian package path was built, installed, launched, and visually validated.
+- Updated the Debian package script default output version to `dd-ssh_0.1.6.1.1_amd64.deb`.
+- Kept SSH/session/terminal/config runtime behavior unchanged in this documentation and packaging-polish checkpoint.
+
 ## dev 0.1.6.1 — Andromeda
 
 First Debian package experiment.

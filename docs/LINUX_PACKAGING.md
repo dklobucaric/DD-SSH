@@ -1,15 +1,15 @@
 # DD-SSH Linux Packaging
 
-**Checkpoint:** dev 0.1.6.1 — Andromeda  
-**Phase:** first Debian package experiment
+**Checkpoint:** dev 0.1.6.1.1 — Andromeda  
+**Phase:** README screenshots and Debian packaging tutorial polish
 
-This document describes the first Linux packaging path for DD-SSH.
+This document describes the first Linux packaging path for DD-SSH. For the copy/paste packaging workflow, see [Debian Package Tutorial](DEBIAN_PACKAGE_TUTORIAL.md).
 
 The goal is not yet a perfect distribution-grade package. The goal is a practical first `.deb` that installs the tested DD-SSH binary, desktop launcher, icons, and documentation on Debian/Ubuntu/Mint-style systems.
 
 ## Packaging strategy
 
-`dev 0.1.6.1` uses a **system-runtime Debian package**:
+`dev 0.1.6.1.1` uses a **system-runtime Debian package**:
 
 - DD-SSH is built locally with CMake.
 - The package installs `/usr/bin/dd-ssh`.
@@ -61,25 +61,25 @@ From the project root:
 Expected output:
 
 ```text
-dist/deb/dd-ssh_0.1.6.1_amd64.deb
+dist/deb/dd-ssh_0.1.6.1.1_amd64.deb
 ```
 
 Inspect the package metadata:
 
 ```bash
-dpkg-deb -I dist/deb/dd-ssh_0.1.6.1_amd64.deb
+dpkg-deb -I dist/deb/dd-ssh_0.1.6.1.1_amd64.deb
 ```
 
 List package contents:
 
 ```bash
-dpkg-deb -c dist/deb/dd-ssh_0.1.6.1_amd64.deb
+dpkg-deb -c dist/deb/dd-ssh_0.1.6.1.1_amd64.deb
 ```
 
 ## Install locally
 
 ```bash
-sudo apt install ./dist/deb/dd-ssh_0.1.6.1_amd64.deb
+sudo apt install ./dist/deb/dd-ssh_0.1.6.1.1_amd64.deb
 ```
 
 Then run:
@@ -116,6 +116,10 @@ If the fallback list does not match a specific distribution, override it manuall
 DD_SSH_DEB_DEPENDS="libc6, libstdc++6, libgcc-s1, libssh-4, libqt6core6, libqt6gui6, libqt6widgets6, libqt6webchannel6, libqt6webenginewidgets6" ./scripts/linux-package-deb.sh
 ```
 
+## Validation result
+
+The first `.deb` package path has been exercised by building the package, installing it locally, launching DD-SSH from the installed binary, opening a saved session, opening the Settings dialog, switching the app theme, and checking the About dialog. Screenshots from that validation pass are stored under [`docs/screenshots`](screenshots/) and summarized in [Screenshots](SCREENSHOTS.md).
+
 ## Test checklist
 
 After installing the `.deb`, verify:
@@ -124,7 +128,7 @@ After installing the `.deb`, verify:
 [ ] dd-ssh starts from terminal
 [ ] desktop launcher appears
 [ ] app icon appears
-[ ] About shows dev 0.1.6.1
+[ ] About shows dev 0.1.6.1.1
 [ ] settings dialog opens
 [ ] existing user config is preserved
 [ ] password SSH login works

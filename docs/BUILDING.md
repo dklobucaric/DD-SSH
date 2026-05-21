@@ -78,7 +78,7 @@ Linux remains the primary development platform. Windows native Debug/Release bui
 The About dialog reads version strings from `CMakeLists.txt`:
 
 ```cmake
-set(DD_SSH_VERSION_STRING "dev 0.1.6.1")
+set(DD_SSH_VERSION_STRING "dev 0.1.6.1.1")
 set(DD_SSH_CODENAME_STRING "Andromeda")
 set(DD_SSH_MILESTONE_STRING "MF 0.2 candidate")
 ```
@@ -157,7 +157,7 @@ scripts/windows-deploy-release.bat
 
 ## Linux Release/package helper
 
-For the first Debian package experiment:
+For the README screenshots and Debian packaging tutorial polish:
 
 ```bash
 ./scripts/linux-build-release.sh
@@ -165,3 +165,8 @@ For the first Debian package experiment:
 ```
 
 See `docs/LINUX_PACKAGING.md`.
+
+
+## Debian package tutorial
+
+For the full `.deb` packaging/install/remove workflow, see [Debian Package Tutorial](DEBIAN_PACKAGE_TUTORIAL.md).

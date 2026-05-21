@@ -6,7 +6,7 @@ project(DD_SSH
     LANGUAGES CXX
 )
 
-set(DD_SSH_VERSION_STRING "dev 0.1.6.1")
+set(DD_SSH_VERSION_STRING "dev 0.1.6.1.1")
 set(DD_SSH_CODENAME_STRING "Andromeda")
 set(DD_SSH_MILESTONE_STRING "MF 0.2 candidate")
 
@@ -149,5 +149,7 @@ install(FILES
 
 install(DIRECTORY docs/
     DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/doc/dd-ssh/docs
-    FILES_MATCHING PATTERN "*.md"
+    FILES_MATCHING
+        PATTERN "*.md"
+        PATTERN "*.png"
 )

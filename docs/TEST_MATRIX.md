@@ -1,8 +1,8 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.6.1 — Andromeda
+**Checkpoint:** dev 0.1.6.1.1 — Andromeda
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
-**Phase:** first Debian package experiment
+**Phase:** README screenshots and Debian packaging tutorial polish
 
 This matrix tracks what has been confirmed manually, what is implemented but should be re-tested before a public alpha tag, and what is still planned.
 
@@ -21,7 +21,7 @@ TODO              Not implemented yet.
 | Area | Test | Expected result | Status | Notes |
 |---|---|---|---|---|
 | Build | `cmake --build build --clean-first` | Build completes and links `dd-ssh` | PASS | Re-tested frequently during development. |
-| Linux Debian package | `./scripts/linux-package-deb.sh` | Creates `dist/deb/dd-ssh_0.1.6.1_amd64.deb` | TODO | Added in dev 0.1.6.1; must be validated on the user's Linux system before marking PASS. |
+| Linux Debian package | `./scripts/linux-package-deb.sh` | Creates `dist/deb/dd-ssh_0.1.6.1.1_amd64.deb` | PASS | First `.deb` package was built, installed, launched, and visually validated on Linux in dev 0.1.6.1.1. |
 | Launch | `./build/dd-ssh` | App opens | PASS | Linux primary test platform. |
 | Windows configure | CMake with MSVC/Qt/vcpkg/pkgconf | Configure completes | PASS | Confirmed on native Windows branch. |
 | Windows Debug build | `cmake --build build-win` | `dd-ssh.exe` builds | PASS | Confirmed on native Windows. |

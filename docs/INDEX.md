@@ -7,6 +7,7 @@ This directory contains the working documentation for DD-SSH.
 - [Getting Started](GETTING_STARTED.md) — first build, first session, first terminal
 - [User Guide](USER_GUIDE.md) — menus, workflows, sessions, settings, terminal use
 - [Use Cases](USE_CASES.md) — realistic ways DD-SSH is expected to be used
+- [Screenshots](SCREENSHOTS.md) — visual overview of the installed DD-SSH app
 - [Features and Limitations](FEATURES.md) — what works now, what does not
 - [Troubleshooting](TROUBLESHOOTING.md) — common problems and recovery steps
 
@@ -19,7 +20,8 @@ This directory contains the working documentation for DD-SSH.
 - [Building](BUILDING.md) — local build instructions
 - [Windows Build Guide](WINDOWS_BUILD.md) — native Windows MSVC/Qt/vcpkg build notes
 - [Windows Deployment Guide](WINDOWS_DEPLOYMENT.md)
-- [Linux Packaging Guide](LINUX_PACKAGING.md) — first Debian package experiment
+- [Linux Packaging Guide](LINUX_PACKAGING.md) — Linux packaging notes and first `.deb` package path
+- [Debian Package Tutorial](DEBIAN_PACKAGE_TUTORIAL.md) — step-by-step `.deb` build/install/remove tutorial
 - [Windows libssh Handshake Compatibility Test](WINDOWS_LIBSSH_HANDSHAKE_COMPATIBILITY.md) — Windows KEX compatibility regression notes
 - [Packaging](PACKAGING.md) — future distribution notes
 
@@ -36,10 +38,10 @@ This directory contains the working documentation for DD-SSH.
 ## Current checkpoint
 
 ```text
-Version: dev 0.1.6.1
+Version: dev 0.1.6.1.1
 Codename: Andromeda
 Milestone: MF 0.2 candidate
-Phase: first Debian package experiment
+Phase: README screenshots and Debian packaging tutorial polish
 ```
 
 
@@ -50,6 +52,8 @@ Phase: first Debian package experiment
 - [Windows Build Guide](WINDOWS_BUILD.md)
 - [Windows Deployment Guide](WINDOWS_DEPLOYMENT.md)
 - [Linux Packaging Guide](LINUX_PACKAGING.md)
+- [Debian Package Tutorial](DEBIAN_PACKAGE_TUTORIAL.md)
+- [Screenshots](SCREENSHOTS.md)
 - [Known Limitations](KNOWN_LIMITATIONS.md)
 - [Stabilization Checkpoint 0.1.5.9](STABILIZATION_CHECKPOINT_0.1.5.9.md)
 - [Release Checklist](RELEASE_CHECKLIST.md)

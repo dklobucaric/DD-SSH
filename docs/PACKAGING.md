@@ -1,7 +1,7 @@
 # Packaging DD-SSH
 
-**Checkpoint:** dev 0.1.6.1 — Andromeda  
-**Phase:** first Debian package experiment
+**Checkpoint:** dev 0.1.6.1.1 — Andromeda  
+**Phase:** README screenshots and Debian packaging tutorial polish
 
 DD-SSH has moved from source-build validation into the first packaging phase.
 
@@ -80,13 +80,13 @@ From the project root on Linux:
 Expected output:
 
 ```text
-dist/deb/dd-ssh_0.1.6.1_amd64.deb
+dist/deb/dd-ssh_0.1.6.1.1_amd64.deb
 ```
 
 Install locally:
 
 ```bash
-sudo apt install ./dist/deb/dd-ssh_0.1.6.1_amd64.deb
+sudo apt install ./dist/deb/dd-ssh_0.1.6.1.1_amd64.deb
 ```
 
 Run:

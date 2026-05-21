@@ -17,10 +17,10 @@ DD-SSH is designed for practical sysadmin use: saved sessions, one portable JSON
 
 ## Current status
 
-**Development checkpoint:** `dev 0.1.6.1`
+**Development checkpoint:** `dev 0.1.6.1.1`
 **Codename:** Andromeda
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
-**Current phase:** first Debian package experiment
+**Current phase:** README screenshots and Debian packaging tutorial polish
 
 DD-SSH is now entering its first packaging phase. It is not a stable 1.0 release yet, but the core workflow is functional and has been validated on Linux, Windows 10, and Windows 11. Native Windows Debug/Release builds and a copied standalone Windows deployment folder have been tested with MSVC, Qt 6.11.1, Qt WebEngine/WebChannel/Positioning, vcpkg/libssh, and pkgconf.
 
@@ -66,6 +66,51 @@ If one or more SSH terminal tabs are still connected, closing the app with the w
 
 
 
+
+## Screenshots
+
+These screenshots show DD-SSH installed and running from the first Debian package experiment on Linux.
+
+### Welcome screen and saved sessions
+
+![DD-SSH welcome screen with saved session sidebar](docs/screenshots/dd-ssh-welcome-overview.png)
+
+The Welcome tab summarizes the current Andromeda milestone, available workflows, documentation entry points, and the saved-session sidebar. This view is useful as a quick project/status dashboard after installing the package.
+
+### Connected xterm.js SSH terminal
+
+![DD-SSH connected xterm.js SSH terminal](docs/screenshots/dd-ssh-terminal-connected.png)
+
+A saved session is opened as a real xterm.js terminal backed by a libssh shell channel. The terminal shows the connection state, target, local xterm.js renderer, PTY resize state, SSH authentication progress, and a live Ubuntu shell.
+
+### Edit saved session dialog
+
+![DD-SSH edit saved session dialog](docs/screenshots/dd-ssh-edit-session-dialog.png)
+
+Saved sessions can be edited without retyping existing plaintext secrets. Leaving the password/private-key fields empty keeps the saved secret; entering a new password or key replaces it in `dd-ssh.json`.
+
+### Settings dialog
+
+![DD-SSH settings dialog](docs/screenshots/dd-ssh-settings-dialog.png)
+
+The Settings dialog exposes the active config path, app theme selection, terminal font settings, quick toolbar visibility, and rotating config-backup options. The config folder can be opened directly from here.
+
+### Dark theme terminal
+
+![DD-SSH dark theme terminal](docs/screenshots/dd-ssh-dark-theme-terminal.png)
+
+DD-SSH can follow a dark Qt app theme while keeping the xterm.js terminal in its dark terminal style. This view shows the normal connected-session layout after theme changes are applied.
+
+### About dialog
+
+![DD-SSH About dialog](docs/screenshots/dd-ssh-about-dialog.png)
+
+The About dialog reports the current development version, codename, milestone, linked libssh backend version, and the exact config file path. It is the quickest sanity check after installing a new `.deb` package.
+
+See [Screenshots](docs/SCREENSHOTS.md) for the same gallery with longer descriptions.
+
+---
+
 ## Public alpha preparation
 
 The current development line is preparing for a public alpha tag:
@@ -78,6 +123,8 @@ MF 0.2 — Real Terminal Foundation
 Before tagging, run:
 
 - [Linux Packaging Guide](docs/LINUX_PACKAGING.md)
+- [Debian Package Tutorial](docs/DEBIAN_PACKAGE_TUTORIAL.md)
+- [Screenshots](docs/SCREENSHOTS.md)
 - [Public Alpha Checklist](docs/PUBLIC_ALPHA_CHECKLIST.md)
 - [Test Matrix](docs/TEST_MATRIX.md)
 - [Windows Build Guide](docs/WINDOWS_BUILD.md)
@@ -211,7 +258,7 @@ DD-SSH is intentionally still limited. Not implemented yet:
 - Portable mode next to binary
 - Custom config path picker
 - macOS validation pass
-- Packaging/installers
+- Final signed installers / official repositories
 - Signed releases
 - Full public release process
 
@@ -370,3 +417,23 @@ Hard to accidentally destroy things.
 ```
 
 DD-SSH should stay focused. Early versions intentionally avoid SFTP, split panes, cloud lock-in, telemetry, and bloated enterprise dashboards.
+
+
+
+## Debian package quick path
+
+The first local `.deb` packaging workflow is documented in detail in [Debian Package Tutorial](docs/DEBIAN_PACKAGE_TUTORIAL.md).
+
+Short version:
+
+```bash
+./scripts/linux-build-release.sh
+./scripts/linux-package-deb.sh
+sudo apt install ./dist/deb/dd-ssh_0.1.6.1.1_amd64.deb
+dd-ssh
+```
+
+The package installs the app, desktop launcher, icons, README, license, Markdown documentation, and screenshots. It does not package your personal `dd-ssh.json` config.
+
+---
+
