@@ -9,10 +9,10 @@ DD-SSH is a cross-platform SSH client and session manager.
 Current checkpoint:
 
 ```text
-Version: dev 0.1.5.9
+Version: dev 0.1.6.1
 Codename: Andromeda
 Milestone: MF 0.2 candidate
-Phase: stabilization docs and release polish
+Phase: first Debian package experiment
 ```
 
 ## Stack
@@ -114,3 +114,8 @@ When changing user-facing behavior during the Andromeda alpha line, update the r
 - docs/PUBLIC_ALPHA_CHECKLIST.md if release validation changes
 
 Do not mark a test as PASS unless it was actually confirmed.
+
+
+## Packaging rule
+
+When changing Linux/Windows/macOS packaging behavior, update `docs/PACKAGING.md`, `docs/LINUX_PACKAGING.md` or the relevant platform packaging guide, and `docs/CHANGELOG.md`. Do not package real user configs or secrets.

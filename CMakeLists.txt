@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.24)
 
 project(DD_SSH
-    VERSION 0.1.5
+    VERSION 0.1.6
     DESCRIPTION "A clean cross-platform SSH client and session manager"
     LANGUAGES CXX
 )
 
-set(DD_SSH_VERSION_STRING "dev 0.1.5.9")
+set(DD_SSH_VERSION_STRING "dev 0.1.6.1")
 set(DD_SSH_CODENAME_STRING "Andromeda")
 set(DD_SSH_MILESTONE_STRING "MF 0.2 candidate")
 
@@ -119,4 +119,35 @@ set_target_properties(dd-ssh PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
     MACOSX_BUNDLE_ICON_FILE dd-ssh.icns
+)
+
+
+include(GNUInstallDirs)
+
+install(TARGETS dd-ssh
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    BUNDLE DESTINATION .
+)
+
+install(FILES resources/linux/dd-ssh.desktop.in
+    RENAME dd-ssh.desktop
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications
+)
+
+foreach(icon_size 16 24 32 48 64 128 256 512 1024)
+    install(FILES resources/icons/dd-ssh-${icon_size}.png
+        RENAME dd-ssh.png
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/${icon_size}x${icon_size}/apps
+    )
+endforeach()
+
+install(FILES
+        README.md
+        LICENSE
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/doc/dd-ssh
+)
+
+install(DIRECTORY docs/
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/doc/dd-ssh/docs
+    FILES_MATCHING PATTERN "*.md"
 )
