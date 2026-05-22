@@ -27,3 +27,14 @@ dd-ssh.json
 # Logs
 *.log
 logs/
+
+# Build/output folders
+build/
+build-*/
+dist/
+
+# Generated release artifacts
+*.deb
+*.dmg
+*.AppImage
+*.zip
