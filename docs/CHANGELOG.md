@@ -1,3 +1,15 @@
+## dev 0.1.6.2 — Andromeda
+
+Phase: macOS Intel app/DMG foundation
+
+- Updated the project identity to `dev 0.1.6.2`.
+- Added `scripts/macos-build-release.sh` for a repeatable Intel macOS Release build using Qt 6.11.1, Homebrew libssh/OpenSSL/zlib, CMake, and Ninja.
+- Added `scripts/macos-deploy-release.sh` for a deployable `DD-SSH.app` and unsigned `DD-SSH-0.1.6.2-macOS-x86_64.dmg`.
+- Added a DMG staging layout with `DD-SSH.app` plus an `Applications` symlink for the standard drag-to-Applications macOS workflow.
+- Added Homebrew dylib bundling/`install_name_tool` handling for `/usr/local` and `/opt/homebrew` dependencies discovered by `otool`.
+- Added macOS build/deployment documentation and test notes for the first Intel native app bundle pass.
+- Runtime SSH/session/terminal/config behavior is unchanged from `dev 0.1.6.1.1`.
+
 # DD-SSH Changelog
 
 ## dev 0.1.6.1.1 — Andromeda

@@ -1,7 +1,7 @@
 # Packaging DD-SSH
 
-**Checkpoint:** dev 0.1.6.1 — Andromeda  
-**Phase:** first Debian package experiment
+**Checkpoint:** dev 0.1.6.2 — Andromeda  
+**Phase:** macOS Intel app/DMG foundation
 
 DD-SSH has moved from source-build validation into the first packaging phase.
 
@@ -80,13 +80,13 @@ From the project root on Linux:
 Expected output:
 
 ```text
-dist/deb/dd-ssh_0.1.6.1_amd64.deb
+dist/deb/dd-ssh_0.1.6.2_amd64.deb
 ```
 
 Install locally:
 
 ```bash
-sudo apt install ./dist/deb/dd-ssh_0.1.6.1_amd64.deb
+sudo apt install ./dist/deb/dd-ssh_0.1.6.2_amd64.deb
 ```
 
 Run:
@@ -129,3 +129,21 @@ macOS future work:
 - `.app` bundle
 - `.dmg`
 - notarization later
+
+
+## macOS app/DMG packaging
+
+`dev 0.1.6.2` adds the first Intel macOS app/DMG path. See:
+
+- [macOS Build Guide](MACOS_BUILD.md)
+- [macOS Deployment Guide](MACOS_DEPLOYMENT.md)
+
+Expected outputs:
+
+```text
+build-macos-release/dd-ssh.app
+dist/macos/DD-SSH.app
+dist/macos/DD-SSH-0.1.6.2-macOS-x86_64.dmg
+```
+
+This first DMG is intentionally unsigned and not notarized. It is suitable for internal testing and early testers who understand Gatekeeper prompts. Developer ID signing, notarization, Homebrew Cask packaging, and native arm64/universal builds are later packaging tasks.

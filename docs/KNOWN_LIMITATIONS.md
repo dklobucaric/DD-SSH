@@ -1,6 +1,6 @@
 # DD-SSH Known Limitations
 
-**Checkpoint:** dev 0.1.6.1.1 — Andromeda
+**Checkpoint:** dev 0.1.6.2 — Andromeda
 
 This document lists limitations that should be visible to testers. Nothing here is hidden or sugar-coated.
 
@@ -21,9 +21,9 @@ This document lists limitations that should be visible to testers. Nothing here 
 
 - Linux is the primary tested platform.
 - Native Windows Debug and Release builds have been validated for app launch and SSH/xterm workflows. Standalone deployment-folder validation passed on real Windows 10/11 machines. Known-host multi-key portability and Windows libssh KEX compatibility have also been validated.
-- macOS builds are planned but not fully validated.
-- Installers are not ready; the current Windows target is a copied `dist\windows-release` folder.
-- Code signing/notarization is not ready.
+- macOS Intel builds and a first unsigned `.dmg` workflow have been validated locally, but clean tester-Mac coverage is still limited.
+- Windows installer packaging is not ready; the current Windows target is a copied `dist\windows-release` folder.
+- macOS code signing/notarization is not ready; testers may need right-click → Open for unsigned apps.
 
 ---
 
@@ -83,3 +83,16 @@ Known Windows alpha notes:
 `dev 0.1.5.7` fixes the single-key known-host portability limitation found during Windows standalone testing. DD-SSH now accepts the legacy one-key format but saves known-host entries with a `keys` object so ED25519 and ECDSA host keys for the same `host:port` can coexist.
 
 A true same-algorithm fingerprint mismatch is still treated as a strong host-key-changed warning.
+
+
+## macOS-specific alpha notes
+
+`dev 0.1.6.2` adds the first Intel macOS `.app` / `.dmg` deployment path. It is useful for early testers, but it is not a final signed public macOS release.
+
+Known macOS alpha notes:
+
+- The first macOS package is x86_64 / Intel.
+- Apple Silicon may run the Intel build through Rosetta 2; native arm64/universal builds are planned later.
+- The DMG is unsigned and not notarized. Gatekeeper may require right-click → Open.
+- macOS 12.x is not the primary target for the Qt 6.11.1 build; older macOS support may need a separate legacy Qt build experiment.
+- Homebrew libssh/OpenSSL/zlib dependencies are bundled into the app during deployment, but tester machines should still be checked with `otool -L` if launch fails.

@@ -22,6 +22,8 @@ This directory contains the working documentation for DD-SSH.
 - [Windows Deployment Guide](WINDOWS_DEPLOYMENT.md)
 - [Linux Packaging Guide](LINUX_PACKAGING.md) — Linux packaging notes and first `.deb` package path
 - [Debian Package Tutorial](DEBIAN_PACKAGE_TUTORIAL.md) — step-by-step `.deb` build/install/remove tutorial
+- [macOS Build Guide](MACOS_BUILD.md) — Intel macOS source build notes
+- [macOS Deployment Guide](MACOS_DEPLOYMENT.md) — `.app` / `.dmg` deployment workflow
 - [Windows libssh Handshake Compatibility Test](WINDOWS_LIBSSH_HANDSHAKE_COMPATIBILITY.md) — Windows KEX compatibility regression notes
 - [Packaging](PACKAGING.md) — future distribution notes
 
@@ -38,10 +40,10 @@ This directory contains the working documentation for DD-SSH.
 ## Current checkpoint
 
 ```text
-Version: dev 0.1.6.1.1
+Version: dev 0.1.6.2
 Codename: Andromeda
 Milestone: MF 0.2 candidate
-Phase: README screenshots and Debian packaging tutorial polish
+Phase: macOS Intel app/DMG foundation
 ```
 
 
@@ -53,6 +55,8 @@ Phase: README screenshots and Debian packaging tutorial polish
 - [Windows Deployment Guide](WINDOWS_DEPLOYMENT.md)
 - [Linux Packaging Guide](LINUX_PACKAGING.md)
 - [Debian Package Tutorial](DEBIAN_PACKAGE_TUTORIAL.md)
+- [macOS Build Guide](MACOS_BUILD.md)
+- [macOS Deployment Guide](MACOS_DEPLOYMENT.md)
 - [Screenshots](SCREENSHOTS.md)
 - [Known Limitations](KNOWN_LIMITATIONS.md)
 - [Stabilization Checkpoint 0.1.5.9](STABILIZATION_CHECKPOINT_0.1.5.9.md)

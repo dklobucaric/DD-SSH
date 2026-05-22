@@ -1,7 +1,7 @@
 # DD-SSH Release Checklist
 
 **Current target line:** Andromeda / MF 0.2 candidate  
-**Current checkpoint:** dev 0.1.6.1
+**Current checkpoint:** dev 0.1.6.2
 
 This checklist is shorter than the full public-alpha checklist. Use it before tagging any internal development checkpoint or before preparing `v0.2.0-alpha`.
 
@@ -30,7 +30,7 @@ grep "DD_SSH_VERSION_STRING" CMakeLists.txt
 Expected for this checkpoint:
 
 ```text
-set(DD_SSH_VERSION_STRING "dev 0.1.6.1")
+set(DD_SSH_VERSION_STRING "dev 0.1.6.2")
 ```
 
 Also verify in the app:
@@ -42,7 +42,7 @@ Help → About DD-SSH
 Expected:
 
 ```text
-Version: dev 0.1.6.1
+Version: dev 0.1.6.2
 Codename: Andromeda
 Milestone: MF 0.2 candidate
 ```
@@ -70,18 +70,18 @@ Minimum pass:
 
 ## 4. Linux Debian package smoke test
 
-For the first Debian package experiment:
+For the macOS Intel app/DMG foundation:
 
 ```bash
 ./scripts/linux-package-deb.sh
-dpkg-deb -I dist/deb/dd-ssh_0.1.6.1_amd64.deb
-dpkg-deb -c dist/deb/dd-ssh_0.1.6.1_amd64.deb | head -50
+dpkg-deb -I dist/deb/dd-ssh_0.1.6.2_amd64.deb
+dpkg-deb -c dist/deb/dd-ssh_0.1.6.2_amd64.deb | head -50
 ```
 
 Optional install test on a disposable or safe Linux machine:
 
 ```bash
-sudo apt install ./dist/deb/dd-ssh_0.1.6.1_amd64.deb
+sudo apt install ./dist/deb/dd-ssh_0.1.6.2_amd64.deb
 dd-ssh
 sudo apt remove dd-ssh
 ```
@@ -129,7 +129,7 @@ Minimum pass:
 [ ] About shows expected version
 ```
 
-## 5. Windows deployed-folder smoke test
+## 6. Windows deployed-folder smoke test
 
 Open a normal Command Prompt, not the VS developer prompt:
 
@@ -151,7 +151,36 @@ Minimum pass:
 [ ] closing with an active SSH session shows exit confirmation
 ```
 
-## 6. Regression checks
+
+## 7. macOS Intel app/DMG smoke test
+
+On the Intel macOS build machine:
+
+```bash
+cd ~/DD-SSH
+rm -rf build-macos-release dist/macos
+./scripts/macos-build-release.sh
+./scripts/macos-deploy-release.sh
+open dist/macos/DD-SSH.app
+open dist/macos/DD-SSH-0.1.6.2-macOS-x86_64.dmg
+```
+
+Minimum pass:
+
+```text
+[ ] CMake finds Qt 6.11.1 under ~/Qt/6.11.1/macos
+[ ] CMake finds Homebrew libssh through pkg-config
+[ ] build-macos-release/dd-ssh.app is created
+[ ] dist/macos/DD-SSH.app is created
+[ ] dist/macos/DD-SSH-0.1.6.2-macOS-x86_64.dmg is created
+[ ] DMG opens and shows DD-SSH.app plus Applications shortcut
+[ ] About shows expected version
+[ ] Settings opens
+[ ] saved session opens xterm terminal
+[ ] whoami works
+```
+
+## 8. Regression checks
 
 Known-host multi-key portability:
 
@@ -168,7 +197,7 @@ Windows libssh KEX compatibility:
 [ ] DD_SSH_DISABLE_WINDOWS_KEX_COMPAT=1 can be used only for comparison/debugging
 ```
 
-## 7. Documentation checks
+## 9. Documentation checks
 
 ```text
 [ ] README current status is accurate
@@ -177,13 +206,14 @@ Windows libssh KEX compatibility:
 [ ] WINDOWS_DEPLOYMENT matches the checked-in BAT script
 [ ] KNOWN_LIMITATIONS does not hide unfinished items
 [ ] SECURITY_NOTES still warns about plaintext secrets
+[ ] MACOS_BUILD and MACOS_DEPLOYMENT match the current scripts
 ```
 
-## 8. Optional internal tag
+## 10. Optional internal tag
 
 ```bash
-git tag dev-0.1.5.9
-git push origin dev-0.1.5.9
+git tag dev-0.1.6.2
+git push origin dev-0.1.6.2
 ```
 
 Use public release tags only when the full public-alpha checklist passes.

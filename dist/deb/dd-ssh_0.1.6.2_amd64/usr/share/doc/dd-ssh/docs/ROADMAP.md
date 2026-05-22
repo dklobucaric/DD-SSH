@@ -131,7 +131,7 @@ Expected before Apollo:
 
 ## Current release-prep step
 
-`dev 0.1.6.1` begins the packaging phase with the first Debian package experiment. `dev 0.1.5.9` is the stabilization docs and release polish checkpoint. It consolidates the 0.1.5.6 Windows standalone deployment pass, the 0.1.5.7 known-host multi-key portability fix, and the 0.1.5.8 Windows libssh KEX compatibility fix. The 0.1.5.x line prepares the repository for `v0.2.0-alpha — Andromeda` with public alpha docs, Windows Debug/Release/deploy-folder validation, release notes, known limitations, issue templates, cross-platform icon resources, WebEngine startup polish, and exit safety.
+`dev 0.1.6.2` adds the first macOS Intel `.app` / `.dmg` deployment foundation. `dev 0.1.6.1.1` added README screenshots and a practical Debian packaging/install tutorial after the first `.deb` validation pass. `dev 0.1.6.1` began the packaging phase with the first Debian package experiment. `dev 0.1.5.9` is the stabilization docs and release polish checkpoint. It consolidates the 0.1.5.6 Windows standalone deployment pass, the 0.1.5.7 known-host multi-key portability fix, and the 0.1.5.8 Windows libssh KEX compatibility fix. The 0.1.5.x line prepares the repository for `v0.2.0-alpha — Andromeda` with public alpha docs, Windows Debug/Release/deploy-folder validation, release notes, known limitations, issue templates, cross-platform icon resources, WebEngine startup polish, and exit safety.
 
 ---
 
@@ -149,6 +149,8 @@ dev 0.1.5.7 — Known-host multi-key portability polish
 dev 0.1.5.8 — Windows libssh handshake compatibility polish
 dev 0.1.5.9 — Stabilization docs and release polish
 dev 0.1.6.1 — First Debian package experiment
+dev 0.1.6.1.1 — README screenshots and Debian packaging tutorial polish
+dev 0.1.6.2 — macOS Intel app/DMG foundation
 ```
 
 Windows/public-alpha scope:

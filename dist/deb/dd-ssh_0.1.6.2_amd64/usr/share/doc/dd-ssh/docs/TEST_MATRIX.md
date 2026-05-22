@@ -1,8 +1,8 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.6.1 — Andromeda
+**Checkpoint:** dev 0.1.6.2 — Andromeda
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
-**Phase:** first Debian package experiment
+**Phase:** macOS Intel app/DMG foundation
 
 This matrix tracks what has been confirmed manually, what is implemented but should be re-tested before a public alpha tag, and what is still planned.
 
@@ -21,7 +21,7 @@ TODO              Not implemented yet.
 | Area | Test | Expected result | Status | Notes |
 |---|---|---|---|---|
 | Build | `cmake --build build --clean-first` | Build completes and links `dd-ssh` | PASS | Re-tested frequently during development. |
-| Linux Debian package | `./scripts/linux-package-deb.sh` | Creates `dist/deb/dd-ssh_0.1.6.1_amd64.deb` | TODO | Added in dev 0.1.6.1; must be validated on the user's Linux system before marking PASS. |
+| Linux Debian package | `./scripts/linux-package-deb.sh` | Creates `dist/deb/dd-ssh_0.1.6.2_amd64.deb` | PASS | First `.deb` package was built, installed, launched, and visually validated on Linux; the package version is carried forward for this checkpoint. |
 | Launch | `./build/dd-ssh` | App opens | PASS | Linux primary test platform. |
 | Windows configure | CMake with MSVC/Qt/vcpkg/pkgconf | Configure completes | PASS | Confirmed on native Windows branch. |
 | Windows Debug build | `cmake --build build-win` | `dd-ssh.exe` builds | PASS | Confirmed on native Windows. |
@@ -31,6 +31,8 @@ TODO              Not implemented yet.
 | Windows deployment script | `scripts\windows-deploy-release.bat` after Release build | Creates `dist\windows-release` and starts deployed exe | PASS | Simple working BAT from the successful Windows standalone deployment test is now checked in. |
 | Windows deployed launch | `dist\windows-release\dd-ssh.exe` from normal Command Prompt | App starts without Qt/vcpkg PATH | PASS | Confirmed on real Windows 10/11 machines during standalone deployment testing. |
 | Clean Windows 10 deploy-folder test | Copy `dist\windows-release` to a clean Windows 10 machine | App launches without dev tools installed | PASS | App launches, icon appears, import/connect works, and xterm terminal is fast. |
+| macOS Intel build | `./scripts/macos-build-release.sh` | Creates `build-macos-release/dd-ssh.app` | PASS | First Intel build validated on macOS 15.7.5 / x86_64 with Qt 6.11.1 and Homebrew libssh. |
+| macOS Intel DMG | `./scripts/macos-deploy-release.sh` | Creates `dist/macos/DD-SSH-0.1.6.2-macOS-x86_64.dmg` | PASS | First unsigned DMG workflow validated locally; includes DD-SSH.app plus Applications shortcut. |
 | About | Help → About DD-SSH | Shows version/codename/milestone/config path | PASS | Verified after version/codename work. |
 | Version | About dialog | Shows current checkpoint version | PASS | Should be checked after every patch. |
 | Codename | About dialog | Shows `Andromeda` | PASS | Current 0.1.x codename line. |
@@ -148,7 +150,7 @@ TODO              Not implemented yet.
 |---|---|---|
 | Linux | PASS | Primary tested platform. |
 | Windows | PASS | Native Windows Debug/Release builds, copied standalone deploy folder, SSH/xterm/htop, config import, exit safety, known-host portability, and libssh KEX compatibility have been validated on Windows 10/11. Installer packaging remains future work. |
-| macOS | TODO | Build/runtime not validated yet. |
+| macOS | PARTIAL | Intel build and first unsigned `.app` / `.dmg` deployment workflow have been validated locally. Clean tester-Mac pass, signing/notarization, native arm64, and Homebrew Cask remain future work. |
 
 
 ## 9a. Windows validation details
@@ -177,8 +179,8 @@ TODO              Not implemented yet.
 | Config import/export | IMPLEMENTED | Needs final focused pass before public alpha tag. |
 | Settings foundation | PASS | Font/app settings exist; theme needs final confirmation if not already done. |
 | Security posture documented | PASS | Plaintext secrets warning exists. |
-| Windows/macOS validation | PARTIAL | Windows native Debug/Release/deploy-folder validation is now PASS; macOS remains pending. |
-| Packaging/installers | TODO | Not part of current dev line. |
+| Windows/macOS validation | PARTIAL | Windows native Debug/Release/deploy-folder validation is PASS. macOS Intel build/DMG is now validated locally; clean tester-Mac pass and signing/notarization remain future work. |
+| Packaging/installers | PARTIAL | Linux `.deb`, Windows deploy folder, and macOS Intel `.dmg` workflows exist. Windows installer, AppImage, Homebrew Cask, signing/notarization, and store packaging remain future work. |
 
 ## 11. Suggested final pre-alpha test pass
 

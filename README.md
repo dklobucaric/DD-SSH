@@ -17,18 +17,20 @@ DD-SSH is designed for practical sysadmin use: saved sessions, one portable JSON
 
 ## Current status
 
-**Development checkpoint:** `dev 0.1.6.1.1`
+**Development checkpoint:** `dev 0.1.6.2`
 **Codename:** Andromeda
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
-**Current phase:** README screenshots and Debian packaging tutorial polish
+**Current phase:** macOS Intel app/DMG foundation
 
-DD-SSH is now entering its first packaging phase. It is not a stable 1.0 release yet, but the core workflow is functional and has been validated on Linux, Windows 10, and Windows 11. Native Windows Debug/Release builds and a copied standalone Windows deployment folder have been tested with MSVC, Qt 6.11.1, Qt WebEngine/WebChannel/Positioning, vcpkg/libssh, and pkgconf.
+DD-SSH is now in its early packaging phase. It is not a stable 1.0 release yet, but the core workflow is functional and has been validated on Linux, Windows 10, Windows 11, and an Intel macOS build machine. Native Windows Debug/Release builds, a copied standalone Windows deployment folder, a first Debian package, and a first macOS Intel `.app` / `.dmg` deployment experiment have been tested.
 
-The current documentation checkpoint consolidates three important Andromeda stabilization wins:
+The current packaging checkpoint consolidates the previous Andromeda stabilization wins and adds the first macOS Intel distribution path:
 
 - `dev 0.1.5.6` proved the Windows standalone deployment folder can run outside the build tree without manually extending `PATH`.
 - `dev 0.1.5.7` fixed portable `known_hosts` behavior so one shared `dd-ssh.json` can carry multiple legitimate host-key algorithms per `host:port`.
 - `dev 0.1.5.8` fixed a Windows/libssh handshake failure against newer OpenSSH servers that advertise ML-KEM/SNTRUP key-exchange algorithms before classic curve25519/ecdh algorithms.
+- `dev 0.1.6.1` and `dev 0.1.6.1.1` added the first Debian package workflow, screenshots, and packaging tutorial.
+- `dev 0.1.6.2` adds the first macOS Intel app/DMG build and deployment documentation, including a DMG layout with an Applications shortcut.
 
 The portable known-host model now supports multi-key storage per `host:port`:
 
@@ -124,11 +126,15 @@ Before tagging, run:
 
 - [Linux Packaging Guide](docs/LINUX_PACKAGING.md)
 - [Debian Package Tutorial](docs/DEBIAN_PACKAGE_TUTORIAL.md)
+- [macOS Build Guide](docs/MACOS_BUILD.md)
+- [macOS Deployment Guide](docs/MACOS_DEPLOYMENT.md)
 - [Screenshots](docs/SCREENSHOTS.md)
 - [Public Alpha Checklist](docs/PUBLIC_ALPHA_CHECKLIST.md)
 - [Test Matrix](docs/TEST_MATRIX.md)
 - [Windows Build Guide](docs/WINDOWS_BUILD.md)
 - [Windows Deployment Guide](docs/WINDOWS_DEPLOYMENT.md)
+- [macOS Build Guide](docs/MACOS_BUILD.md)
+- [macOS Deployment Guide](docs/MACOS_DEPLOYMENT.md)
 - [Release Notes Draft](docs/RELEASE_NOTES_v0.2.0-alpha.md)
 
 GitHub issue templates are included for bug reports, terminal issues, config/recovery issues, and feature requests.
@@ -202,7 +208,7 @@ See [Security Notes](docs/SECURITY_NOTES.md).
 - Qt window icon resource
 - Windows `.ico` / `.rc` executable icon prep
 - Linux PNG icon resources for future `.desktop` packaging
-- macOS `.icns` and `.iconset` prep for future app bundles
+- macOS `.icns` / `.app` bundle / `.dmg` deployment prep for Intel builds
 - App theme: System / Light / Dark
 - Terminal font family and size for newly opened terminal tabs
 - Optional quick action toolbar
@@ -257,7 +263,7 @@ DD-SSH is intentionally still limited. Not implemented yet:
 - Keep-alive settings
 - Portable mode next to binary
 - Custom config path picker
-- macOS validation pass
+- macOS Intel build and first `.dmg` validation pass
 - Final signed installers / official repositories
 - Signed releases
 - Full public release process
@@ -382,6 +388,8 @@ Start here:
 - [Building](docs/BUILDING.md)
 - [Windows Build Guide](docs/WINDOWS_BUILD.md)
 - [Windows Deployment Guide](docs/WINDOWS_DEPLOYMENT.md)
+- [macOS Build Guide](docs/MACOS_BUILD.md)
+- [macOS Deployment Guide](docs/MACOS_DEPLOYMENT.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Test Matrix](docs/TEST_MATRIX.md)
 - [Public Alpha Checklist](docs/PUBLIC_ALPHA_CHECKLIST.md)
@@ -429,11 +437,28 @@ Short version:
 ```bash
 ./scripts/linux-build-release.sh
 ./scripts/linux-package-deb.sh
-sudo apt install ./dist/deb/dd-ssh_0.1.6.1.1_amd64.deb
+sudo apt install ./dist/deb/dd-ssh_0.1.6.2_amd64.deb
 dd-ssh
 ```
 
 The package installs the app, desktop launcher, icons, README, license, Markdown documentation, and screenshots. It does not package your personal `dd-ssh.json` config.
+
+---
+
+## macOS Intel app/DMG quick path
+
+The first macOS packaging workflow is documented in [macOS Build Guide](docs/MACOS_BUILD.md) and [macOS Deployment Guide](docs/MACOS_DEPLOYMENT.md).
+
+Short version on the validated Intel build machine:
+
+```bash
+./scripts/macos-build-release.sh
+./scripts/macos-deploy-release.sh
+open dist/macos/DD-SSH.app
+open dist/macos/DD-SSH-0.1.6.2-macOS-x86_64.dmg
+```
+
+The generated DMG contains `DD-SSH.app` and an `Applications` shortcut so testers can drag the app into `/Applications`. The first macOS package is unsigned and not notarized; Gatekeeper may require right-click → Open on tester machines. The initial target is Intel macOS; Apple Silicon support is expected via Rosetta for this build, with native arm64/universal builds planned later.
 
 ---
 

@@ -78,7 +78,7 @@ Linux remains the primary development platform. Windows native Debug/Release bui
 The About dialog reads version strings from `CMakeLists.txt`:
 
 ```cmake
-set(DD_SSH_VERSION_STRING "dev 0.1.6.1.1")
+set(DD_SSH_VERSION_STRING "dev 0.1.6.2")
 set(DD_SSH_CODENAME_STRING "Andromeda")
 set(DD_SSH_MILESTONE_STRING "MF 0.2 candidate")
 ```
@@ -157,7 +157,7 @@ scripts/windows-deploy-release.bat
 
 ## Linux Release/package helper
 
-For the README screenshots and Debian packaging tutorial polish:
+For the current Linux package workflow:
 
 ```bash
 ./scripts/linux-build-release.sh
@@ -170,3 +170,21 @@ See `docs/LINUX_PACKAGING.md`.
 ## Debian package tutorial
 
 For the full `.deb` packaging/install/remove workflow, see [Debian Package Tutorial](DEBIAN_PACKAGE_TUTORIAL.md).
+
+
+## macOS Intel build/deploy helper
+
+For the first macOS Intel `.app` / `.dmg` workflow:
+
+```bash
+./scripts/macos-build-release.sh
+./scripts/macos-deploy-release.sh
+```
+
+Default Qt path:
+
+```text
+~/Qt/6.11.1/macos
+```
+
+See [macOS Build Guide](MACOS_BUILD.md) and [macOS Deployment Guide](MACOS_DEPLOYMENT.md).
