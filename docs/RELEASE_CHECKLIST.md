@@ -1,7 +1,7 @@
 # DD-SSH Release Checklist
 
 **Current target line:** Andromeda / MF 0.2 candidate  
-**Current checkpoint:** dev 0.1.6.4
+**Current checkpoint:** dev 0.1.6.5
 
 This checklist is shorter than the full public-alpha checklist. Use it before tagging any internal development checkpoint or before preparing `v0.2.0-alpha`.
 
@@ -30,7 +30,7 @@ grep "DD_SSH_VERSION_STRING" CMakeLists.txt
 Expected for this checkpoint:
 
 ```text
-set(DD_SSH_VERSION_STRING "dev 0.1.6.4")
+set(DD_SSH_VERSION_STRING "dev 0.1.6.5")
 ```
 
 Also verify in the app:
@@ -42,7 +42,7 @@ Help → About DD-SSH
 Expected:
 
 ```text
-Version: dev 0.1.6.4
+Version: dev 0.1.6.5
 Codename: Andromeda
 Milestone: MF 0.2 candidate
 ```
@@ -74,14 +74,14 @@ For the macOS Intel app/DMG foundation:
 
 ```bash
 ./scripts/linux-package-deb.sh
-dpkg-deb -I dist/deb/dd-ssh_0.1.6.4_amd64.deb
-dpkg-deb -c dist/deb/dd-ssh_0.1.6.4_amd64.deb | head -50
+dpkg-deb -I dist/deb/dd-ssh_0.1.6.5_amd64.deb
+dpkg-deb -c dist/deb/dd-ssh_0.1.6.5_amd64.deb | head -50
 ```
 
 Optional install test on a disposable or safe Linux machine:
 
 ```bash
-sudo apt install ./dist/deb/dd-ssh_0.1.6.4_amd64.deb
+sudo apt install ./dist/deb/dd-ssh_0.1.6.5_amd64.deb
 dd-ssh
 sudo apt remove dd-ssh
 ```
@@ -162,7 +162,7 @@ rm -rf build-macos-release dist/macos
 ./scripts/macos-build-release.sh
 ./scripts/macos-deploy-release.sh
 open dist/macos/DD-SSH.app
-open dist/macos/DD-SSH-0.1.6.4-macOS-x86_64.dmg
+open dist/macos/DD-SSH-0.1.6.5-macOS-x86_64.dmg
 ```
 
 Minimum pass:
@@ -172,7 +172,7 @@ Minimum pass:
 [ ] CMake finds Homebrew libssh through pkg-config
 [ ] build-macos-release/dd-ssh.app is created
 [ ] dist/macos/DD-SSH.app is created
-[ ] dist/macos/DD-SSH-0.1.6.4-macOS-x86_64.dmg is created
+[ ] dist/macos/DD-SSH-0.1.6.5-macOS-x86_64.dmg is created
 [ ] DMG opens and shows DD-SSH.app plus Applications shortcut
 [ ] About shows expected version
 [ ] Settings opens

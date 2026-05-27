@@ -1,3 +1,16 @@
+# DD-SSH Changelog
+
+## dev 0.1.6.5 — Andromeda
+
+macOS DMG and dependency polish.
+
+- Updated the project identity to `dev 0.1.6.5`.
+- Improved `scripts/macos-deploy-release.sh` with a generated `otool` dependency audit report beside the DMG.
+- Added dependency warning output for leftover `/Users`, `/usr/local`, or `/opt/homebrew` paths after bundling.
+- Added `STRICT_DEP_AUDIT=1` support so the Mac build machine can fail deployment when local/Homebrew paths remain unresolved.
+- Added `README_FIRST.txt` inside the DMG staging folder with drag-to-Applications, Gatekeeper right-click Open, macOS 13+ guidance, Rosetta notes, and plain-v1 config warning.
+- Kept SSH/session/terminal/config runtime behavior unchanged from `dev 0.1.6.3` and kept release-artifact rules from `dev 0.1.6.4` intact.
+
 ## dev 0.1.6.4 — Andromeda
 
 Repo hygiene and release artifact workflow.
@@ -38,7 +51,6 @@ Phase: macOS Intel app/DMG foundation
 - Added macOS build/deployment documentation and test notes for the first Intel native app bundle pass.
 - Runtime SSH/session/terminal/config behavior is unchanged from `dev 0.1.6.1.1`.
 
-# DD-SSH Changelog
 
 ## dev 0.1.6.1.1 — Andromeda
 

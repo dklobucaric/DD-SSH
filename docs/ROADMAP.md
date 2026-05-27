@@ -131,7 +131,7 @@ Expected before Apollo:
 
 ## Current release-prep step
 
-`dev 0.1.6.4` adds repo hygiene, release-artifact rules, and checksum helpers while keeping SSH runtime behavior unchanged from `dev 0.1.6.3`. `dev 0.1.6.3` hardened the SSH trust chain so the real authentication/shell connection verifies the approved host key before sending secrets. `dev 0.1.6.2` added the first macOS Intel `.app` / `.dmg` deployment foundation. `dev 0.1.6.1.1` added README screenshots and a practical Debian packaging/install tutorial after the first `.deb` validation pass. `dev 0.1.6.1` began the packaging phase with the first Debian package experiment. `dev 0.1.5.9` is the stabilization docs and release polish checkpoint. It consolidates the 0.1.5.6 Windows standalone deployment pass, the 0.1.5.7 known-host multi-key portability fix, and the 0.1.5.8 Windows libssh KEX compatibility fix. The 0.1.5.x line prepares the repository for `v0.2.0-alpha — Andromeda` with public alpha docs, Windows Debug/Release/deploy-folder validation, release notes, known limitations, issue templates, cross-platform icon resources, WebEngine startup polish, and exit safety.
+`dev 0.1.6.5` improves the macOS DMG/dependency flow with an `otool` audit report, optional strict dependency audit, and a small tester README inside the DMG while keeping SSH runtime behavior unchanged from `dev 0.1.6.3`. `dev 0.1.6.4` added repo hygiene, release-artifact rules, and checksum helpers. `dev 0.1.6.3` hardened the SSH trust chain so the real authentication/shell connection verifies the approved host key before sending secrets. `dev 0.1.6.2` added the first macOS Intel `.app` / `.dmg` deployment foundation. `dev 0.1.6.1.1` added README screenshots and a practical Debian packaging/install tutorial after the first `.deb` validation pass. `dev 0.1.6.1` began the packaging phase with the first Debian package experiment. `dev 0.1.5.9` is the stabilization docs and release polish checkpoint. It consolidates the 0.1.5.6 Windows standalone deployment pass, the 0.1.5.7 known-host multi-key portability fix, and the 0.1.5.8 Windows libssh KEX compatibility fix. The 0.1.5.x line prepares the repository for `v0.2.0-alpha — Andromeda` with public alpha docs, Windows Debug/Release/deploy-folder validation, release notes, known limitations, issue templates, cross-platform icon resources, WebEngine startup polish, and exit safety.
 
 ---
 
@@ -153,6 +153,7 @@ dev 0.1.6.1.1 — README screenshots and Debian packaging tutorial polish
 dev 0.1.6.2 — macOS Intel app/DMG foundation
 dev 0.1.6.3 — SSH trust-chain hardening
 dev 0.1.6.4 — Repo hygiene and release artifact workflow
+dev 0.1.6.5 — macOS DMG/dependency polish
 ```
 
 Windows/public-alpha scope:
@@ -189,10 +190,22 @@ scripts/generate-checksums-windows.ps1
 scripts/generate-checksums-windows.bat
 ```
 
+## 0.1.6.5 macOS DMG/dependency polish
+
+`dev 0.1.6.5` keeps runtime/SSH behavior unchanged and strengthens the macOS tester package path:
+
+```text
+- generate a deployable DD-SSH.app and Intel DMG
+- keep the Applications shortcut in the DMG
+- include README_FIRST.txt inside the DMG for unsigned-app/Gatekeeper guidance
+- generate an otool dependency report beside the DMG
+- warn about leftover /Users, /usr/local, or /opt/homebrew dependencies
+- support STRICT_DEP_AUDIT=1 for fail-fast dependency checks on the build Mac
+```
+
 Next packaging polish candidates after this checkpoint:
 
 ```text
-dev 0.1.6.5 — macOS DMG/dependency polish
 dev 0.1.6.6 — Windows installer experiment
 dev 0.1.6.7 — Linux package dependency polish
 dev 0.1.6.8 — diagnostics and copy diagnostics

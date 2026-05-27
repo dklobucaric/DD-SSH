@@ -1,7 +1,7 @@
 # DD-SSH macOS Build Guide
 
-**Checkpoint:** dev 0.1.6.4 — Andromeda  
-**Phase:** macOS Intel app/DMG foundation
+**Checkpoint:** dev 0.1.6.5 — Andromeda  
+**Phase:** macOS DMG/dependency polish
 
 This guide documents the first native macOS build path for DD-SSH.
 
@@ -18,7 +18,7 @@ Qt 6.11.1 from the official Qt installer
 Homebrew libssh / OpenSSL / zlib
 ```
 
-This is not yet the final public macOS release process. It is the foundation for producing a local `.app` and a first unsigned `.dmg` for tester distribution.
+This is not yet the final public macOS release process. It is the foundation for producing a local `.app` and an unsigned `.dmg` for tester distribution, with extra dependency-audit reporting added in `dev 0.1.6.5`.
 
 ---
 
@@ -125,7 +125,7 @@ grep "DD_SSH_VERSION_STRING" CMakeLists.txt
 Expected for this checkpoint:
 
 ```text
-set(DD_SSH_VERSION_STRING "dev 0.1.6.4")
+set(DD_SSH_VERSION_STRING "dev 0.1.6.5")
 ```
 
 ---
@@ -208,7 +208,7 @@ After launching:
 
 ```text
 [ ] Main window opens
-[ ] About shows dev 0.1.6.4
+[ ] About shows dev 0.1.6.5
 [ ] Settings opens
 [ ] Config path is created under the macOS user profile
 [ ] Saved session can be created

@@ -37,15 +37,17 @@ This directory contains the working documentation for DD-SSH.
 - [Release Artifacts](RELEASE_ARTIFACTS.md)
 - [Release Notes Template](RELEASE_NOTES_TEMPLATE.md) — future release checklist
 - [Release Checklist](RELEASE_CHECKLIST.md) — focused checkpoint smoke-test checklist
+- [Build/Test 0.1.6.5](BUILD_AND_TEST_0.1.6.5.md) — macOS DMG/dependency polish build notes
+- [Testcase 0.1.6.5](TESTCASE_0.1.6.5.md) — macOS DMG/dependency validation checklist
 - [Stabilization Checkpoint 0.1.5.9](STABILIZATION_CHECKPOINT_0.1.5.9.md) — validated stabilization summary
 
 ## Current checkpoint
 
 ```text
-Version: dev 0.1.6.4
+Version: dev 0.1.6.5
 Codename: Andromeda
 Milestone: MF 0.2 candidate
-Phase: macOS Intel app/DMG foundation
+Phase: macOS DMG/dependency polish
 ```
 
 

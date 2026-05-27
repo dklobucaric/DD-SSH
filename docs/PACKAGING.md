@@ -1,9 +1,9 @@
 # Packaging DD-SSH
 
-**Checkpoint:** dev 0.1.6.4 — Andromeda  
-**Phase:** repo hygiene and release artifact workflow
+**Checkpoint:** dev 0.1.6.5 — Andromeda  
+**Phase:** macOS DMG/dependency polish
 
-DD-SSH has moved from source-build validation into the first packaging phase. `dev 0.1.6.4` adds repository hygiene and checksum helpers so generated packages are kept out of Git and uploaded as release assets instead.
+DD-SSH has moved from source-build validation into the first packaging phase. `dev 0.1.6.4` added repository hygiene and checksum helpers so generated packages stay out of Git. `dev 0.1.6.5` keeps that release-artifact policy and improves the macOS tester package path with dependency-audit reporting.
 
 The first Linux package target is a practical `.deb` for Debian/Ubuntu/Mint/LMDE-style systems. Windows already has a validated deploy-folder flow; a Windows installer is planned later.
 
@@ -62,11 +62,17 @@ Planned later:
 
 ### macOS
 
+Current target:
+
+- Intel `.app` bundle
+- unsigned Intel `.dmg`
+- dependency audit report generated from `otool`
+
 Planned later:
 
-- `.app` bundle
-- `.dmg`
 - signing/notarization when appropriate
+- native Apple Silicon / universal build
+- Homebrew Cask draft
 
 ## Build first Linux `.deb`
 
@@ -80,13 +86,13 @@ From the project root on Linux:
 Expected output:
 
 ```text
-dist/deb/dd-ssh_0.1.6.4_amd64.deb
+dist/deb/dd-ssh_0.1.6.5_amd64.deb
 ```
 
 Install locally:
 
 ```bash
-sudo apt install ./dist/deb/dd-ssh_0.1.6.4_amd64.deb
+sudo apt install ./dist/deb/dd-ssh_0.1.6.5_amd64.deb
 ```
 
 Run:
@@ -142,14 +148,15 @@ Windows future work:
 
 macOS future work:
 
-- `.app` bundle
-- `.dmg`
+- clean tester-Mac pass
+- Apple Silicon / universal build
+- Homebrew Cask draft
 - notarization later
 
 
 ## macOS app/DMG packaging
 
-`dev 0.1.6.4` adds the first Intel macOS app/DMG path. See:
+`dev 0.1.6.5` polishes the Intel macOS app/DMG path. See:
 
 - [macOS Build Guide](MACOS_BUILD.md)
 - [macOS Deployment Guide](MACOS_DEPLOYMENT.md)
@@ -159,7 +166,8 @@ Expected outputs:
 ```text
 build-macos-release/dd-ssh.app
 dist/macos/DD-SSH.app
-dist/macos/DD-SSH-0.1.6.4-macOS-x86_64.dmg
+dist/macos/DD-SSH-0.1.6.5-macOS-x86_64.dmg
+dist/macos/DD-SSH-0.1.6.5-macOS-x86_64-otool-report.txt
 ```
 
 This first DMG is intentionally unsigned and not notarized. It is suitable for internal testing and early testers who understand Gatekeeper prompts. Developer ID signing, notarization, Homebrew Cask packaging, and native arm64/universal builds are later packaging tasks.

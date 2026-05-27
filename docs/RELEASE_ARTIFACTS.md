@@ -1,6 +1,6 @@
 # DD-SSH release artifacts
 
-**Checkpoint:** dev 0.1.6.4 — Andromeda  
+**Checkpoint:** dev 0.1.6.5 — Andromeda  
 **Phase:** repo hygiene and release artifact workflow
 
 This repository should contain source code, documentation, resources, packaging templates, and helper scripts. Generated release artifacts should not be committed to Git.
@@ -39,9 +39,9 @@ Release artifacts belong in GitHub Releases, not in normal Git commits.
 Typical future release assets:
 
 ```text
-DD-SSH-dev-0.1.6.4-windows-portable.zip
-dd-ssh_0.1.6.4_amd64.deb
-DD-SSH-0.1.6.4-macOS-x86_64.dmg
+DD-SSH-dev-0.1.6.5-windows-portable.zip
+dd-ssh_0.1.6.5_amd64.deb
+DD-SSH-0.1.6.5-macOS-x86_64.dmg
 SHA256SUMS
 ```
 
@@ -103,7 +103,7 @@ They do not checksum every file inside a Windows portable folder. Create a porta
 ```bash
 # Linux .deb
 ./scripts/linux-build-release.sh
-DD_SSH_DEB_VERSION=0.1.6.4 ./scripts/linux-package-deb.sh
+DD_SSH_DEB_VERSION=0.1.6.5 ./scripts/linux-package-deb.sh
 
 # Optional: put/copy all final assets under dist/ before generating checksums
 ./scripts/generate-checksums-linux.sh
@@ -115,7 +115,7 @@ Windows portable release example:
 ```text
 1. Build Release on Windows.
 2. Run scripts\windows-deploy-release.bat.
-3. Zip dist\windows-release as DD-SSH-dev-0.1.6.4-windows-portable.zip.
+3. Zip dist\windows-release as DD-SSH-dev-0.1.6.5-windows-portable.zip.
 4. Place/copy the zip under dist\.
 5. Run scripts\generate-checksums-windows.bat.
 6. Upload the zip and dist\SHA256SUMS to GitHub Releases.
@@ -125,7 +125,7 @@ macOS release example:
 
 ```bash
 ./scripts/macos-build-release.sh
-DD_SSH_MACOS_VERSION=0.1.6.4 ./scripts/macos-deploy-release.sh
+DD_SSH_MACOS_VERSION=0.1.6.5 ./scripts/macos-deploy-release.sh
 ./scripts/generate-checksums-macos.sh
 ```
 

@@ -1,7 +1,7 @@
 # DD-SSH macOS Deployment Guide
 
-**Checkpoint:** dev 0.1.6.4 — Andromeda  
-**Phase:** macOS Intel app/DMG foundation
+**Checkpoint:** dev 0.1.6.5 — Andromeda  
+**Phase:** macOS DMG/dependency polish
 
 This guide documents the first deployable macOS package path for DD-SSH.
 
@@ -9,7 +9,7 @@ The goal of this checkpoint is practical tester distribution:
 
 ```text
 DD-SSH.app
-DD-SSH-0.1.6.4-macOS-x86_64.dmg
+DD-SSH-0.1.6.5-macOS-x86_64.dmg
 ```
 
 The generated DMG contains:
@@ -17,9 +17,10 @@ The generated DMG contains:
 ```text
 DD-SSH.app
 Applications -> /Applications
+README_FIRST.txt
 ```
 
-The user opens the DMG and drags `DD-SSH.app` to the `Applications` shortcut.
+The user opens the DMG and drags `DD-SSH.app` to the `Applications` shortcut. The small `README_FIRST.txt` file gives testers unsigned-app/Gatekeeper launch guidance without requiring them to find the full documentation first.
 
 ---
 
@@ -51,7 +52,7 @@ QT_DIR=$HOME/Qt/6.11.1/macos
 BUILD_DIR=build-macos-release
 DIST_DIR=dist/macos
 MACOS_ARCH=x86_64
-DD_SSH_MACOS_VERSION=0.1.6.4
+DD_SSH_MACOS_VERSION=0.1.6.5
 CODESIGN_ADHOC=1
 ```
 
@@ -59,8 +60,17 @@ Expected output:
 
 ```text
 dist/macos/DD-SSH.app
-dist/macos/DD-SSH-0.1.6.4-macOS-x86_64.dmg
+dist/macos/DD-SSH-0.1.6.5-macOS-x86_64.dmg
+dist/macos/DD-SSH-0.1.6.5-macOS-x86_64-otool-report.txt
 ```
+
+Optional strict dependency audit:
+
+```bash
+STRICT_DEP_AUDIT=1 ./scripts/macos-deploy-release.sh
+```
+
+With `STRICT_DEP_AUDIT=1`, deployment fails if the generated audit still contains local build paths such as `/Users/...`, `/usr/local/...`, or `/opt/homebrew/...`. Without strict mode, the script prints warnings and still creates the DMG so the developer can inspect the result.
 
 ---
 
@@ -76,8 +86,10 @@ dist/macos/DD-SSH-0.1.6.4-macOS-x86_64.dmg
 5. Copies Homebrew dylibs from /usr/local or /opt/homebrew into Contents/Frameworks.
 6. Rewrites dylib references with install_name_tool.
 7. Applies an ad-hoc signature for local testing when possible.
-8. Creates a DMG staging folder with DD-SSH.app and an Applications symlink.
-9. Creates a compressed DMG with hdiutil.
+8. Writes an `otool` dependency audit report beside the DMG.
+9. Warns if local build/Homebrew paths remain after bundling.
+10. Creates a DMG staging folder with DD-SSH.app, an Applications symlink, and `README_FIRST.txt`.
+11. Creates a compressed DMG with hdiutil.
 ```
 
 Homebrew dylib bundling is needed because `macdeployqt` handles Qt runtime files but does not automatically bundle every non-Qt dependency such as Homebrew `libssh` / OpenSSL.
@@ -95,7 +107,7 @@ open dist/macos/DD-SSH.app
 Open the DMG:
 
 ```bash
-open dist/macos/DD-SSH-0.1.6.4-macOS-x86_64.dmg
+open dist/macos/DD-SSH-0.1.6.5-macOS-x86_64.dmg
 ```
 
 Then drag `DD-SSH.app` to `Applications` and launch it from there.
@@ -104,7 +116,13 @@ Then drag `DD-SSH.app` to `Applications` and launch it from there.
 
 ## 5. Inspect dependencies
 
-Check the app binary:
+The deploy script now writes a dependency audit report automatically:
+
+```bash
+cat dist/macos/DD-SSH-0.1.6.5-macOS-x86_64-otool-report.txt
+```
+
+Manual spot check:
 
 ```bash
 otool -L dist/macos/DD-SSH.app/Contents/MacOS/dd-ssh
@@ -116,6 +134,7 @@ A good deployable app should not depend on personal build paths such as:
 /Users/user/Qt/...
 /usr/local/Cellar/libssh/...
 /usr/local/opt/openssl@3/...
+/opt/homebrew/Cellar/libssh/...
 ```
 
 Qt framework references may use bundle-relative paths, and Homebrew libraries should be copied into:
@@ -124,7 +143,14 @@ Qt framework references may use bundle-relative paths, and Homebrew libraries sh
 DD-SSH.app/Contents/Frameworks/
 ```
 
-If a tester Mac reports `Library not loaded`, run `otool -L` and look for the missing path.
+Useful checks:
+
+```bash
+grep -E '/Users/|/usr/local/|/opt/homebrew/' dist/macos/DD-SSH-0.1.6.5-macOS-x86_64-otool-report.txt || echo "Dependency audit looks clean"
+STRICT_DEP_AUDIT=1 ./scripts/macos-deploy-release.sh
+```
+
+If a tester Mac reports `Library not loaded`, run `otool -L`, inspect the generated report, and look for the missing path.
 
 ---
 
@@ -188,9 +214,10 @@ On a clean tester Mac:
 
 ```text
 [ ] DMG opens
+[ ] DMG contains DD-SSH.app, Applications shortcut, and README_FIRST.txt
 [ ] DD-SSH.app can be dragged to Applications
 [ ] App opens via right-click -> Open if Gatekeeper blocks first launch
-[ ] About shows dev 0.1.6.4
+[ ] About shows dev 0.1.6.5
 [ ] Settings opens
 [ ] Config path is created
 [ ] Saved session can be created/imported

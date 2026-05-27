@@ -71,9 +71,9 @@ Do not commit generated packages or deployment folders. Upload them to GitHub Re
 Expected release assets may include:
 
 ```text
-DD-SSH-dev-0.1.6.4-windows-portable.zip
-dd-ssh_0.1.6.4_amd64.deb
-DD-SSH-0.1.6.4-macOS-x86_64.dmg
+DD-SSH-dev-0.1.6.5-windows-portable.zip
+dd-ssh_0.1.6.5_amd64.deb
+DD-SSH-0.1.6.5-macOS-x86_64.dmg
 SHA256SUMS
 ```
 
@@ -131,7 +131,7 @@ Deployment/installer artifacts are not required for the first internal Windows v
 
 ## Windows deployment folder test
 
-Current packaging hygiene checkpoint: `dev 0.1.6.4 — repo hygiene and release artifact workflow`.
+Current macOS packaging checkpoint: `dev 0.1.6.5 — macOS DMG/dependency polish`.
 
 Before a public alpha release that includes Windows notes:
 

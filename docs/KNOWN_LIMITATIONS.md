@@ -1,6 +1,6 @@
 # DD-SSH Known Limitations
 
-**Checkpoint:** dev 0.1.6.4 — Andromeda
+**Checkpoint:** dev 0.1.6.5 — Andromeda
 
 This document lists limitations that should be visible to testers. Nothing here is hidden or sugar-coated.
 
@@ -87,7 +87,7 @@ A true same-algorithm fingerprint mismatch is still treated as a strong host-key
 
 ## macOS-specific alpha notes
 
-`dev 0.1.6.4` adds the first Intel macOS `.app` / `.dmg` deployment path. It is useful for early testers, but it is not a final signed public macOS release.
+`dev 0.1.6.5` adds the first Intel macOS `.app` / `.dmg` deployment path. It is useful for early testers, but it is not a final signed public macOS release.
 
 Known macOS alpha notes:
 
