@@ -131,7 +131,7 @@ Expected before Apollo:
 
 ## Current release-prep step
 
-`dev 0.1.6.2` adds the first macOS Intel `.app` / `.dmg` deployment foundation. `dev 0.1.6.1.1` added README screenshots and a practical Debian packaging/install tutorial after the first `.deb` validation pass. `dev 0.1.6.1` began the packaging phase with the first Debian package experiment. `dev 0.1.5.9` is the stabilization docs and release polish checkpoint. It consolidates the 0.1.5.6 Windows standalone deployment pass, the 0.1.5.7 known-host multi-key portability fix, and the 0.1.5.8 Windows libssh KEX compatibility fix. The 0.1.5.x line prepares the repository for `v0.2.0-alpha — Andromeda` with public alpha docs, Windows Debug/Release/deploy-folder validation, release notes, known limitations, issue templates, cross-platform icon resources, WebEngine startup polish, and exit safety.
+`dev 0.1.6.3` hardens the SSH trust chain so the real authentication/shell connection verifies the approved host key before sending secrets. `dev 0.1.6.2` added the first macOS Intel `.app` / `.dmg` deployment foundation. `dev 0.1.6.1.1` added README screenshots and a practical Debian packaging/install tutorial after the first `.deb` validation pass. `dev 0.1.6.1` began the packaging phase with the first Debian package experiment. `dev 0.1.5.9` is the stabilization docs and release polish checkpoint. It consolidates the 0.1.5.6 Windows standalone deployment pass, the 0.1.5.7 known-host multi-key portability fix, and the 0.1.5.8 Windows libssh KEX compatibility fix. The 0.1.5.x line prepares the repository for `v0.2.0-alpha — Andromeda` with public alpha docs, Windows Debug/Release/deploy-folder validation, release notes, known limitations, issue templates, cross-platform icon resources, WebEngine startup polish, and exit safety.
 
 ---
 
@@ -151,6 +151,7 @@ dev 0.1.5.9 — Stabilization docs and release polish
 dev 0.1.6.1 — First Debian package experiment
 dev 0.1.6.1.1 — README screenshots and Debian packaging tutorial polish
 dev 0.1.6.2 — macOS Intel app/DMG foundation
+dev 0.1.6.3 — SSH trust-chain hardening
 ```
 
 Windows/public-alpha scope:
@@ -164,3 +165,17 @@ Windows/public-alpha scope:
 - copy vcpkg runtime DLLs into the deployment folder
 - run deployed app outside the build environment
 - collect bugfixes before `v0.2.0-alpha`
+
+---
+
+## Future file transport direction
+
+DD-SSH may later add a simple file transport view for saved sessions. The intended model is a two-panel local/remote file manager using SFTP over libssh:
+
+```text
+left: local files
+right: remote files
+terminal tabs may remain open in the background
+```
+
+This must not be implemented before the terminal, packaging, diagnostics, and SSH trust-chain foundations are stable. Early code should avoid assuming that a saved session can only open a terminal. A saved session should be treated as a connection profile that may later open a terminal, diagnostics view, traffic monitor, or file transport view.

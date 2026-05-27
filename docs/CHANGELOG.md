@@ -1,3 +1,15 @@
+## dev 0.1.6.3 — Andromeda
+
+Phase: SSH trust-chain hardening
+
+- Updated the project identity to `dev 0.1.6.3`.
+- Added a small `SshHostKeyExpectation` safety object used by authentication tests and real shell workers.
+- Hardened saved-session xterm.js/basic shell startup so the real SSH shell connection verifies the approved host-key type and fingerprint after `ssh_connect()` and before password/private-key authentication.
+- Hardened manual and saved-session authentication tests so the second/authentication connection also verifies the preflight-approved host key before attempting auth.
+- Added auth-test output showing whether host-key verification was attempted and verified in the authentication connection.
+- Preserved the existing human-readable `plain-v1` JSON format, known-host multi-key portability model, Windows KEX compatibility override, terminal behavior, and packaging scripts.
+- This checkpoint intentionally avoids SFTP/file-manager work, traffic widgets, terminal byte-stream refactoring, JSON encryption, and large UI refactors.
+
 ## dev 0.1.6.2 — Andromeda
 
 Phase: macOS Intel app/DMG foundation

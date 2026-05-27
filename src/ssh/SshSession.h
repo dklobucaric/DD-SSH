@@ -13,6 +13,16 @@ struct SshHandshakeResult
     int sshErrorCode = 0;
 };
 
+struct SshHostKeyExpectation
+{
+    bool enabled = false;
+    QString host;
+    int port = 22;
+    QString keyType;
+    QString fingerprint;
+    QString decision;
+};
+
 enum class SshAuthMethod
 {
     Password,
@@ -26,6 +36,10 @@ struct SshAuthResult
     QString error;
     int sshErrorCode = 0;
     int authReturnCode = 0;
+    bool hostKeyVerificationAttempted = false;
+    bool hostKeyVerified = false;
+    QString hostKeyType;
+    QString hostKeyFingerprint;
 };
 
 class SshSession
@@ -45,6 +59,7 @@ public:
         const QString &username,
         SshAuthMethod authMethod,
         const QString &password,
-        const QString &privateKeyPath
+        const QString &privateKeyPath,
+        const SshHostKeyExpectation &hostKeyExpectation = SshHostKeyExpectation()
     );
 };

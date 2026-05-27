@@ -17,20 +17,23 @@ DD-SSH is designed for practical sysadmin use: saved sessions, one portable JSON
 
 ## Current status
 
-**Development checkpoint:** `dev 0.1.6.2`
+**Development checkpoint:** `dev 0.1.6.3`
 **Codename:** Andromeda
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
-**Current phase:** macOS Intel app/DMG foundation
+**Current phase:** SSH trust-chain hardening
 
 DD-SSH is now in its early packaging phase. It is not a stable 1.0 release yet, but the core workflow is functional and has been validated on Linux, Windows 10, Windows 11, and an Intel macOS build machine. Native Windows Debug/Release builds, a copied standalone Windows deployment folder, a first Debian package, and a first macOS Intel `.app` / `.dmg` deployment experiment have been tested.
 
-The current packaging checkpoint consolidates the previous Andromeda stabilization wins and adds the first macOS Intel distribution path:
+The current hardening checkpoint keeps the packaging foundation intact and closes the SSH trust-chain gap found during source audit:
 
 - `dev 0.1.5.6` proved the Windows standalone deployment folder can run outside the build tree without manually extending `PATH`.
 - `dev 0.1.5.7` fixed portable `known_hosts` behavior so one shared `dd-ssh.json` can carry multiple legitimate host-key algorithms per `host:port`.
 - `dev 0.1.5.8` fixed a Windows/libssh handshake failure against newer OpenSSH servers that advertise ML-KEM/SNTRUP key-exchange algorithms before classic curve25519/ecdh algorithms.
 - `dev 0.1.6.1` and `dev 0.1.6.1.1` added the first Debian package workflow, screenshots, and packaging tutorial.
-- `dev 0.1.6.2` adds the first macOS Intel app/DMG build and deployment documentation, including a DMG layout with an Applications shortcut.
+- `dev 0.1.6.2` added the first macOS Intel app/DMG build and deployment documentation, including a DMG layout with an Applications shortcut.
+- `dev 0.1.6.3` verifies the approved SSH host key again in the real authentication/shell connection before any password or private key is sent.
+
+In `dev 0.1.6.3`, terminal opens and auth tests now carry the preflight-approved host-key type/fingerprint into the real auth/shell connection. If that second connection reports a different key, DD-SSH aborts before authentication and reports that no password/private key was sent.
 
 The portable known-host model now supports multi-key storage per `host:port`:
 

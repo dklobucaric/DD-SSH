@@ -17,11 +17,13 @@
 BasicTerminalTab::BasicTerminalTab(
     const SessionProfile &session,
     const QString &secretValue,
+    const SshHostKeyExpectation &hostKeyExpectation,
     QWidget *parent
 )
     : QWidget(parent)
     , m_session(session)
     , m_secretValue(secretValue)
+    , m_hostKeyExpectation(hostKeyExpectation)
 {
     auto *layout = new QVBoxLayout(this);
 
@@ -79,7 +81,8 @@ BasicTerminalTab::BasicTerminalTab(
         m_session.port,
         m_session.username,
         authMethod,
-        m_secretValue
+        m_secretValue,
+        m_hostKeyExpectation
     );
 
     m_shellActive = true;

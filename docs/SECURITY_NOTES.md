@@ -2,6 +2,30 @@
 
 DD-SSH is currently an early public-alpha candidate. Security decisions are explicit and must remain visible to users.
 
+## SSH host-key trust chain
+
+Starting with `dev 0.1.6.3`, DD-SSH must verify the SSH host key in the same connection that performs authentication or opens the shell.
+
+Required rule:
+
+```text
+ssh_connect()
+read current server host key
+compare type + SHA256 fingerprint with the preflight-approved key
+only then send password/private key authentication
+```
+
+If the real authentication/shell connection reports a different key than the key approved during preflight, DD-SSH must abort before authentication and tell the user that authentication was not attempted.
+
+This rule must apply to:
+
+- Saved-session xterm.js terminal opens
+- Saved-session basic shell fallback opens
+- Saved-session authentication tests
+- Manual connection/authentication tests
+
+The multi-key known-host model remains valid: one `host:port` may store more than one legitimate key algorithm/fingerprint pair, for example ED25519 on Linux/Windows 11 and ECDSA on Windows 10. The active connection must still match the key approved for that attempt before auth is sent.
+
 ## Plaintext secrets
 
 Current early builds use:

@@ -1,8 +1,8 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.6.2 — Andromeda
+**Checkpoint:** dev 0.1.6.3 — Andromeda
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
-**Phase:** macOS Intel app/DMG foundation
+**Phase:** SSH trust-chain hardening
 
 This matrix tracks what has been confirmed manually, what is implemented but should be re-tested before a public alpha tag, and what is still planned.
 
@@ -68,6 +68,9 @@ TODO              Not implemented yet.
 | Multi-key known host B | ECDSA-only config on Linux/Windows 11 where libssh negotiates ED25519 | Offers Trust additional key, connects, saves both keys | PASS | Reverse regression confirmed; same JSON works across Windows 10, Windows 11, and Linux after both keys are stored. |
 | Trust once additional key | Additional key type prompt → Trust once | Opens shell/auth flow without saving JSON | IMPLEMENTED | Keep in final regression pass; primary Trust additional key path is validated. |
 | Changed host | Same key type with different fingerprint | Must show strong host-key-changed warning | TODO | Needs deliberate edited-copy config test before stable release. |
+| Shell same-connection host-key verification | Open saved xterm.js/basic shell after approving/trusting host | Real shell connection verifies approved key before authentication | IMPLEMENTED | Added in dev 0.1.6.3. Must be manually re-tested on Linux first, then Windows standalone. |
+| Auth-test same-connection host-key verification | Manual/saved auth test after known-host decision | Authentication connection verifies approved key before sending password/private key | IMPLEMENTED | Auth test output now includes host-key verification before auth. |
+| Pre-auth mismatch block | Force/edit expected known-host mismatch or connect to changed host | DD-SSH aborts before auth and states authentication was not attempted | NOT TESTED | Critical 0.1.6.3 regression test before public alpha. |
 
 ## 4. Terminal renderer and shell behavior
 
@@ -205,4 +208,7 @@ Then verify:
 9. Corrupt config recovery still works.
 10. Export/import/restore config actions pass a focused test.
 11. Windows Release build test records startup/RAM notes.
+12. Auth-test output shows `Host-key verification before auth: VERIFIED` for a trusted host.
+13. Saved xterm.js terminal still opens only after the worker verifies the approved host key before auth.
+14. A deliberate same-key-type fingerprint mismatch blocks before authentication.
 ```

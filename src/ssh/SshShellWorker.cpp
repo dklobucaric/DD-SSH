@@ -10,12 +10,148 @@
 #include <QTemporaryFile>
 #include <QThread>
 
+namespace {
+
+bool readConnectedServerHostKey(
+    ssh_session session,
+    QString *keyType,
+    QString *fingerprint,
+    QString *errorMessage
+)
+{
+    if (keyType != nullptr) {
+        *keyType = QString();
+    }
+
+    if (fingerprint != nullptr) {
+        *fingerprint = QString();
+    }
+
+    if (errorMessage != nullptr) {
+        *errorMessage = QString();
+    }
+
+    ssh_key serverPublicKey = nullptr;
+    const int keyRc = ssh_get_server_publickey(session, &serverPublicKey);
+
+    if (keyRc != SSH_OK || serverPublicKey == nullptr) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Could not read SSH server host key: ")
+                + QString::fromUtf8(ssh_get_error(session));
+        }
+
+        return false;
+    }
+
+    const char *rawKeyType = ssh_key_type_to_char(ssh_key_type(serverPublicKey));
+
+    if (rawKeyType != nullptr) {
+        if (keyType != nullptr) {
+            *keyType = QString::fromUtf8(rawKeyType);
+        }
+    } else if (keyType != nullptr) {
+        *keyType = QStringLiteral("unknown");
+    }
+
+    unsigned char *hash = nullptr;
+    size_t hashLength = 0;
+
+    const int hashRc = ssh_get_publickey_hash(
+        serverPublicKey,
+        SSH_PUBLICKEY_HASH_SHA256,
+        &hash,
+        &hashLength
+    );
+
+    if (hashRc != SSH_OK || hash == nullptr) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Could not calculate SSH server host-key fingerprint: ")
+                + QString::fromUtf8(ssh_get_error(session));
+        }
+
+        ssh_key_free(serverPublicKey);
+        return false;
+    }
+
+    char *rawFingerprint = ssh_get_fingerprint_hash(
+        SSH_PUBLICKEY_HASH_SHA256,
+        hash,
+        hashLength
+    );
+
+    ssh_clean_pubkey_hash(&hash);
+    ssh_key_free(serverPublicKey);
+
+    if (rawFingerprint == nullptr) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("Could not format SSH server host-key fingerprint.");
+        }
+
+        return false;
+    }
+
+    if (fingerprint != nullptr) {
+        *fingerprint = QString::fromUtf8(rawFingerprint);
+    }
+
+    ssh_string_free_char(rawFingerprint);
+    return true;
+}
+
+bool verifyConnectedServerHostKey(
+    ssh_session session,
+    const SshHostKeyExpectation &expectation,
+    QString *errorMessage
+)
+{
+    if (errorMessage != nullptr) {
+        *errorMessage = QString();
+    }
+
+    if (!expectation.enabled) {
+        return true;
+    }
+
+    QString currentKeyType;
+    QString currentFingerprint;
+    QString keyError;
+
+    if (!readConnectedServerHostKey(session, &currentKeyType, &currentFingerprint, &keyError)) {
+        if (errorMessage != nullptr) {
+            *errorMessage = QStringLiteral("SSH host key verification failed before authentication. Authentication was not attempted.\n\n")
+                + keyError;
+        }
+
+        return false;
+    }
+
+    if (currentKeyType == expectation.keyType && currentFingerprint == expectation.fingerprint) {
+        return true;
+    }
+
+    if (errorMessage != nullptr) {
+        *errorMessage =
+            QStringLiteral("SSH host key verification failed before authentication. Authentication was not attempted.\n\n")
+            + QStringLiteral("The real shell connection reported a different SSH host key than the key approved during the preflight check.\n\n")
+            + QStringLiteral("Expected host: ") + expectation.host + QStringLiteral(":") + QString::number(expectation.port) + QStringLiteral("\n")
+            + QStringLiteral("Expected key type: ") + expectation.keyType + QStringLiteral("\n")
+            + QStringLiteral("Expected fingerprint: ") + expectation.fingerprint + QStringLiteral("\n")
+            + QStringLiteral("Current key type: ") + currentKeyType + QStringLiteral("\n")
+            + QStringLiteral("Current fingerprint: ") + currentFingerprint;
+    }
+
+    return false;
+}
+
+}
+
 SshShellWorker::SshShellWorker(
     const QString &host,
     int port,
     const QString &username,
     SshAuthMethod authMethod,
     const QString &secretValue,
+    const SshHostKeyExpectation &hostKeyExpectation,
     QObject *parent
 )
     : QObject(parent)
@@ -24,6 +160,7 @@ SshShellWorker::SshShellWorker(
     , m_username(username)
     , m_authMethod(authMethod)
     , m_secretValue(secretValue)
+    , m_hostKeyExpectation(hostKeyExpectation)
 {
 }
 
@@ -131,6 +268,19 @@ void SshShellWorker::start()
         ssh_free(session);
         emit finished();
         return;
+    }
+
+    if (m_hostKeyExpectation.enabled) {
+        emit stateChanged(QStringLiteral("Verifying SSH host key before authentication..."));
+
+        QString verificationError;
+        if (!verifyConnectedServerHostKey(session, m_hostKeyExpectation, &verificationError)) {
+            emit errorOccurred(verificationError);
+            ssh_disconnect(session);
+            ssh_free(session);
+            emit finished();
+            return;
+        }
     }
 
     emit stateChanged(QStringLiteral("Authenticating..."));

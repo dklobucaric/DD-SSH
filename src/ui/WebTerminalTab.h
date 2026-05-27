@@ -2,6 +2,7 @@
 
 #include "core/SessionProfile.h"
 #include "core/ConfigManager.h"
+#include "ssh/SshSession.h"
 
 #include <QWidget>
 
@@ -23,6 +24,7 @@ public:
     WebTerminalTab(
         const SessionProfile &session,
         const QString &secretValue,
+        const SshHostKeyExpectation &hostKeyExpectation = SshHostKeyExpectation(),
         QWidget *parent = nullptr
     );
 
@@ -59,6 +61,7 @@ private:
 
     SessionProfile m_session;
     QString m_secretValue;
+    SshHostKeyExpectation m_hostKeyExpectation;
     AppSettings m_appSettings;
 
     QLabel *m_statusLabel = nullptr;

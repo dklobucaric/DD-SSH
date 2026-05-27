@@ -21,6 +21,7 @@ public:
     BasicTerminalTab(
         const SessionProfile &session,
         const QString &secretValue,
+        const SshHostKeyExpectation &hostKeyExpectation = SshHostKeyExpectation(),
         QWidget *parent = nullptr
     );
 
@@ -49,6 +50,7 @@ private:
 
     SessionProfile m_session;
     QString m_secretValue;
+    SshHostKeyExpectation m_hostKeyExpectation;
 
     QLabel *m_statusLabel = nullptr;
     QPlainTextEdit *m_output = nullptr;

@@ -40,11 +40,13 @@ QString javaScriptStringLiteral(const QString &value)
 WebTerminalTab::WebTerminalTab(
     const SessionProfile &session,
     const QString &secretValue,
+    const SshHostKeyExpectation &hostKeyExpectation,
     QWidget *parent
 )
     : QWidget(parent)
     , m_session(session)
     , m_secretValue(secretValue)
+    , m_hostKeyExpectation(hostKeyExpectation)
 {
     ConfigManager config;
     m_appSettings = config.loadSettings();
@@ -757,7 +759,8 @@ void WebTerminalTab::startShell()
         m_session.port,
         m_session.username,
         authMethod,
-        m_secretValue
+        m_secretValue,
+        m_hostKeyExpectation
     );
 
     if (m_lastTerminalColumns > 0 && m_lastTerminalRows > 0) {

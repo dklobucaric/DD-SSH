@@ -227,6 +227,24 @@ QString hostPortLabel(const QString &host, int port)
     return host + QStringLiteral(":") + QString::number(port);
 }
 
+SshHostKeyExpectation makeHostKeyExpectation(
+    const QString &host,
+    int port,
+    const QString &keyType,
+    const QString &fingerprint,
+    const QString &decision
+)
+{
+    SshHostKeyExpectation expectation;
+    expectation.enabled = true;
+    expectation.host = host;
+    expectation.port = port;
+    expectation.keyType = keyType;
+    expectation.fingerprint = fingerprint;
+    expectation.decision = decision;
+    return expectation;
+}
+
 KnownHostDecisionResult promptKnownHostDecision(
     QWidget *parent,
     KnownHostsManager &knownHosts,
@@ -1591,14 +1609,22 @@ void MainWindow::openSavedSessionShellInternal(const QString &sessionId, bool us
         return;
     }
 
+    const SshHostKeyExpectation hostKeyExpectation = makeHostKeyExpectation(
+        session.host,
+        session.port,
+        handshake.hostKeyType,
+        handshake.hostKeyFingerprint,
+        knownHostResult.decision
+    );
+
     QWidget *terminal = nullptr;
     QString titleSuffix;
 
     if (useWebTerminal) {
-        terminal = new WebTerminalTab(session, secretValue, this);
+        terminal = new WebTerminalTab(session, secretValue, hostKeyExpectation, this);
         titleSuffix = QStringLiteral(" xterm");
     } else {
-        terminal = new BasicTerminalTab(session, secretValue, this);
+        terminal = new BasicTerminalTab(session, secretValue, hostKeyExpectation, this);
         titleSuffix = QStringLiteral(" shell");
     }
 
@@ -1846,13 +1872,22 @@ void MainWindow::testSavedSession(const QString &sessionId)
                 QApplication::setOverrideCursor(Qt::WaitCursor);
                 QApplication::processEvents();
 
+                const SshHostKeyExpectation hostKeyExpectation = makeHostKeyExpectation(
+                    session.host,
+                    session.port,
+                    handshake.hostKeyType,
+                    handshake.hostKeyFingerprint,
+                    knownHostDecision
+                );
+
                 authResult = SshSession::testAuthentication(
                     session.host,
                     session.port,
                     session.username,
                     authMethod,
                     passwordForAuth,
-                    keyPathForAuth
+                    keyPathForAuth,
+                    hostKeyExpectation
                 );
 
                 QApplication::restoreOverrideCursor();
@@ -1861,6 +1896,14 @@ void MainWindow::testSavedSession(const QString &sessionId)
                 authSuccessful = authResult.success;
 
                 output += QStringLiteral("Authentication result:\n");
+
+                if (authResult.hostKeyVerificationAttempted) {
+                    output += QStringLiteral("Host-key verification before auth: ")
+                        + (authResult.hostKeyVerified ? QStringLiteral("VERIFIED") : QStringLiteral("FAILED"))
+                        + QStringLiteral("\n");
+                    output += QStringLiteral("Auth connection key type: ") + authResult.hostKeyType + QStringLiteral("\n");
+                    output += QStringLiteral("Auth connection fingerprint: ") + authResult.hostKeyFingerprint + QStringLiteral("\n");
+                }
 
                 if (authResult.success) {
                     output += QStringLiteral("Status: SUCCESS\n");
@@ -2120,13 +2163,22 @@ void MainWindow::showConnectDialog(bool newSavedSessionMode)
             QApplication::setOverrideCursor(Qt::WaitCursor);
             QApplication::processEvents();
 
+            const SshHostKeyExpectation hostKeyExpectation = makeHostKeyExpectation(
+                dialog.host(),
+                dialog.port(),
+                handshake.hostKeyType,
+                handshake.hostKeyFingerprint,
+                knownHostDecision
+            );
+
             authResult = SshSession::testAuthentication(
                 dialog.host(),
                 dialog.port(),
                 dialog.username(),
                 authMethod,
                 dialog.password(),
-                dialog.keyPath()
+                dialog.keyPath(),
+                hostKeyExpectation
             );
 
             QApplication::restoreOverrideCursor();
@@ -2135,6 +2187,14 @@ void MainWindow::showConnectDialog(bool newSavedSessionMode)
             authSuccessful = authResult.success;
 
             output += QStringLiteral("Authentication result:\n");
+
+            if (authResult.hostKeyVerificationAttempted) {
+                output += QStringLiteral("Host-key verification before auth: ")
+                    + (authResult.hostKeyVerified ? QStringLiteral("VERIFIED") : QStringLiteral("FAILED"))
+                    + QStringLiteral("\n");
+                output += QStringLiteral("Auth connection key type: ") + authResult.hostKeyType + QStringLiteral("\n");
+                output += QStringLiteral("Auth connection fingerprint: ") + authResult.hostKeyFingerprint + QStringLiteral("\n");
+            }
 
             if (authResult.success) {
                 output += QStringLiteral("Status: SUCCESS\n");

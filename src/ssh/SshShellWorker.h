@@ -19,6 +19,7 @@ public:
         const QString &username,
         SshAuthMethod authMethod,
         const QString &secretValue,
+        const SshHostKeyExpectation &hostKeyExpectation = SshHostKeyExpectation(),
         QObject *parent = nullptr
     );
 
@@ -46,6 +47,7 @@ private:
     QString m_username;
     SshAuthMethod m_authMethod = SshAuthMethod::Password;
     QString m_secretValue;
+    SshHostKeyExpectation m_hostKeyExpectation;
 
     QMutex m_inputMutex;
     QStringList m_pendingInput;
