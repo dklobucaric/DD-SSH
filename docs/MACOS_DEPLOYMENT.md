@@ -1,6 +1,6 @@
 # DD-SSH macOS Deployment Guide
 
-**Checkpoint:** dev 0.1.6.2 — Andromeda  
+**Checkpoint:** dev 0.1.6.4 — Andromeda  
 **Phase:** macOS Intel app/DMG foundation
 
 This guide documents the first deployable macOS package path for DD-SSH.
@@ -9,7 +9,7 @@ The goal of this checkpoint is practical tester distribution:
 
 ```text
 DD-SSH.app
-DD-SSH-0.1.6.2-macOS-x86_64.dmg
+DD-SSH-0.1.6.4-macOS-x86_64.dmg
 ```
 
 The generated DMG contains:
@@ -51,7 +51,7 @@ QT_DIR=$HOME/Qt/6.11.1/macos
 BUILD_DIR=build-macos-release
 DIST_DIR=dist/macos
 MACOS_ARCH=x86_64
-DD_SSH_MACOS_VERSION=0.1.6.2
+DD_SSH_MACOS_VERSION=0.1.6.4
 CODESIGN_ADHOC=1
 ```
 
@@ -59,7 +59,7 @@ Expected output:
 
 ```text
 dist/macos/DD-SSH.app
-dist/macos/DD-SSH-0.1.6.2-macOS-x86_64.dmg
+dist/macos/DD-SSH-0.1.6.4-macOS-x86_64.dmg
 ```
 
 ---
@@ -95,7 +95,7 @@ open dist/macos/DD-SSH.app
 Open the DMG:
 
 ```bash
-open dist/macos/DD-SSH-0.1.6.2-macOS-x86_64.dmg
+open dist/macos/DD-SSH-0.1.6.4-macOS-x86_64.dmg
 ```
 
 Then drag `DD-SSH.app` to `Applications` and launch it from there.
@@ -190,7 +190,7 @@ On a clean tester Mac:
 [ ] DMG opens
 [ ] DD-SSH.app can be dragged to Applications
 [ ] App opens via right-click -> Open if Gatekeeper blocks first launch
-[ ] About shows dev 0.1.6.2
+[ ] About shows dev 0.1.6.4
 [ ] Settings opens
 [ ] Config path is created
 [ ] Saved session can be created/imported

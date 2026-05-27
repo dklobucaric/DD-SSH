@@ -17,14 +17,14 @@ DD-SSH is designed for practical sysadmin use: saved sessions, one portable JSON
 
 ## Current status
 
-**Development checkpoint:** `dev 0.1.6.3`
+**Development checkpoint:** `dev 0.1.6.4`
 **Codename:** Andromeda
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
-**Current phase:** SSH trust-chain hardening
+**Current phase:** repo hygiene and release artifact workflow
 
 DD-SSH is now in its early packaging phase. It is not a stable 1.0 release yet, but the core workflow is functional and has been validated on Linux, Windows 10, Windows 11, and an Intel macOS build machine. Native Windows Debug/Release builds, a copied standalone Windows deployment folder, a first Debian package, and a first macOS Intel `.app` / `.dmg` deployment experiment have been tested.
 
-The current hardening checkpoint keeps the packaging foundation intact and closes the SSH trust-chain gap found during source audit:
+The current repo-hygiene checkpoint keeps the 0.1.6.3 SSH trust-chain hardening intact and adds release-artifact rules so generated packages stay out of Git:
 
 - `dev 0.1.5.6` proved the Windows standalone deployment folder can run outside the build tree without manually extending `PATH`.
 - `dev 0.1.5.7` fixed portable `known_hosts` behavior so one shared `dd-ssh.json` can carry multiple legitimate host-key algorithms per `host:port`.
@@ -32,8 +32,9 @@ The current hardening checkpoint keeps the packaging foundation intact and close
 - `dev 0.1.6.1` and `dev 0.1.6.1.1` added the first Debian package workflow, screenshots, and packaging tutorial.
 - `dev 0.1.6.2` added the first macOS Intel app/DMG build and deployment documentation, including a DMG layout with an Applications shortcut.
 - `dev 0.1.6.3` verifies the approved SSH host key again in the real authentication/shell connection before any password or private key is sent.
+- `dev 0.1.6.4` adds `.gitignore` protection, release-artifact documentation, and checksum helpers for Linux, macOS, and Windows.
 
-In `dev 0.1.6.3`, terminal opens and auth tests now carry the preflight-approved host-key type/fingerprint into the real auth/shell connection. If that second connection reports a different key, DD-SSH aborts before authentication and reports that no password/private key was sent.
+In `dev 0.1.6.4`, runtime/SSH behavior is intentionally unchanged from `dev 0.1.6.3`. The focus is repository hygiene: generated `dist/`, build folders, `.deb`, `.dmg`, `.zip`, AppImage/MSI/package artifacts, and OS junk files are kept out of Git. Release packages should be attached to GitHub Releases with a generated `SHA256SUMS` file.
 
 The portable known-host model now supports multi-key storage per `host:port`:
 
@@ -136,6 +137,7 @@ Before tagging, run:
 - [Test Matrix](docs/TEST_MATRIX.md)
 - [Windows Build Guide](docs/WINDOWS_BUILD.md)
 - [Windows Deployment Guide](docs/WINDOWS_DEPLOYMENT.md)
+- [Release Artifacts](docs/RELEASE_ARTIFACTS.md)
 - [macOS Build Guide](docs/MACOS_BUILD.md)
 - [macOS Deployment Guide](docs/MACOS_DEPLOYMENT.md)
 - [Release Notes Draft](docs/RELEASE_NOTES_v0.2.0-alpha.md)
@@ -391,6 +393,7 @@ Start here:
 - [Building](docs/BUILDING.md)
 - [Windows Build Guide](docs/WINDOWS_BUILD.md)
 - [Windows Deployment Guide](docs/WINDOWS_DEPLOYMENT.md)
+- [Release Artifacts](docs/RELEASE_ARTIFACTS.md)
 - [macOS Build Guide](docs/MACOS_BUILD.md)
 - [macOS Deployment Guide](docs/MACOS_DEPLOYMENT.md)
 - [Roadmap](docs/ROADMAP.md)
@@ -440,7 +443,7 @@ Short version:
 ```bash
 ./scripts/linux-build-release.sh
 ./scripts/linux-package-deb.sh
-sudo apt install ./dist/deb/dd-ssh_0.1.6.2_amd64.deb
+sudo apt install ./dist/deb/dd-ssh_0.1.6.4_amd64.deb
 dd-ssh
 ```
 
@@ -458,7 +461,7 @@ Short version on the validated Intel build machine:
 ./scripts/macos-build-release.sh
 ./scripts/macos-deploy-release.sh
 open dist/macos/DD-SSH.app
-open dist/macos/DD-SSH-0.1.6.2-macOS-x86_64.dmg
+open dist/macos/DD-SSH-0.1.6.4-macOS-x86_64.dmg
 ```
 
 The generated DMG contains `DD-SSH.app` and an `Applications` shortcut so testers can drag the app into `/Applications`. The first macOS package is unsigned and not notarized; Gatekeeper may require right-click → Open on tester machines. The initial target is Intel macOS; Apple Silicon support is expected via Rosetta for this build, with native arm64/universal builds planned later.

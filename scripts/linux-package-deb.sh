@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 
 PACKAGE_NAME="${PACKAGE_NAME:-dd-ssh}"
-DEB_VERSION="${DD_SSH_DEB_VERSION:-0.1.6.2}"
+DEB_VERSION="${DD_SSH_DEB_VERSION:-0.1.6.4}"
 ARCH="${DEB_ARCH:-$(dpkg --print-architecture 2>/dev/null || echo amd64)}"
 BUILD_DIR="${BUILD_DIR:-${PROJECT_ROOT}/build-linux-release}"
 OUT_DIR="${OUT_DIR:-${PROJECT_ROOT}/dist/deb}"

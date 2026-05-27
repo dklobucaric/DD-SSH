@@ -1,6 +1,6 @@
 # DD-SSH Debian Package Tutorial
 
-**Checkpoint:** dev 0.1.6.2 — Andromeda  
+**Checkpoint:** dev 0.1.6.4 — Andromeda  
 **Goal:** build, package, install, test, and remove the first DD-SSH `.deb` package.
 
 This tutorial is the practical copy/paste path for creating a local Debian package from the DD-SSH source tree.
@@ -63,7 +63,7 @@ Optional local smoke test before packaging:
 Check the About dialog and confirm it shows:
 
 ```text
-Version: dev 0.1.6.2
+Version: dev 0.1.6.4
 Codename: Andromeda
 ```
 
@@ -76,7 +76,7 @@ Codename: Andromeda
 Expected output:
 
 ```text
-dist/deb/dd-ssh_0.1.6.2_amd64.deb
+dist/deb/dd-ssh_0.1.6.4_amd64.deb
 ```
 
 The script stages the package with `cmake --install`, writes Debian control metadata, copies maintainer hooks, calculates installed size, and builds the package with `dpkg-deb`.
@@ -84,13 +84,13 @@ The script stages the package with `cmake --install`, writes Debian control meta
 ## 4. Inspect the package
 
 ```bash
-dpkg-deb -I dist/deb/dd-ssh_0.1.6.2_amd64.deb
+dpkg-deb -I dist/deb/dd-ssh_0.1.6.4_amd64.deb
 ```
 
 List the package contents:
 
 ```bash
-dpkg-deb -c dist/deb/dd-ssh_0.1.6.2_amd64.deb | less
+dpkg-deb -c dist/deb/dd-ssh_0.1.6.4_amd64.deb | less
 ```
 
 Useful paths to verify:
@@ -108,7 +108,7 @@ Useful paths to verify:
 ## 5. Install locally
 
 ```bash
-sudo apt install ./dist/deb/dd-ssh_0.1.6.2_amd64.deb
+sudo apt install ./dist/deb/dd-ssh_0.1.6.4_amd64.deb
 ```
 
 Run from terminal:
@@ -126,7 +126,7 @@ Minimum test pass:
 ```text
 [ ] DD-SSH starts from terminal with `dd-ssh`
 [ ] app icon appears
-[ ] About shows dev 0.1.6.2
+[ ] About shows dev 0.1.6.4
 [ ] existing user config is preserved
 [ ] Settings opens and shows the config path
 [ ] saved session list loads
@@ -159,7 +159,7 @@ Remove that manually only if you intentionally want to delete saved sessions/sec
 The package script accepts an override:
 
 ```bash
-DD_SSH_DEB_VERSION=0.1.6.2 ./scripts/linux-package-deb.sh
+DD_SSH_DEB_VERSION=0.1.6.4 ./scripts/linux-package-deb.sh
 ```
 
 It also accepts a manual dependency override if `dpkg-shlibdeps` cannot produce suitable dependencies for your distribution:

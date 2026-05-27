@@ -1,3 +1,19 @@
+## dev 0.1.6.4 — Andromeda
+
+Repo hygiene and release artifact workflow.
+
+- Updated the project identity to `dev 0.1.6.4`.
+- Added `.gitignore` protection for generated build folders, `dist/`, package artifacts, OS junk files, local logs, and IDE state.
+- Added release-artifact documentation explaining that `.deb`, `.dmg`, `.zip`, AppImage/MSI/package outputs, and Windows deployment folders belong in GitHub Releases, not normal commits.
+- Added SHA256 checksum helpers for Linux, macOS, and Windows:
+  - `scripts/generate-checksums-linux.sh`
+  - `scripts/generate-checksums-macos.sh`
+  - `scripts/generate-checksums-windows.ps1`
+  - `scripts/generate-checksums-windows.bat`
+- Added a reusable release-notes template.
+- Updated Linux/macOS packaging script defaults to `0.1.6.4`.
+- Kept SSH/session/terminal/config runtime behavior unchanged from `dev 0.1.6.3`.
+
 ## dev 0.1.6.3 — Andromeda
 
 Phase: SSH trust-chain hardening

@@ -1,40 +1,61 @@
-# Build directories
+# DD-SSH repository hygiene
+# Source code, docs, resources, packaging templates, and helper scripts belong in Git.
+# Generated build folders and release artifacts belong outside Git / in GitHub Release assets.
+
+# Build folders
 build/
 build-*/
+build-linux-release/
+build-win-release/
+build-macos-release/
+cmake-build-*/
+out/
 
-# Qt Creator user files
-*.user
-*.user.*
-
-# CMake
+# CMake/Ninja generated files
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
 compile_commands.json
+.ninja_*
+build.ninja
+install_manifest.txt
 
-# Binaries
-*.o
-*.so
-*.dll
-*.dylib
-*.exe
-*.app
-
-# Local/dev config
-dd-ssh.json
-*.local.json
-
-# Logs
-*.log
-logs/
-
-# Build/output folders
-build/
-build-*/
+# Release/dist artifacts
 dist/
-
-# Generated release artifacts
 *.deb
 *.dmg
-*.AppImage
 *.zip
+*.AppImage
+*.msi
+*.pkg
+*.tar.gz
+*.tgz
+
+# Generated binaries/libraries/objects
+*.exe
+*.dll
+*.so
+*.dylib
+*.o
+*.obj
+*.a
+*.lib
+*.pdb
+*.ilk
+
+# Qt Creator / IDE local state
+*.user
+*.user.*
+*.autosave
+
+# OS junk
+.DS_Store
+.AppleDouble
+.LSOverride
+__MACOSX/
+Thumbs.db
+desktop.ini
+
+# Logs and local diagnostics
+*.log
+diagnostics/

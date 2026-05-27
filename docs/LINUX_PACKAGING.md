@@ -1,6 +1,6 @@
 # DD-SSH Linux Packaging
 
-**Checkpoint:** dev 0.1.6.2 — Andromeda  
+**Checkpoint:** dev 0.1.6.4 — Andromeda  
 **Phase:** README screenshots and Debian packaging tutorial polish
 
 This document describes the first Linux packaging path for DD-SSH. For the copy/paste packaging workflow, see [Debian Package Tutorial](DEBIAN_PACKAGE_TUTORIAL.md).
@@ -9,7 +9,7 @@ The goal is not yet a perfect distribution-grade package. The goal is a practica
 
 ## Packaging strategy
 
-`dev 0.1.6.2` continues to use the **system-runtime Debian package** path:
+`dev 0.1.6.4` continues to use the **system-runtime Debian package** path:
 
 - DD-SSH is built locally with CMake.
 - The package installs `/usr/bin/dd-ssh`.
@@ -61,25 +61,25 @@ From the project root:
 Expected output:
 
 ```text
-dist/deb/dd-ssh_0.1.6.2_amd64.deb
+dist/deb/dd-ssh_0.1.6.4_amd64.deb
 ```
 
 Inspect the package metadata:
 
 ```bash
-dpkg-deb -I dist/deb/dd-ssh_0.1.6.2_amd64.deb
+dpkg-deb -I dist/deb/dd-ssh_0.1.6.4_amd64.deb
 ```
 
 List package contents:
 
 ```bash
-dpkg-deb -c dist/deb/dd-ssh_0.1.6.2_amd64.deb
+dpkg-deb -c dist/deb/dd-ssh_0.1.6.4_amd64.deb
 ```
 
 ## Install locally
 
 ```bash
-sudo apt install ./dist/deb/dd-ssh_0.1.6.2_amd64.deb
+sudo apt install ./dist/deb/dd-ssh_0.1.6.4_amd64.deb
 ```
 
 Then run:
@@ -128,7 +128,7 @@ After installing the `.deb`, verify:
 [ ] dd-ssh starts from terminal
 [ ] desktop launcher appears
 [ ] app icon appears
-[ ] About shows dev 0.1.6.2
+[ ] About shows dev 0.1.6.4
 [ ] settings dialog opens
 [ ] existing user config is preserved
 [ ] password SSH login works

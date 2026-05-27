@@ -63,6 +63,35 @@ Known limitations:
 - No Multi-Exec yet
 ```
 
+
+## Release artifacts
+
+Do not commit generated packages or deployment folders. Upload them to GitHub Releases.
+
+Expected release assets may include:
+
+```text
+DD-SSH-dev-0.1.6.4-windows-portable.zip
+dd-ssh_0.1.6.4_amd64.deb
+DD-SSH-0.1.6.4-macOS-x86_64.dmg
+SHA256SUMS
+```
+
+Generate checksums before uploading:
+
+```bash
+./scripts/generate-checksums-linux.sh
+./scripts/generate-checksums-macos.sh
+```
+
+Windows:
+
+```cmd
+scripts\generate-checksums-windows.bat
+```
+
+See [Release Artifacts](RELEASE_ARTIFACTS.md).
+
 ## Tagging
 
 Example:
@@ -102,7 +131,7 @@ Deployment/installer artifacts are not required for the first internal Windows v
 
 ## Windows deployment folder test
 
-Current stabilization checkpoint: `dev 0.1.5.9 — stabilization docs and release polish`.
+Current packaging hygiene checkpoint: `dev 0.1.6.4 — repo hygiene and release artifact workflow`.
 
 Before a public alpha release that includes Windows notes:
 

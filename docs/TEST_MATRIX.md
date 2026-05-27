@@ -1,6 +1,6 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.6.3 — Andromeda
+**Checkpoint:** dev 0.1.6.4 — Andromeda
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
 **Phase:** SSH trust-chain hardening
 
@@ -21,7 +21,7 @@ TODO              Not implemented yet.
 | Area | Test | Expected result | Status | Notes |
 |---|---|---|---|---|
 | Build | `cmake --build build --clean-first` | Build completes and links `dd-ssh` | PASS | Re-tested frequently during development. |
-| Linux Debian package | `./scripts/linux-package-deb.sh` | Creates `dist/deb/dd-ssh_0.1.6.2_amd64.deb` | PASS | First `.deb` package was built, installed, launched, and visually validated on Linux; the package version is carried forward for this checkpoint. |
+| Linux Debian package | `./scripts/linux-package-deb.sh` | Creates `dist/deb/dd-ssh_0.1.6.4_amd64.deb` | PASS | First `.deb` package was built, installed, launched, and visually validated on Linux; the package version is carried forward for this checkpoint. |
 | Launch | `./build/dd-ssh` | App opens | PASS | Linux primary test platform. |
 | Windows configure | CMake with MSVC/Qt/vcpkg/pkgconf | Configure completes | PASS | Confirmed on native Windows branch. |
 | Windows Debug build | `cmake --build build-win` | `dd-ssh.exe` builds | PASS | Confirmed on native Windows. |
@@ -32,7 +32,7 @@ TODO              Not implemented yet.
 | Windows deployed launch | `dist\windows-release\dd-ssh.exe` from normal Command Prompt | App starts without Qt/vcpkg PATH | PASS | Confirmed on real Windows 10/11 machines during standalone deployment testing. |
 | Clean Windows 10 deploy-folder test | Copy `dist\windows-release` to a clean Windows 10 machine | App launches without dev tools installed | PASS | App launches, icon appears, import/connect works, and xterm terminal is fast. |
 | macOS Intel build | `./scripts/macos-build-release.sh` | Creates `build-macos-release/dd-ssh.app` | PASS | First Intel build validated on macOS 15.7.5 / x86_64 with Qt 6.11.1 and Homebrew libssh. |
-| macOS Intel DMG | `./scripts/macos-deploy-release.sh` | Creates `dist/macos/DD-SSH-0.1.6.2-macOS-x86_64.dmg` | PASS | First unsigned DMG workflow validated locally; includes DD-SSH.app plus Applications shortcut. |
+| macOS Intel DMG | `./scripts/macos-deploy-release.sh` | Creates `dist/macos/DD-SSH-0.1.6.4-macOS-x86_64.dmg` | PASS | First unsigned DMG workflow validated locally; includes DD-SSH.app plus Applications shortcut. |
 | About | Help → About DD-SSH | Shows version/codename/milestone/config path | PASS | Verified after version/codename work. |
 | Version | About dialog | Shows current checkpoint version | PASS | Should be checked after every patch. |
 | Codename | About dialog | Shows `Andromeda` | PASS | Current 0.1.x codename line. |

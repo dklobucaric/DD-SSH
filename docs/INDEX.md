@@ -33,14 +33,16 @@ This directory contains the working documentation for DD-SSH.
 - [Roadmap](ROADMAP.md) — version plan and future features
 - [Test Matrix](TEST_MATRIX.md) — manual validation checklist
 - [Changelog](CHANGELOG.md) — checkpoint history
-- [Release Process](RELEASE_PROCESS.md) — future release checklist
+- [Release Process](RELEASE_PROCESS.md)
+- [Release Artifacts](RELEASE_ARTIFACTS.md)
+- [Release Notes Template](RELEASE_NOTES_TEMPLATE.md) — future release checklist
 - [Release Checklist](RELEASE_CHECKLIST.md) — focused checkpoint smoke-test checklist
 - [Stabilization Checkpoint 0.1.5.9](STABILIZATION_CHECKPOINT_0.1.5.9.md) — validated stabilization summary
 
 ## Current checkpoint
 
 ```text
-Version: dev 0.1.6.2
+Version: dev 0.1.6.4
 Codename: Andromeda
 Milestone: MF 0.2 candidate
 Phase: macOS Intel app/DMG foundation
