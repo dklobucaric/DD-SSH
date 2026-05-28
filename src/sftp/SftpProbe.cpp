@@ -183,7 +183,7 @@ bool verifyConnectedServerHostKey(
             result->success = false;
             result->message = QStringLiteral("SSH host key verification failed before SFTP authentication.");
             result->error =
-                QStringLiteral("The SFTP probe connection reported a different SSH host key than the key approved during the preflight check. Authentication was not attempted.\n")
+                QStringLiteral("The SFTP connection reported a different SSH host key than the key approved during the preflight check. Authentication was not attempted.\n")
                 + QStringLiteral("Expected host: ") + expectation.host + QStringLiteral(":") + QString::number(expectation.port) + QStringLiteral("\n")
                 + QStringLiteral("Expected key type: ") + expectation.keyType + QStringLiteral("\n")
                 + QStringLiteral("Expected fingerprint: ") + expectation.fingerprint + QStringLiteral("\n")
@@ -229,7 +229,7 @@ bool authenticateSession(
         if (!tempKeyFile.open()) {
             if (result != nullptr) {
                 result->success = false;
-                result->message = QStringLiteral("Could not create temporary private key file for SFTP probe.");
+                result->message = QStringLiteral("Could not create temporary private key file for SFTP directory listing.");
                 result->error = tempKeyFile.errorString();
                 result->sshErrorCode = ssh_get_error_code(session);
             }
@@ -257,7 +257,7 @@ bool authenticateSession(
         if (importRc != SSH_OK || privateKey == nullptr) {
             if (result != nullptr) {
                 result->success = false;
-                result->message = QStringLiteral("Could not load private key for SFTP probe.");
+                result->message = QStringLiteral("Could not load private key for SFTP directory listing.");
                 result->authReturnCode = importRc;
                 result->sshErrorCode = ssh_get_error_code(session);
                 result->error = QString::fromUtf8(ssh_get_error(session));
@@ -286,13 +286,13 @@ bool authenticateSession(
             result->error = QString::fromUtf8(ssh_get_error(session));
 
             if (authRc == SSH_AUTH_DENIED) {
-                result->message = QStringLiteral("SFTP probe authentication denied by server.");
+                result->message = QStringLiteral("SFTP directory listing authentication denied by server.");
             } else if (authRc == SSH_AUTH_PARTIAL) {
-                result->message = QStringLiteral("SFTP probe authentication partially successful; additional method required.");
+                result->message = QStringLiteral("SFTP directory listing authentication partially successful; additional method required.");
             } else if (authRc == SSH_AUTH_AGAIN) {
-                result->message = QStringLiteral("SFTP probe authentication needs to be retried.");
+                result->message = QStringLiteral("SFTP directory listing authentication needs to be retried.");
             } else {
-                result->message = QStringLiteral("SFTP probe authentication failed.");
+                result->message = QStringLiteral("SFTP directory listing authentication failed.");
             }
         }
 
@@ -317,7 +317,7 @@ SftpProbeResult SftpProbe::listRemoteDirectory(
     SftpProbeResult result;
     result.remotePath = remotePath.trimmed().isEmpty() ? QStringLiteral(".") : remotePath.trimmed();
 
-    AppLogger::info(QStringLiteral("SFTP probe started: host=") + host
+    AppLogger::info(QStringLiteral("SFTP directory listing started: host=") + host
         + QStringLiteral(", port=") + QString::number(port)
         + QStringLiteral(", user=") + username
         + QStringLiteral(", method=") + (authMethod == SshAuthMethod::Password ? QStringLiteral("password") : QStringLiteral("private-key")));
@@ -326,9 +326,9 @@ SftpProbeResult SftpProbe::listRemoteDirectory(
 
     if (session == nullptr) {
         result.success = false;
-        result.message = QStringLiteral("SFTP probe failed before connect.");
+        result.message = QStringLiteral("SFTP directory listing failed before connect.");
         result.error = QStringLiteral("ssh_new() failed: could not allocate SSH session.");
-        AppLogger::error(QStringLiteral("SFTP probe failed before connect: ssh_new failed"));
+        AppLogger::error(QStringLiteral("SFTP directory listing failed before connect: ssh_new failed"));
         return result;
     }
 
@@ -349,10 +349,10 @@ SftpProbeResult SftpProbe::listRemoteDirectory(
 
     if (connectRc != SSH_OK) {
         result.success = false;
-        result.message = QStringLiteral("SSH connect failed during SFTP probe.");
+        result.message = QStringLiteral("SSH connect failed during SFTP directory listing.");
         result.sshErrorCode = ssh_get_error_code(session);
         result.error = QString::fromUtf8(ssh_get_error(session));
-        AppLogger::error(QStringLiteral("SFTP probe connect failed: host=") + host
+        AppLogger::error(QStringLiteral("SFTP directory listing connect failed: host=") + host
             + QStringLiteral(", port=") + QString::number(port)
             + QStringLiteral(", error=") + result.error);
         ssh_free(session);
@@ -360,7 +360,7 @@ SftpProbeResult SftpProbe::listRemoteDirectory(
     }
 
     if (!verifyConnectedServerHostKey(session, hostKeyExpectation, &result)) {
-        AppLogger::error(QStringLiteral("SFTP probe host-key verification failed before auth: host=") + host
+        AppLogger::error(QStringLiteral("SFTP directory listing host-key verification failed before auth: host=") + host
             + QStringLiteral(", port=") + QString::number(port)
             + QStringLiteral(", error=") + result.error);
         ssh_disconnect(session);
@@ -369,12 +369,12 @@ SftpProbeResult SftpProbe::listRemoteDirectory(
     }
 
     if (hostKeyExpectation.enabled) {
-        AppLogger::info(QStringLiteral("SFTP probe host-key verification OK: host=") + host
+        AppLogger::info(QStringLiteral("SFTP directory listing host-key verification OK: host=") + host
             + QStringLiteral(", port=") + QString::number(port));
     }
 
     if (!authenticateSession(session, username, authMethod, secretValue, &result)) {
-        AppLogger::warn(QStringLiteral("SFTP probe authentication failed: host=") + host
+        AppLogger::warn(QStringLiteral("SFTP directory listing authentication failed: host=") + host
             + QStringLiteral(", port=") + QString::number(port)
             + QStringLiteral(", message=") + result.message
             + QStringLiteral(", error=") + result.error);
@@ -383,7 +383,7 @@ SftpProbeResult SftpProbe::listRemoteDirectory(
         return result;
     }
 
-    AppLogger::info(QStringLiteral("SFTP probe authentication successful: host=") + host
+    AppLogger::info(QStringLiteral("SFTP directory listing authentication successful: host=") + host
         + QStringLiteral(", port=") + QString::number(port));
 
     sftp_session sftp = sftp_new(session);
@@ -393,7 +393,7 @@ SftpProbeResult SftpProbe::listRemoteDirectory(
         result.message = QStringLiteral("Could not allocate SFTP session.");
         result.sshErrorCode = ssh_get_error_code(session);
         result.error = QString::fromUtf8(ssh_get_error(session));
-        AppLogger::error(QStringLiteral("SFTP probe allocation failed: ") + result.error);
+        AppLogger::error(QStringLiteral("SFTP directory listing allocation failed: ") + result.error);
         ssh_disconnect(session);
         ssh_free(session);
         return result;
@@ -406,7 +406,7 @@ SftpProbeResult SftpProbe::listRemoteDirectory(
         result.message = QStringLiteral("Could not initialize SFTP subsystem.");
         result.sftpErrorCode = sftp_get_error(sftp);
         result.error = QString::fromUtf8(ssh_get_error(session));
-        AppLogger::error(QStringLiteral("SFTP probe subsystem init failed: ") + result.error
+        AppLogger::error(QStringLiteral("SFTP directory listing subsystem init failed: ") + result.error
             + QStringLiteral(", sftpError=") + QString::number(result.sftpErrorCode));
         sftp_free(sftp);
         ssh_disconnect(session);
@@ -419,10 +419,10 @@ SftpProbeResult SftpProbe::listRemoteDirectory(
 
     if (directory == nullptr) {
         result.success = false;
-        result.message = QStringLiteral("Could not open remote directory for SFTP probe.");
+        result.message = QStringLiteral("Could not open remote directory for SFTP directory listing.");
         result.sftpErrorCode = sftp_get_error(sftp);
         result.error = QString::fromUtf8(ssh_get_error(session));
-        AppLogger::error(QStringLiteral("SFTP probe opendir failed: sftpError=") + QString::number(result.sftpErrorCode)
+        AppLogger::error(QStringLiteral("SFTP directory listing opendir failed: sftpError=") + QString::number(result.sftpErrorCode)
             + QStringLiteral(", error=") + result.error);
         sftp_free(sftp);
         ssh_disconnect(session);
@@ -455,7 +455,7 @@ SftpProbeResult SftpProbe::listRemoteDirectory(
         result.message = QStringLiteral("Remote directory listing stopped before EOF.");
         result.sftpErrorCode = sftp_get_error(sftp);
         result.error = QString::fromUtf8(ssh_get_error(session));
-        AppLogger::warn(QStringLiteral("SFTP probe readdir stopped before EOF: sftpError=") + QString::number(result.sftpErrorCode)
+        AppLogger::warn(QStringLiteral("SFTP directory listing readdir stopped before EOF: sftpError=") + QString::number(result.sftpErrorCode)
             + QStringLiteral(", error=") + result.error);
         sftp_closedir(directory);
         sftp_free(sftp);
@@ -472,7 +472,7 @@ SftpProbeResult SftpProbe::listRemoteDirectory(
     result.success = true;
     result.message = QStringLiteral("SFTP subsystem initialized and remote directory listed successfully.");
 
-    AppLogger::info(QStringLiteral("SFTP probe successful: host=") + host
+    AppLogger::info(QStringLiteral("SFTP directory listing successful: host=") + host
         + QStringLiteral(", port=") + QString::number(port)
         + QStringLiteral(", entries=") + QString::number(result.entries.size()));
 

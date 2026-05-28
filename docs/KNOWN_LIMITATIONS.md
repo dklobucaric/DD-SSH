@@ -1,6 +1,6 @@
 # DD-SSH Known Limitations
 
-**Checkpoint:** dev 0.1.7.3 — Andromeda
+**Checkpoint:** dev 0.1.7.4.1 — Andromeda
 
 This document lists limitations that should be visible to testers. Nothing here is hidden or sugar-coated.
 
@@ -29,12 +29,12 @@ This document lists limitations that should be visible to testers. Nothing here 
 
 ## Feature limitations
 
-`dev 0.1.7.3` adds only the first SFTP proof-of-concept path. It can open the SFTP subsystem and list the remote `.` directory into a text tab, but it is not a graphical file manager yet.
+`dev 0.1.7.4.1` keeps only the first graphical read-only remote SFTP browser and bugfix polish. `dev 0.1.7.4` added the browser. It can browse remote directories, but it is not a complete two-panel file manager yet.
 
 Not implemented yet:
 
-- Graphical remote file browser, upload, and download
-- Split panes
+- Upload, download, and two-panel local/remote file browsing
+- Delete, rename, chmod, mkdir, transfer queue, recursive folder transfer
 - Multi-Exec
 - Keep-alive settings
 - Portable mode next to binary
@@ -98,3 +98,8 @@ Known macOS alpha notes:
 - The DMG is unsigned and not notarized. Gatekeeper may require right-click → Open.
 - macOS 12.x is not the primary target for the Qt 6.11.1 build; older macOS support may need a separate legacy Qt build experiment.
 - Homebrew libssh/OpenSSL/zlib dependencies are bundled into the app during deployment, but tester machines should still be checked with `otool -L` if launch fails.
+
+
+## SFTP traffic monitor
+
+SFTP activity is not yet included in the live Session Traffic monitor. This is planned for the upload/download transfer phase, not the first read-only browser polish checkpoint.

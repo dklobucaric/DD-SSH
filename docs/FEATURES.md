@@ -19,7 +19,7 @@
 - Duplicate target warning for same `username + host + port`
 - Sidebar context menu
 - Double-click opens xterm.js terminal
-- File Manager / SFTP probe action for the future SFTP development track
+- Read-only File Manager / SFTP browser action for the future SFTP development track
 
 ### SSH/auth
 
@@ -47,9 +47,11 @@
 ### File transfer / File Manager
 
 - Architecture documentation exists in `docs/FILE_TRANSFER_ARCHITECTURE.md`
-- Saved-session context menu includes `Open File Manager (SFTP probe)`
-- The SFTP probe uses saved session data, existing known-host preflight, approved host-key verification before auth, libssh SFTP initialization, and a remote `.` directory listing
-- No graphical file browser, upload, download, delete, rename, queue, or progress UI is implemented yet
+- Saved-session context menu includes `Open File Manager (read-only)`
+- The SFTP browser uses saved session data, existing known-host preflight, approved host-key verification before auth, libssh SFTP initialization, and remote directory listing
+- Read-only browser UI includes remote path, `Go`, `Up`, `Refresh`, and a table with name/type/size/modified/permissions
+- Double-clicking directories navigates into them
+- Upload, download, delete, rename, queue, local file browsing, and transfer progress/cancel UI are not implemented yet
 
 ### Config
 
@@ -132,3 +134,8 @@ The repository now includes public-alpha preparation documents:
 - `docs/RELEASE_NOTES_v0.2.0-alpha.md`
 - `docs/KNOWN_LIMITATIONS.md`
 - GitHub issue templates under `.github/ISSUE_TEMPLATE/`
+
+
+## SFTP browser polish
+
+`dev 0.1.7.4.1` disables alternating row colors for readable dark-theme tables, includes SFTP browser tabs in app-exit safety confirmation, and hints tab scrolling for crowded tab bars.

@@ -6,9 +6,9 @@ project(DD_SSH
     LANGUAGES CXX
 )
 
-set(DD_SSH_VERSION_STRING "dev 0.1.7.3")
+set(DD_SSH_VERSION_STRING "dev 0.1.7.4.1")
 set(DD_SSH_CODENAME_STRING "Andromeda")
-set(DD_SSH_MILESTONE_STRING "SFTP connection proof of concept")
+set(DD_SSH_MILESTONE_STRING "Read-only SFTP browser bugfix polish")
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -35,6 +35,8 @@ qt_add_executable(dd-ssh
     src/ui/WebTerminalTab.cpp
     src/ui/SettingsDialog.h
     src/ui/SettingsDialog.cpp
+    src/ui/SftpBrowserTab.h
+    src/ui/SftpBrowserTab.cpp
 
     src/core/SessionProfile.h
     src/core/ConfigManager.h

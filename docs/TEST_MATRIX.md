@@ -1,328 +1,95 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.7.3 — Andromeda
-**Milestone:** SFTP connection proof of concept
-**Phase:** First libssh SFTP probe from saved sessions
+**Checkpoint:** dev 0.1.7.4.1 — Andromeda  
+**Milestone:** Read-only SFTP browser bugfix polish  
+**Phase:** First graphical read-only SFTP browser tab, cross-platform polish before commit
 
-This matrix tracks what has been confirmed manually, what is implemented but should be re-tested before a public alpha tag, and what is still planned.
+## dev 0.1.7.4.1 — read-only SFTP browser bugfix smoke test
 
+[ ] About shows dev 0.1.7.4.1  
+[ ] Saved-session context menu shows `Open File Manager (read-only)`  
+[ ] Browser opens and lists remote `.` on a known SFTP-enabled server  
+[ ] SFTP file table has readable rows in dark theme; no white alternating rows with white text  
+[ ] Browser button shows `↑ Up` and navigates to the parent path  
+[ ] With many tabs open, tab bar still allows navigation/scrolling where the platform supports it  
+[ ] Closing the whole app with active SSH terminal tab(s) lists SSH terminal sessions in the confirmation  
+[ ] Closing the whole app with open SFTP browser tab(s) lists SFTP browser tabs in the confirmation  
+[ ] Closing the whole app with both SSH and SFTP tabs lists both groups  
+[ ] Cancelling the exit confirmation keeps the app open  
+[ ] SFTP traffic is not expected in the live Session Traffic monitor yet  
+[ ] Existing xterm.js terminal, paste paths, Ctrl+C interrupt, known-host checks, and logging still work  
+
+## dev 0.1.7.4 — read-only remote file browser smoke test
+
+[ ] About shows dev 0.1.7.4  
+[ ] Welcome tab mentions the read-only remote file browser  
+[ ] Saved-session context menu shows `Open File Manager (read-only)`  
+[ ] Browser uses the existing known-host prompt for unknown/additional/changed hosts  
+[ ] Browser verifies the approved host key before authentication  
+[ ] Password-auth saved session can open the browser and list remote `.`  
+[ ] Private-key saved session can open the browser and list remote `.`  
+[ ] Browser table shows Name / Type / Size / Modified / Permissions  
+[ ] Double-clicking a directory navigates into it  
+[ ] `Up` navigates to the parent directory  
+[ ] Manual path entry + `Go` works for a known path  
+[ ] `Refresh` reloads the current directory  
+[ ] Double-clicking a regular file does not upload/download/open/modify it  
+[ ] Existing saved xterm.js terminal still opens normally after using the browser  
+[ ] Existing paste paths still work: toolbar Paste, right-click paste, Ctrl+Shift+V, Command+V  
+[ ] Existing Ctrl+C remote interrupt still works  
+[ ] Session Traffic still updates for terminal tabs  
+[ ] Diagnostic logging still stays OFF by default  
+[ ] Diagnostic logging, if enabled, logs SFTP summary events only and does not log file contents or secrets
 
 ## dev 0.1.7.3 — SFTP connection proof-of-concept smoke test
 
-[ ] About shows dev 0.1.7.3
-[ ] Welcome tab mentions the SFTP connection proof of concept
-[ ] Saved-session context menu shows `Open File Manager (SFTP probe)`
-[ ] SFTP probe uses the existing known-host prompt for unknown/additional/changed hosts
-[ ] SFTP probe verifies the approved host key before authentication
-[ ] Password-auth saved session can initialize SFTP and list remote `.`
-[ ] Private-key saved session can initialize SFTP and list remote `.`
-[ ] Probe result opens in a read-only text tab and shows type/size/modified/permissions/name
-[ ] No upload, download, delete, rename, queue, or file browser UI is available yet
+[ ] About shows dev 0.1.7.3  
+[ ] Welcome tab mentions the SFTP connection proof of concept  
+[ ] Saved-session context menu shows `Open File Manager (SFTP probe)`  
+[ ] SFTP probe uses the existing known-host prompt for unknown/additional/changed hosts  
+[ ] SFTP probe verifies the approved host key before authentication  
+[ ] Password-auth saved session can initialize SFTP and list remote `.`  
+[ ] Private-key saved session can initialize SFTP and list remote `.`  
+[ ] SFTP subsystem failure is reported cleanly when the server rejects SFTP  
+[ ] Secrets and file contents are not logged  
 [ ] Existing saved xterm.js terminal still opens normally after the SFTP probe
-[ ] Toolbar Paste, right-click paste, Ctrl+Shift+V / Command+V, and Ctrl+C interrupt still work
-[ ] Session Traffic terminal behavior is unchanged
-[ ] Diagnostic logs do not contain passwords, private-key content, terminal I/O, clipboard content, file contents, or full dd-ssh.json
-[ ] Windows KEX regression host still connects
-[ ] Known-host multi-key portability regression still passes
 
-## dev 0.1.7.2 — File transport architecture foundation smoke test
+## dev 0.1.7.2 — file transport architecture foundation smoke test
 
-[ ] About shows dev 0.1.7.2
-[ ] Welcome tab mentions the File Transfer architecture foundation
-[ ] Saved-session context menu shows `Open File Manager (planned)`
-[ ] Clicking `Open File Manager (planned)` shows an information dialog only
-[ ] Clicking the File Manager placeholder does not open an SSH/SFTP connection
-[ ] Clicking the File Manager placeholder does not change `dd-ssh.json`
+[ ] About shows dev 0.1.7.2  
+[ ] Welcome tab mentions the File Transfer / File Manager architecture foundation  
+[ ] Saved-session context menu shows `Open File Manager (planned)`  
+[ ] Clicking `Open File Manager (planned)` shows an information dialog only  
+[ ] Clicking the File Manager placeholder does not open an SSH/SFTP connection  
+[ ] Clicking the File Manager placeholder does not change `dd-ssh.json`  
 [ ] Existing saved xterm.js terminal still opens normally
-[ ] Toolbar Paste still sends clipboard text cleanly
-[ ] Right-click paste and Ctrl+Shift+V / Command+V still use the safe paste path
-[ ] Keyboard Ctrl+C inside the focused terminal still interrupts a remote program
-[ ] Session Traffic counters still update during terminal activity
-[ ] Diagnostic logging remains OFF by default and still excludes secrets, terminal input/output, and clipboard content
-[ ] Windows KEX regression host still connects
-[ ] Known-host multi-key portability regression still passes
 
-## dev 0.1.7.1 — Native paste event hardening smoke test
+## dev 0.1.7.1 — native paste event hardening
 
-[ ] About shows dev 0.1.7.1
-[ ] Toolbar Paste still sends clipboard text cleanly
-[ ] Right-click paste sends clipboard text cleanly and does not show `^[[200~` or `^[[201~`
-[ ] Ctrl+Shift+V sends clipboard text cleanly and does not show `^[[200~` or `^[[201~`
-[ ] macOS Command+V sends clipboard text cleanly and does not show `^[[200~` or `^[[201~`
-[ ] Keyboard Ctrl+C inside the focused terminal still interrupts a remote program such as `seq 1 500000`
-[ ] Large paste through the toolbar Paste button still works without truncation
-[ ] Session Traffic counters still update during output-heavy commands
+[PASS] Linux toolbar Paste  
+[PASS] Linux right-click paste  
+[PASS] Linux Ctrl+Shift+V paste  
+[PASS] Windows toolbar Paste  
+[PASS] Windows right-click paste  
+[PASS] Windows Ctrl+Shift+V paste  
+[PASS] macOS toolbar Paste  
+[PASS] macOS right-click paste  
+[PASS] macOS Command+V paste  
+[PASS] UTF-8 paste  
+[PASS] Large paste around 900 KB  
+[PASS] Ctrl+C remote interrupt behavior
 
-## dev 0.1.7.0 — Terminal transport hardening smoke test
+## Cross-platform status
 
-[ ] About shows dev 0.1.7.0
-[ ] Saved xterm.js terminal opens normally
-[ ] Basic commands work: `whoami`, `pwd`, `clear`, `stty size`
-[ ] Fullscreen apps still work where previously validated: `htop`, `top`, `nano`, `vim`
-[ ] UTF-8 output renders correctly: `čćžšđ ČĆŽŠĐ € 🚀`
-[ ] Output-heavy commands render without crash or UI lockup
-[ ] Large paste / large input is not silently truncated
-[ ] Keyboard Ctrl+C inside terminal still interrupts remote programs
-[ ] Toolbar Copy still copies selected terminal text
-[ ] Session Traffic RX/TX counters still update
-[ ] Diagnostic logging still excludes terminal input/output and secrets
-[ ] Windows KEX regression host still connects
-[ ] Known-host multi-key portability regression still passes
+- Linux: active first-test platform for new checkpoints
+- Windows 10/11: standalone deployment previously validated; smoke required after SFTP browser changes
+- macOS Intel: DMG tester flow previously validated; smoke required after SFTP browser changes
 
-## dev 0.1.6.8 — Config import/export safety preview smoke test
+## Required regression guardrails
 
-[ ] About shows dev 0.1.6.8
-[ ] File → Export Config shows preview before export target write
-[ ] Export preview shows sessions, known hosts, trusted keys, secrets mode, saved secrets, plaintext-secret flag
-[ ] Export warning clearly says exported JSON may contain plaintext secrets
-[ ] File → Import Config shows preview before replacing active config
-[ ] Import preview cancel leaves active config unchanged
-[ ] Invalid JSON import is refused before replace
-[ ] Root-array JSON import is refused before replace
-[ ] Diagnostic logging records only preview counts/flags, not secret values or full JSON
-[ ] SSH connection smoke test still passes
-[ ] Session Traffic status bar smoke test still passes
-
-## dev 0.1.6.7 — Basic Session Traffic Monitor smoke test
-
-[ ] About shows dev 0.1.6.7
-[ ] Status bar shows `Traffic: No active session` on Welcome/non-terminal tabs
-[ ] Opening a saved xterm.js terminal shows `Traffic: <session>`
-[ ] Received rate/total increases with remote output
-[ ] Sent total increases with keyboard input/paste
-[ ] Switching terminal tabs changes the active traffic display
-[ ] Disconnect keeps final totals visible with a disconnected state
-[ ] With diagnostic logging ON, log contains traffic started/summary/stopped entries
-[ ] Logs do not contain terminal input/output or secrets
-
-## dev 0.1.6.6 — optional diagnostic logging smoke test
-
-Required checks:
-
-```text
-[ ] About shows dev 0.1.6.6
-[ ] Settings shows Enable diagnostic logging
-[ ] logging is OFF by default
-[ ] enabling logging creates/appends yyyymmdd.log
-[ ] Help → Open Log Folder opens the user-writable log folder
-[ ] status bar shows Logging enabled while enabled
-[ ] disabling logging removes the status bar indicator without restart
-[ ] log contains app/session/SSH lifecycle events
-[ ] log does not contain password values, private-key contents, terminal input, terminal output, clipboard contents, or full dd-ssh.json
-```
-
-Platform log folders:
-
-```text
-Linux: ~/.local/state/DD-SSH/logs
-Windows: %LOCALAPPDATA%\DD-SSH\logs
-macOS: ~/Library/Logs/DD-SSH
-```
-
-
-## Legend
-
-```text
-PASS              Confirmed working in manual testing.
-IMPLEMENTED       Feature exists, but should be re-tested before public alpha tagging.
-PARTIAL           Works, but needs polish or broader testing.
-NOT TESTED        Important scenario not yet manually verified.
-TODO              Not implemented yet.
-```
-
-## 1. Build and identity
-
-| Area | Test | Expected result | Status | Notes |
-|---|---|---|---|---|
-| Build | `cmake --build build --clean-first` | Build completes and links `dd-ssh` | PASS | Re-tested frequently during development. |
-| Linux Debian package | `./scripts/linux-package-deb.sh` | Creates `dist/deb/dd-ssh_0.1.6.5_amd64.deb` | PASS | First `.deb` package was built, installed, launched, and visually validated on Linux; the package version is carried forward for this checkpoint. |
-| Launch | `./build/dd-ssh` | App opens | PASS | Linux primary test platform. |
-| Windows configure | CMake with MSVC/Qt/vcpkg/pkgconf | Configure completes | PASS | Confirmed on native Windows branch. |
-| Windows Debug build | `cmake --build build-win` | `dd-ssh.exe` builds | PASS | Confirmed on native Windows. |
-| Windows launch | `build-win\dd-ssh.exe` with Qt/vcpkg DLL paths | App opens | PASS | Confirmed; Welcome screen and UI visible. |
-| Windows Release build | `build-win-release` | Release exe builds | PASS | Confirmed on native Windows before the deployment pass. |
-| Windows libssh KEX compatibility | OpenSSH 10 server advertising ML-KEM/SNTRUP KEX first | DD-SSH reaches auth/shell flow on Windows 10/11 | PASS | Validated on two Windows machines and one Linux machine after dev 0.1.5.8; server-side KEX workaround no longer required. |
-| Windows deployment script | `scripts\windows-deploy-release.bat` after Release build | Creates `dist\windows-release` and starts deployed exe | PASS | Simple working BAT from the successful Windows standalone deployment test is now checked in. |
-| Windows deployed launch | `dist\windows-release\dd-ssh.exe` from normal Command Prompt | App starts without Qt/vcpkg PATH | PASS | Confirmed on real Windows 10/11 machines during standalone deployment testing. |
-| Clean Windows 10 deploy-folder test | Copy `dist\windows-release` to a clean Windows 10 machine | App launches without dev tools installed | PASS | App launches, icon appears, import/connect works, and xterm terminal is fast. |
-| macOS Intel build | `./scripts/macos-build-release.sh` | Creates `build-macos-release/dd-ssh.app` | PASS | First Intel build validated on macOS 15.7.5 / x86_64 with Qt 6.11.1 and Homebrew libssh. |
-| macOS Intel DMG | `./scripts/macos-deploy-release.sh` | Creates `dist/macos/DD-SSH-0.1.6.5-macOS-x86_64.dmg` and dependency audit report | IMPLEMENTED | DMG includes DD-SSH.app, Applications shortcut, and README_FIRST.txt. Re-test on the Intel Mac build machine and preferably a clean tester Mac before publishing. |
-| About | Help → About DD-SSH | Shows version/codename/milestone/config path | PASS | Verified after version/codename work. |
-| Version | About dialog | Shows current checkpoint version | PASS | Should be checked after every patch. |
-| Codename | About dialog | Shows `Andromeda` | PASS | Current 0.1.x codename line. |
-| Welcome screen | First tab on startup | Shows current status/dashboard, not old skeleton text | PASS | Updated during docs/welcome polish. |
-| Terminal startup notice | New terminal tab displays loading/startup state before xterm.js bridge is ready | User sees startup message instead of blank terminal during first WebEngine initialization | IMPLEMENTED | Added in dev 0.1.5.3; especially useful on Windows where first Qt WebEngine startup can be slower. |
-| App icon resources | Build includes Qt/Windows/macOS/Linux icon assets | Window/exe/bundle icon resources exist | IMPLEMENTED | Added in 0.1.5.2; needs visual verification on Windows taskbar/Explorer and future Linux/macOS packaging. |
-
-## 2. Sessions and menus
-
-| Area | Test | Expected result | Status | Notes |
-|---|---|---|---|---|
-| Load sessions | Start app with valid config | Sidebar loads saved sessions | PASS | Tested repeatedly with real saved sessions. |
-| New session | Session → New Session | Creates saved session after successful auth | PASS | Uses plaintext portable secret storage. |
-| Failed new session save | Attempt New Session with failed auth | Session is not saved | IMPLEMENTED | Documented in dev 0.1.5.5; final pass should confirm wrong password/port does not create a sidebar entry. |
-| Manual auth | Session → Connect / Auth test | Runs auth test; save optional | PASS | Old auth-test flow preserved. |
-| Edit session | Session → Edit selected session / context menu | Edits selected saved session | PASS | Password/key can be kept or replaced. |
-| Delete session | Context menu → Delete | Deletes session, preserves known_hosts | PASS | Orphan secret cleanup implemented. |
-| Duplicate warning | Save same username+host+port | Offers update/copy/cancel | PASS | Manual save polish confirmed earlier. |
-| Double-click | Double-click saved session | Opens xterm.js terminal | PASS | Default behavior since 0.1.3.4. |
-| File menu | File menu | Config-level actions and Exit live here | IMPLEMENTED | Re-test after import/export and toolbar changes. |
-| Session menu | Session menu | New/Connect/Edit session actions live here | PASS | Polished in 0.1.4.6. |
-| Quick toolbar | Settings checkbox | Toolbar can be shown/hidden and persists | IMPLEMENTED | Needs final visual re-test after revised sizing patch. |
-
-## 3. Auth and known_hosts
-
-| Area | Test | Expected result | Status | Notes |
-|---|---|---|---|---|
-| Password auth | Saved password session | Auth succeeds | PASS | Tested with real LAN host. |
-| Private-key auth | Saved key session | Auth succeeds | PASS | Tested with embedded plaintext private key from JSON. |
-| Known host | Reconnect to same host | TRUSTED when fingerprint matches | PASS | Confirmed after known_hosts save/load. |
-| Unknown host | First connect to new host | Prompts/trust flow works | PASS | Confirmed during first-connect tests. |
-| Multi-key known host A | ED25519-only config on Windows 10 where libssh negotiates ECDSA | Offers Trust additional key, connects, saves both keys | PASS | Regression case: 138.2.166.222:223; confirms portable JSON works after adding ECDSA. |
-| Multi-key known host B | ECDSA-only config on Linux/Windows 11 where libssh negotiates ED25519 | Offers Trust additional key, connects, saves both keys | PASS | Reverse regression confirmed; same JSON works across Windows 10, Windows 11, and Linux after both keys are stored. |
-| Trust once additional key | Additional key type prompt → Trust once | Opens shell/auth flow without saving JSON | IMPLEMENTED | Keep in final regression pass; primary Trust additional key path is validated. |
-| Changed host | Same key type with different fingerprint | Must show strong host-key-changed warning | TODO | Needs deliberate edited-copy config test before stable release. |
-| Shell same-connection host-key verification | Open saved xterm.js/basic shell after approving/trusting host | Real shell connection verifies approved key before authentication | IMPLEMENTED | Added in dev 0.1.6.3. Must be manually re-tested on Linux first, then Windows standalone. |
-| Auth-test same-connection host-key verification | Manual/saved auth test after known-host decision | Authentication connection verifies approved key before sending password/private key | IMPLEMENTED | Auth test output now includes host-key verification before auth. |
-| Pre-auth mismatch block | Force/edit expected known-host mismatch or connect to changed host | DD-SSH aborts before auth and states authentication was not attempted | NOT TESTED | Critical 0.1.6.3 regression test before public alpha. |
-
-## 4. Terminal renderer and shell behavior
-
-| Area | Test | Expected result | Status | Notes |
-|---|---|---|---|---|
-| Renderer | Open terminal | Header says xterm.js ACTIVE local bundled renderer | PASS | Confirmed after Qt resource path fix. |
-| Offline/local assets | Open terminal without CDN dependency | xterm.js still loads | PASS | Local bundled renderer confirmed active. |
-| Basic command | `whoami` / `hostname` / `pwd` | Output appears | PASS | Confirmed. |
-| Paste | Paste multiline commands | Commands execute | PASS | Fixed and confirmed. |
-| Ctrl+C | `ping 8.8.8.8`, Ctrl+C | Ping stops | PASS | Confirmed. |
-| PTY resize | `stty size`, resize window | rows/cols change | PASS | Confirmed with multiple window sizes. |
-| htop | `htop` | Full-screen app renders | PASS | Confirmed. |
-| nano | `nano /tmp/dd-ssh-test.txt` | Opens, text entry and Ctrl commands work | PASS | Confirmed, including Ctrl shortcuts. |
-| vim | `vim /tmp/dd-ssh-test.txt` | Opens and works enough for manual testing | PASS | Confirmed. |
-| top | `top` | Opens and updates | PASS | Confirmed. |
-| clear | `clear` | Clears terminal | PASS | Confirmed. |
-| Multiple terminal tabs | Open more than one saved session terminal | Inputs stay with correct session | PASS | Confirmed earlier with parallel tab testing. |
-
-## 5. Terminal lifecycle
-
-| Area | Test | Expected result | Status | Notes |
-|---|---|---|---|---|
-| Exit shell | `exit` | Terminal becomes disconnected | PASS | Confirmed. |
-| Disconnect button | Click Disconnect | Session closes and controls update | PASS | Confirmed. |
-| Remote reboot | Reboot server externally | DD-SSH detects disconnect and cleans up | PASS | Confirmed with real reboot test. |
-| Reconnect | Click Reconnect after disconnect | Same tab reconnects using saved session | PASS | Confirmed after 0.1.3.7. |
-| Close active tab | Click tab close while connected | Confirms before disconnecting | PASS | Confirmed in lifecycle polish. |
-| Close active app window | Window close button / X while connected tabs exist | Confirms before disconnecting all active sessions and exiting | IMPLEMENTED | Added in dev 0.1.5.5; confirmed during deployed-folder testing. |
-| File Exit with active sessions | `File → Exit` while connected tabs exist | Uses the same active-session confirmation as window close | IMPLEMENTED | Added in dev 0.1.5.5 via main window close event; include this in deployed-folder testing. |
-| Close disconnected tab | Close after disconnect | Closes without active-session warning | IMPLEMENTED | Should be included in next final pass. |
-
-## 6. Settings and app UI
-
-| Area | Test | Expected result | Status | Notes |
-|---|---|---|---|---|
-| Open Settings | Tools → Settings | Dialog opens readable | PASS | Sizing polish added after visual issue. |
-| App theme | System/Light/Dark | Qt app theme changes after OK and persists | PASS | Confirmed by user; app theme changes apply and persist. |
-| Terminal font | Change font size | New terminal tabs use new font | PASS | Confirmed by user. |
-| Backup setting | Enable/disable backups, max count | Setting is saved | PASS | Confirmed together with backup creation. |
-| Open config folder | Settings/File action | Opens config folder | PASS | Confirmed during Windows/AppData validation path and Linux settings workflow. |
-| Plaintext warning | Settings dialog | Orange plaintext secrets warning visible | PASS | Confirmed and intentionally kept. |
-| Dark terminal | xterm terminal | Terminal remains dark independent of app theme | PASS | Intentional for now; xterm theming deferred. |
-
-## 7. Config safety and recovery
-
-| Area | Test | Expected result | Status | Notes |
-|---|---|---|---|---|
-| Default config | First run/no config file | Creates or uses healthy default config structure | IMPLEMENTED | Should be explicitly re-tested by moving config folder aside. |
-| Backup before save | Save settings/session | `dd-ssh.json.bak-*` created | PASS | Confirmed. |
-| Backup rotation | More backups than max count | Old backups are pruned | IMPLEMENTED | Needs explicit stress test. |
-| Corrupt startup | Start with invalid config | Recovery dialog appears; file not overwritten | PASS | Confirmed. |
-| Continue read-only | Recovery dialog | App opens without overwriting corrupt config | PASS | Confirmed in recovery flow. |
-| Restore latest valid backup | Recovery dialog | Corrupt file moved aside, latest valid backup restored | PASS | Confirmed as part of recovery-actions testing if completed. |
-| Create fresh config | Recovery dialog | Corrupt file moved aside, default config created | PASS | Confirmed as part of recovery-actions testing if completed. |
-| Export config | File → Export Config | Valid JSON copied to chosen path | IMPLEMENTED | Needs explicit final public-alpha pass if not already tested. |
-| Import invalid | Import invalid JSON | Import refused, active config unchanged | IMPLEMENTED | Needs explicit final public-alpha pass if not already tested. |
-| Import valid | Import exported config | Pre-import backup created and config reloads | IMPLEMENTED | Needs explicit final public-alpha pass if not already tested. |
-| Restore latest from File | File → Restore Latest Backup | Latest valid backup restored | IMPLEMENTED | Needs explicit final public-alpha pass if not already tested. |
-
-## 8. Documentation
-
-| Requirement | Status | Notes |
-|---|---|---|
-| README current | PASS | Public-alpha style README added. |
-| Security warning visible | PASS | Plaintext secrets warning documented. |
-| Config docs current | PASS | CONFIG_FORMAT updated. |
-| Test matrix current | PASS | This file should stay conservative: do not mark untested items PASS. |
-| Changelog current | PASS | CHANGELOG tracks development checkpoints. |
-| Public alpha checklist | PASS | PUBLIC_ALPHA_CHECKLIST documents final pre-alpha gate. |
-| Release notes draft | PASS | RELEASE_NOTES_v0.2.0-alpha.md added for alpha tagging. |
-| GitHub issue templates | PASS | Bug, terminal, config/recovery, and feature request templates added. |
-| Use cases documented | PASS | USE_CASES added. |
-| Troubleshooting documented | PASS | TROUBLESHOOTING added. |
-| Known limitations documented | PASS | Public alpha limitations documented. |
-| Packaging docs | PARTIAL | Linux `.deb`, Windows deploy folder, and macOS DMG docs exist; macOS clean-tester pass and installer/signing docs remain future work. |
-
-## 9. Platform coverage
-
-| Platform | Status | Notes |
-|---|---|---|
-| Linux | PASS | Primary tested platform. |
-| Windows | PASS | Native Windows Debug/Release builds, copied standalone deploy folder, SSH/xterm/htop, config import, exit safety, known-host portability, and libssh KEX compatibility have been validated on Windows 10/11. Installer packaging remains future work. |
-| macOS | PARTIAL | Intel build and first unsigned `.app` / `.dmg` deployment workflow have been validated locally. Clean tester-Mac pass, signing/notarization, native arm64, and Homebrew Cask remain future work. |
-
-
-## 9a. Windows validation details
-
-| Area | Test | Expected result | Status | Notes |
-|---|---|---|---|---|
-| MSVC | `cl` in x64 Native Tools prompt | Microsoft C/C++ compiler is available | PASS | MSVC x64 confirmed. |
-| Qt WebEngine | Qt 6.11.1 MSVC 2022 64-bit | WebEngineWidgets found by CMake | PASS | Needed Qt Positioning dependency. |
-| Qt WebChannel | `Qt6WebChannelConfig.cmake` exists | WebChannel bridge available | PASS | Confirmed in Qt install. |
-| Qt Positioning | `Qt6PositioningConfig.cmake` exists | WebEngine dependency resolves | PASS | Added after first CMake failure. |
-| vcpkg libssh | `vcpkg install libssh:x64-windows` | libssh installed | PASS | vcpkg reported successful install. |
-| pkgconf | vcpkg `pkgconf` path passed to CMake | `pkg_check_modules(libssh)` works | PASS | CMake found libssh 0.12.0. |
-| AppData config | First Windows launch | Config stored under AppData/Local/DD-LAB/DD-SSH | PASS | Windows path verified by app launch behavior. |
-| Windows terminal | Saved session opens xterm | SSH terminal opens | PASS | Confirmed with real SSH session. |
-| Windows htop | `htop` in terminal | Fullscreen terminal app renders | PASS | Confirmed by screenshot/test. |
-| Windows startup/RAM | Task Manager observation | Record initial metrics | PARTIAL | Debug build showed several-second first terminal startup and ~350–380 MB RAM with WebEngine terminal. Release-build measurement should be recorded during deployment testing. |
-| Windows deploy | Run outside build environment | App starts without developer PATH | PASS | Confirmed on real Windows 10/11 machines; app icon, config import, SSH connect, xterm terminal, `whoami`/`htop`, and exit safety validated. |
-
-## 10. Public alpha readiness summary
-
-| Requirement | Status | Notes |
-|---|---|---|
-| Core saved-session workflow | PASS | Create/edit/delete/open terminal tested. |
-| Real terminal foundation | PASS | xterm.js, PTY resize, fullscreen apps tested. |
-| Config safety foundation | PASS | Backup and corrupt config recovery exist. |
-| Config import/export | IMPLEMENTED | Needs final focused pass before public alpha tag. |
-| Settings foundation | PASS | Font/app settings exist; theme needs final confirmation if not already done. |
-| Security posture documented | PASS | Plaintext secrets warning exists. |
-| Windows/macOS validation | PARTIAL | Windows native Debug/Release/deploy-folder validation is PASS. macOS Intel build/DMG is now validated locally; clean tester-Mac pass and signing/notarization remain future work. |
-| Packaging/installers | PARTIAL | Linux `.deb`, Windows deploy folder, and macOS Intel `.dmg` workflows exist. Windows installer, AppImage, Homebrew Cask, signing/notarization, and store packaging remain future work. |
-
-## 11. Suggested final pre-alpha test pass
-
-Before tagging an Andromeda public alpha, run this short pass:
-
-```bash
-cmake --build build --clean-first
-./build/dd-ssh
-```
-
-Then verify:
-
-```text
-1. About shows the expected version/codename/milestone.
-2. Saved password session opens xterm terminal.
-3. Saved key session opens xterm terminal.
-4. whoami, htop, nano, vim, top, clear work.
-5. stty size changes after resizing the window.
-6. Disconnect and Reconnect work.
-7. Settings save and persist.
-8. Config backup is created before save.
-9. Corrupt config recovery still works.
-10. Export/import/restore config actions pass a focused test.
-11. Windows Release build test records startup/RAM notes.
-12. Auth-test output shows `Host-key verification before auth: VERIFIED` for a trusted host.
-13. Saved xterm.js terminal still opens only after the worker verifies the approved host key before auth.
-14. A deliberate same-key-type fingerprint mismatch blocks before authentication.
-```
+- Do not regress terminal transport/paste behavior
+- Do not regress known-host multi-key portability
+- Do not regress Windows-safe KEX compatibility
+- Do not log passwords, private keys, clipboard contents, terminal contents, file contents, or full config JSON
+- Keep `dd-ssh.json` human-readable
+- Keep diagnostic logging OFF by default

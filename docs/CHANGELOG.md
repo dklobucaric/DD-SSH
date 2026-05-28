@@ -1,3 +1,53 @@
+## dev 0.1.7.4.1 — Andromeda
+
+Read-only SFTP browser bugfix polish checkpoint.
+
+### Fixed / polished
+
+- Exit safety now includes open SFTP browser tabs in the close confirmation, alongside active SSH terminal sessions.
+- Disabled alternating row colors in the SFTP browser table to avoid unreadable white rows on dark themes.
+- Added stronger tab-bar scroll-button hints and right-side eliding for crowded tab bars, intended to improve macOS behavior when many tabs are open.
+- Changed the browser `Up` button label to `↑ Up` so the action remains obvious even when native platform arrows are not rendered.
+- Added the SFTP browser table to the application light/dark stylesheet coverage.
+
+### Deferred intentionally
+
+- SFTP byte counters are not yet included in the live Session Traffic monitor. This belongs with the upload/download transfer phase.
+- `.` / `..` path normalization and hiding pseudo-directory entries remain later UI polish.
+- No upload, download, delete, rename, local browser panel, queue, or progress/cancel behavior is added.
+- No terminal transport, SSH trust-chain, known-host, Windows KEX workaround, or config schema behavior was intentionally changed.
+
+### Docs
+
+- Added `docs/BUILD_AND_TEST_0.1.7.4.1.md` and `docs/TESTCASE_0.1.7.4.1.md`.
+
+## dev 0.1.7.4 — Andromeda
+
+Read-only remote file browser checkpoint.
+
+### Added
+
+- Added `src/ui/SftpBrowserTab.h` and `src/ui/SftpBrowserTab.cpp` as the first graphical read-only remote SFTP browser tab.
+- Saved-session context menu now offers `Open File Manager (read-only)`.
+- The browser uses saved session data, existing known-host preflight, approved host-key verification before auth, and libssh SFTP directory listing.
+- Browser UI includes a remote path field, `Go`, `Up`, `Refresh`, status label, and table columns for name, type, size, modified time, and permissions.
+- Double-clicking a directory navigates into that directory. Double-clicking a regular file does not transfer or open it.
+- Added `docs/BUILD_AND_TEST_0.1.7.4.md` and `docs/TESTCASE_0.1.7.4.md`.
+
+### Preserved
+
+- Existing terminal/xterm.js runtime remains isolated from the SFTP browser.
+- Existing `SftpProbe` path remains the shared SFTP listing backend for this simple checkpoint.
+- Known-host multi-key support, Windows KEX workaround, diagnostic logging, Session Traffic, config import/export, and native paste hardening should not regress.
+
+### Not included
+
+- No upload/download.
+- No local file browser panel.
+- No delete/rename/chmod/mkdir.
+- No queue, progress/cancel transfer UI, recursive transfer, or sync engine.
+- No encryption/master-password work.
+
 ## dev 0.1.7.3 — Andromeda
 
 SFTP connection proof-of-concept checkpoint.

@@ -1,8 +1,8 @@
 # DD-SSH File Transfer Architecture
 
-**Checkpoint:** dev 0.1.7.3 — Andromeda  
-**Status:** SFTP connection proof of concept  
-**Runtime behavior:** saved-session SFTP probe can initialize SFTP and list remote `.`
+**Checkpoint:** dev 0.1.7.4.1 — Andromeda  
+**Status:** Read-only SFTP browser bugfix polish  
+**Runtime behavior:** saved-session SFTP browser can list and navigate remote directories
 
 ---
 
@@ -26,11 +26,15 @@ The future File Manager should eventually provide:
 - diagnostic logging that never records file contents or secrets
 - Session Traffic integration for SFTP bytes where practical
 
-`dev 0.1.7.3` implements only the first connection proof of concept. It can open SFTP and list a directory into a text result tab, but it does **not** implement the graphical file browser or transfers yet.
+`dev 0.1.7.4` implements only the first graphical read-only remote browser. It can open SFTP, list remote directories, refresh, go up, and navigate into directories, but it does **not** implement upload, download, delete, rename, local browsing, queue, or transfer progress/cancel yet.
 
 ---
 
-## Non-goals for dev 0.1.7.3
+## dev 0.1.7.4.1 polish boundary
+
+`dev 0.1.7.4.1` is a small bugfix polish checkpoint for the first read-only SFTP browser. It includes exit safety for SFTP browser tabs, readable dark-theme table rows, and tab-bar scroll hints for crowded tab bars. It does **not** add SFTP traffic counters, upload/download, local browsing, queue, progress/cancel, or path normalization beyond the existing read-only browser behavior.
+
+## Non-goals for dev 0.1.7.4
 
 This checkpoint intentionally does not add:
 
@@ -49,27 +53,28 @@ This checkpoint intentionally does not add:
 - known-host behavior changes
 - encryption/master-password changes
 
-This is a transport proof checkpoint, not a file-manager checkpoint.
+This is a read-only remote browsing checkpoint, not a transfer checkpoint.
 
 ---
 
-## dev 0.1.7.3 runtime proof
+## dev 0.1.7.4 runtime browser
 
-`dev 0.1.7.3` adds a deliberately small saved-session SFTP probe:
+`dev 0.1.7.4` adds a deliberately small saved-session read-only SFTP browser:
 
 ```text
 Saved session context menu
-   -> Open File Manager (SFTP probe)
+   -> Open File Manager (read-only)
    -> load saved SessionProfile and referenced plain-v1 secret
    -> run SSH preflight handshake
    -> use existing known-host prompt/decision flow
    -> verify the approved host key again on the real SFTP connection before authentication
    -> authenticate using password or embedded private key
    -> initialize libssh SFTP subsystem
-   -> list remote `.` directory into a read-only text tab
+   -> list remote directory into a table
+   -> allow read-only navigation with path, Go, Up, Refresh, and double-click directory
 ```
 
-This proves the transport path while keeping the terminal baseline isolated. The probe is intentionally blocking/simple for this checkpoint and should evolve into a proper worker-backed File Manager tab in later checkpoints.
+This proves the first UI layer for remote browsing while keeping the terminal baseline isolated. The browser is intentionally blocking/simple for this checkpoint and should evolve into a proper worker-backed File Manager tab when transfers/progress/cancel become necessary.
 
 It does not modify `dd-ssh.json` except when the existing known-host flow intentionally saves a newly trusted host key or additional host-key algorithm.
 
@@ -287,11 +292,19 @@ permissions display string if practical
 - list remote home/current directory to a simple debug dialog or log-safe output
 - no two-panel browser yet
 
+### dev 0.1.7.4.1 — read-only SFTP browser bugfix polish [current]
+
+- app-exit safety includes open SFTP browser tabs
+- alternating row colors disabled for SFTP table readability
+- tab scroll-button hints for crowded tab bars
+- no transfer/traffic/path-normalization expansion
+
 ### dev 0.1.7.4 — read-only remote file browser
 
 - remote list panel
-- name/type/size/modified
-- enter folder
+- name/type/size/modified/permissions
+- editable remote path + Go
+- enter folder by double-click
 - go up
 - refresh
 - no upload/download/delete
@@ -419,20 +432,20 @@ Specific cases to test later:
 
 ---
 
-## Current SFTP probe behavior
+## Current SFTP browser behavior
 
-`dev 0.1.7.3` changes the saved-session context-menu action to `Open File Manager (SFTP probe)`.
+`dev 0.1.7.4` changes the saved-session context-menu action to `Open File Manager (read-only)`.
 
-The probe:
+The browser:
 
 - opens a real SSH/SFTP connection path using the saved session
 - uses the existing known-host prompt and trust-chain flow
 - verifies the approved host key again before authentication
 - initializes the libssh SFTP subsystem
-- lists remote `.` into a read-only text tab
+- lists remote directories into a read-only table
+- supports path entry, Go, Up, Refresh, and double-click directory navigation
 - does not upload, download, delete, rename, or transfer files
-- does not implement the final File Manager UI yet
 - does not modify `dd-ssh.json` except when the existing known-host flow intentionally saves trusted host-key data
 - does not touch terminal tabs
 
-This proves the transport path without risking the tested terminal baseline.
+This proves the first remote browser UI without risking the tested terminal baseline.

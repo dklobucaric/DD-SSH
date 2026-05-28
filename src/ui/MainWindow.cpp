@@ -3,12 +3,12 @@
 #include "BasicTerminalTab.h"
 #include "WebTerminalTab.h"
 #include "SettingsDialog.h"
+#include "SftpBrowserTab.h"
 #include "core/AppLogger.h"
 #include "core/ConfigManager.h"
 #include "core/KnownHostsManager.h"
 #include "core/SessionProfile.h"
 #include "ssh/SshSession.h"
-#include "sftp/SftpProbe.h"
 
 #include <QAbstractButton>
 #include <QAction>
@@ -33,6 +33,7 @@
 #include <QStatusBar>
 #include <QSysInfo>
 #include <QTabWidget>
+#include <QTabBar>
 #include <QStringList>
 #include <QTemporaryFile>
 #include <QTextEdit>
@@ -189,6 +190,8 @@ QLineEdit,
 QSpinBox,
 QComboBox,
 QListWidget,
+QTableWidget,
+QTableView,
 QTextEdit,
 QPlainTextEdit {
     background-color: #ffffff;
@@ -196,6 +199,10 @@ QPlainTextEdit {
     border: 1px solid #b8c0cc;
     selection-background-color: #cfe3ff;
     selection-color: #111111;
+}
+QTableWidget::item:selected {
+    background-color: #cfe3ff;
+    color: #111111;
 }
 QPushButton {
     background-color: #ffffff;
@@ -268,6 +275,8 @@ QLineEdit,
 QSpinBox,
 QComboBox,
 QListWidget,
+QTableWidget,
+QTableView,
 QTextEdit,
 QPlainTextEdit {
     background-color: #0f141b;
@@ -276,9 +285,14 @@ QPlainTextEdit {
     selection-background-color: #315f9f;
     selection-color: #ffffff;
 }
-QListWidget::item:selected {
+QListWidget::item:selected,
+QTableWidget::item:selected {
     background-color: #2f7d46;
     color: #ffffff;
+}
+QTableWidget::item {
+    background-color: #0f141b;
+    color: #e6edf3;
 }
 QPushButton {
     background-color: #26303d;
@@ -977,36 +991,67 @@ QStringList MainWindow::activeSshTerminalNames() const
     return names;
 }
 
-bool MainWindow::confirmExitWithActiveSshTerminals()
+QStringList MainWindow::openSftpBrowserNames() const
+{
+    QStringList names;
+
+    if (m_tabs == nullptr) {
+        return names;
+    }
+
+    for (int i = 0; i < m_tabs->count(); ++i) {
+        QWidget *widget = m_tabs->widget(i);
+
+        if (auto *sftpBrowser = dynamic_cast<SftpBrowserTab *>(widget)) {
+            names.append(sftpBrowser->displayName());
+        }
+    }
+
+    return names;
+}
+
+bool MainWindow::confirmExitWithOpenConnectionTabs()
 {
     const QStringList activeTerminals = activeSshTerminalNames();
+    const QStringList openSftpBrowsers = openSftpBrowserNames();
 
-    if (activeTerminals.isEmpty()) {
+    if (activeTerminals.isEmpty() && openSftpBrowsers.isEmpty()) {
         return true;
     }
 
-    QString message = QStringLiteral("DD-SSH has %1 active SSH terminal session(s).\n\nClosing the application will disconnect:")
-        .arg(activeTerminals.size());
+    QString message = QStringLiteral("DD-SSH has open connection tab(s).\n\nClosing the application will close:");
 
-    const int maxShownSessions = 10;
+    const int maxShownItems = 10;
 
-    for (int i = 0; i < activeTerminals.size() && i < maxShownSessions; ++i) {
-        message += QStringLiteral("\n- ") + activeTerminals.at(i);
+    if (!activeTerminals.isEmpty()) {
+        message += QStringLiteral("\n\nSSH terminal session(s):");
+        for (int i = 0; i < activeTerminals.size() && i < maxShownItems; ++i) {
+            message += QStringLiteral("\n- ") + activeTerminals.at(i);
+        }
+        if (activeTerminals.size() > maxShownItems) {
+            message += QStringLiteral("\n- ...");
+        }
     }
 
-    if (activeTerminals.size() > maxShownSessions) {
-        message += QStringLiteral("\n- ...");
+    if (!openSftpBrowsers.isEmpty()) {
+        message += QStringLiteral("\n\nSFTP browser tab(s):");
+        for (int i = 0; i < openSftpBrowsers.size() && i < maxShownItems; ++i) {
+            message += QStringLiteral("\n- ") + openSftpBrowsers.at(i);
+        }
+        if (openSftpBrowsers.size() > maxShownItems) {
+            message += QStringLiteral("\n- ...");
+        }
     }
 
-    message += QStringLiteral("\n\nDisconnect these sessions and exit DD-SSH?");
+    message += QStringLiteral("\n\nClose these tabs and exit DD-SSH?");
 
     QMessageBox dialog(this);
     dialog.setIcon(QMessageBox::Warning);
-    dialog.setWindowTitle(QStringLiteral("Active SSH sessions — DD-SSH"));
+    dialog.setWindowTitle(QStringLiteral("Open connection tabs — DD-SSH"));
     dialog.setText(message);
 
-    QPushButton *disconnectAndExitButton = dialog.addButton(
-        QStringLiteral("Disconnect and Exit"),
+    QPushButton *closeAndExitButton = dialog.addButton(
+        QStringLiteral("Close and Exit"),
         QMessageBox::AcceptRole
     );
     QPushButton *cancelButton = dialog.addButton(
@@ -1017,7 +1062,7 @@ bool MainWindow::confirmExitWithActiveSshTerminals()
     dialog.setDefaultButton(cancelButton);
     dialog.exec();
 
-    return dialog.clickedButton() == disconnectAndExitButton;
+    return dialog.clickedButton() == closeAndExitButton;
 }
 
 void MainWindow::requestDisconnectForActiveSshTerminals()
@@ -1045,9 +1090,9 @@ void MainWindow::closeEvent(QCloseEvent *event)
 {
     AppLogger::info(QStringLiteral("App close requested"));
 
-    if (!confirmExitWithActiveSshTerminals()) {
-        AppLogger::warn(QStringLiteral("App close cancelled because SSH sessions are still active"));
-        statusBar()->showMessage(QStringLiteral("Exit cancelled because SSH sessions are still active"));
+    if (!confirmExitWithOpenConnectionTabs()) {
+        AppLogger::warn(QStringLiteral("App close cancelled because connection tabs are still open"));
+        statusBar()->showMessage(QStringLiteral("Exit cancelled because connection tabs are still open"));
         event->ignore();
         return;
     }
@@ -1281,7 +1326,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: SFTP connection proof of concept.\n\n")
+            + QStringLiteral("Current phase: Read-only remote file browser.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n")
@@ -1361,6 +1406,14 @@ void MainWindow::setupCentralLayout()
     m_tabs = new QTabWidget(splitter);
     m_tabs->setTabsClosable(true);
     m_tabs->setMovable(true);
+    m_tabs->setUsesScrollButtons(true);
+    m_tabs->setElideMode(Qt::ElideRight);
+
+    if (m_tabs->tabBar() != nullptr) {
+        m_tabs->tabBar()->setUsesScrollButtons(true);
+        m_tabs->tabBar()->setExpanding(false);
+        m_tabs->tabBar()->setElideMode(Qt::ElideRight);
+    }
 
     connect(m_tabs, &QTabWidget::currentChanged, this, [this](int) {
         m_lastTrafficWidget = nullptr;
@@ -1505,7 +1558,7 @@ void MainWindow::addWelcomeTab()
         "A clean cross-platform SSH client and session manager.\n\n"
         "Double-click a saved session on the left to open the xterm.js terminal.\n\n"
         "Current milestone:\n"
-        "SFTP connection proof of concept — terminal baseline preserved, first libssh SFTP probe\n\n"
+        "Read-only SFTP browser bugfix polish — browser UI safer for cross-platform testing\n\n"
         "Working now:\n"
         "- saved sessions loaded from dd-ssh.json\n"
         "- portable plaintext secrets in dd-ssh.json\n"
@@ -1523,7 +1576,7 @@ void MainWindow::addWelcomeTab()
         "- cross-platform app icon resources for Qt, Windows, Linux, and macOS prep\n"
         "- Windows standalone deployment helper validated on real Windows 10/11 machines\n"
         "- app exit protection when active SSH terminals are still connected\n"
-        "- File Manager / SFTP probe action for the 0.1.7.x SFTP development track\n\n"
+        "- read-only File Manager / SFTP browser action for the 0.1.7.x SFTP development track\n\n"
         "Main menus:\n"
         "- File: Open Config Folder, Export Config, Import Config, Restore Latest Backup, Exit\n"
         "- Session: New Session, Connect / Auth test, Edit selected session\n"
@@ -1543,8 +1596,8 @@ void MainWindow::addWelcomeTab()
         "- docs/FILE_TRANSFER_ARCHITECTURE.md explains the planned SFTP/File Manager foundation\n\n"
         "Current development focus:\n"
         "- keep dev 0.1.7.1 as the closed terminal foundation baseline\n"
-        "- introduce file transfer architecture without changing SSH terminal runtime behavior\n"
-        "- use libssh SFTP API in future checkpoints, not shell command parsing hacks\n"
+        "- introduce a read-only SFTP browser without changing SSH terminal runtime behavior\n"
+        "- use libssh SFTP API for remote directory browsing, not shell command parsing hacks\n"
         "- keep terminal tabs and future File Manager tabs separated by design\n\n"
         "Codename roadmap:\n"
         "- 0.0.x — Launchpad / early prototype history\n"
@@ -1560,11 +1613,24 @@ void MainWindow::addWelcomeTab()
 }
 
 
-void MainWindow::runSftpProbeForSavedSession(const QString &sessionId)
+void MainWindow::openSftpBrowserForSavedSession(const QString &sessionId)
 {
     ConfigManager config;
     SessionProfile session;
     QString loadError;
+
+    auto addStatusTab = [this, &session](const QString &titleSuffix, const QString &text) {
+        auto *statusTab = new QTextEdit(this);
+        statusTab->setReadOnly(true);
+        statusTab->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+        statusTab->setPlainText(text);
+
+        const QString tabName = session.name.trimmed().isEmpty()
+            ? QStringLiteral("sftp status")
+            : session.name + QStringLiteral(" ") + titleSuffix;
+        const int tabIndex = m_tabs->addTab(statusTab, tabName);
+        m_tabs->setCurrentIndex(tabIndex);
+    };
 
     if (!config.loadSessionById(sessionId, &session, &loadError)) {
         QMessageBox::warning(
@@ -1572,11 +1638,11 @@ void MainWindow::runSftpProbeForSavedSession(const QString &sessionId)
             QStringLiteral("Could not load saved session"),
             loadError
         );
-        statusBar()->showMessage(QStringLiteral("Could not load saved session for SFTP probe: ") + sessionId);
+        statusBar()->showMessage(QStringLiteral("Could not load saved session for SFTP browser: ") + sessionId);
         return;
     }
 
-    AppLogger::info(QStringLiteral("SFTP probe requested: session=\"") + session.name
+    AppLogger::info(QStringLiteral("SFTP browser requested: session=\"") + session.name
         + QStringLiteral("\", host=") + session.host
         + QStringLiteral(", port=") + QString::number(session.port)
         + QStringLiteral(", user=") + session.username);
@@ -1598,44 +1664,37 @@ void MainWindow::runSftpProbeForSavedSession(const QString &sessionId)
             ? session.secretRef
             : session.keyRef;
 
-    QString output;
-    output += QStringLiteral("DD-SSH SFTP connection proof of concept\n\n");
-    output += QStringLiteral("Checkpoint: dev 0.1.7.3 — SFTP connection proof of concept\n\n");
-    output += QStringLiteral("Session: ") + session.name + QStringLiteral("\n");
-    output += QStringLiteral("Session id: ") + session.id + QStringLiteral("\n");
-    output += QStringLiteral("Group: ") + (session.group.trimmed().isEmpty() ? QStringLiteral("(none)") : session.group) + QStringLiteral("\n\n");
-    output += QStringLiteral("Host: ") + session.host + QStringLiteral("\n");
-    output += QStringLiteral("Port: ") + QString::number(session.port) + QStringLiteral("\n");
-    output += QStringLiteral("Username: ") + session.username + QStringLiteral("\n");
-    output += QStringLiteral("Auth type: ") + authLabel + QStringLiteral("\n");
-    output += QStringLiteral("Secret ref: ") + secretRef + QStringLiteral("\n");
-    output += QStringLiteral("Secret value: loaded from dd-ssh.json, hidden from display\n\n");
-    output += QStringLiteral("Scope:\n");
-    output += QStringLiteral("- open SSH connection using saved session data\n");
-    output += QStringLiteral("- use existing known-host prompt and trust-chain preflight\n");
-    output += QStringLiteral("- verify approved host key again before authentication\n");
-    output += QStringLiteral("- authenticate and initialize libssh SFTP subsystem\n");
-    output += QStringLiteral("- list remote '.' directory as a proof of concept\n");
-    output += QStringLiteral("- no upload, download, delete, rename, queue, or file browser UI yet\n\n");
+    QString preflightText;
+    preflightText += QStringLiteral("DD-SSH read-only SFTP browser preflight\n\n");
+    preflightText += QStringLiteral("Checkpoint: dev 0.1.7.4.1 — read-only SFTP browser bugfix polish\n\n");
+    preflightText += QStringLiteral("Session: ") + session.name + QStringLiteral("\n");
+    preflightText += QStringLiteral("Session id: ") + session.id + QStringLiteral("\n");
+    preflightText += QStringLiteral("Group: ") + (session.group.trimmed().isEmpty() ? QStringLiteral("(none)") : session.group) + QStringLiteral("\n\n");
+    preflightText += QStringLiteral("Host: ") + session.host + QStringLiteral("\n");
+    preflightText += QStringLiteral("Port: ") + QString::number(session.port) + QStringLiteral("\n");
+    preflightText += QStringLiteral("Username: ") + session.username + QStringLiteral("\n");
+    preflightText += QStringLiteral("Auth type: ") + authLabel + QStringLiteral("\n");
+    preflightText += QStringLiteral("Secret ref: ") + secretRef + QStringLiteral("\n");
+    preflightText += QStringLiteral("Secret value: loaded from dd-ssh.json, hidden from display\n\n");
+    preflightText += QStringLiteral("Scope:\n");
+    preflightText += QStringLiteral("- open a graphical read-only remote SFTP browser tab\n");
+    preflightText += QStringLiteral("- use saved session data and plain-v1 secret references\n");
+    preflightText += QStringLiteral("- use existing known-host prompt and trust-chain preflight\n");
+    preflightText += QStringLiteral("- verify the approved host key again before SFTP authentication\n");
+    preflightText += QStringLiteral("- list remote directories with Refresh, Up, editable path, and double-click folder navigation\n");
+    preflightText += QStringLiteral("- no upload, download, delete, rename, queue, or local file panel yet\n\n");
 
     QString secretValue;
     QString secretType;
     QString secretError;
 
     if (!config.loadPlainSecret(secretRef, &secretValue, &secretType, &secretError)) {
-        output += QStringLiteral("Secret load result:\n");
-        output += QStringLiteral("Status: FAILED\n");
-        output += QStringLiteral("Message: ") + secretError + QStringLiteral("\n\n");
-        output += QStringLiteral("SFTP probe was NOT attempted.\n");
-
-        auto *probeTab = new QTextEdit(this);
-        probeTab->setReadOnly(true);
-        probeTab->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
-        probeTab->setPlainText(output);
-
-        const int tabIndex = m_tabs->addTab(probeTab, session.name + QStringLiteral(" sftp"));
-        m_tabs->setCurrentIndex(tabIndex);
-        statusBar()->showMessage(QStringLiteral("SFTP probe secret load failed for ") + tabTitle);
+        preflightText += QStringLiteral("Secret load result:\n");
+        preflightText += QStringLiteral("Status: FAILED\n");
+        preflightText += QStringLiteral("Message: ") + secretError + QStringLiteral("\n\n");
+        preflightText += QStringLiteral("SFTP browser was NOT opened.\n");
+        addStatusTab(QStringLiteral("sftp error"), preflightText);
+        statusBar()->showMessage(QStringLiteral("SFTP browser secret load failed for ") + tabTitle);
         return;
     }
 
@@ -1645,31 +1704,24 @@ void MainWindow::runSftpProbeForSavedSession(const QString &sessionId)
             : QStringLiteral("private_key");
 
     if (secretType != expectedSecretType) {
-        output += QStringLiteral("Secret load result:\n");
-        output += QStringLiteral("Status: FAILED\n");
-        output += QStringLiteral("Message: Secret type mismatch. Expected ")
+        preflightText += QStringLiteral("Secret load result:\n");
+        preflightText += QStringLiteral("Status: FAILED\n");
+        preflightText += QStringLiteral("Message: Secret type mismatch. Expected ")
             + expectedSecretType
             + QStringLiteral(", got ")
             + secretType
             + QStringLiteral(".\n\n");
-        output += QStringLiteral("SFTP probe was NOT attempted.\n");
-
-        auto *probeTab = new QTextEdit(this);
-        probeTab->setReadOnly(true);
-        probeTab->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
-        probeTab->setPlainText(output);
-
-        const int tabIndex = m_tabs->addTab(probeTab, session.name + QStringLiteral(" sftp"));
-        m_tabs->setCurrentIndex(tabIndex);
-        statusBar()->showMessage(QStringLiteral("SFTP probe secret type mismatch for ") + tabTitle);
+        preflightText += QStringLiteral("SFTP browser was NOT opened.\n");
+        addStatusTab(QStringLiteral("sftp error"), preflightText);
+        statusBar()->showMessage(QStringLiteral("SFTP browser secret type mismatch for ") + tabTitle);
         return;
     }
 
-    output += QStringLiteral("Secret load result:\n");
-    output += QStringLiteral("Status: SUCCESS\n");
-    output += QStringLiteral("Message: Plaintext secret loaded from dd-ssh.json. Value is hidden.\n\n");
+    preflightText += QStringLiteral("Secret load result:\n");
+    preflightText += QStringLiteral("Status: SUCCESS\n");
+    preflightText += QStringLiteral("Message: Plaintext secret loaded from dd-ssh.json. Value is hidden.\n\n");
 
-    statusBar()->showMessage(QStringLiteral("Running SSH preflight before SFTP probe for ") + tabTitle + QStringLiteral("..."));
+    statusBar()->showMessage(QStringLiteral("Running SSH preflight before SFTP browser for ") + tabTitle + QStringLiteral("..."));
     QApplication::setOverrideCursor(Qt::WaitCursor);
     QApplication::processEvents();
 
@@ -1681,7 +1733,7 @@ void MainWindow::runSftpProbeForSavedSession(const QString &sessionId)
 
     QApplication::restoreOverrideCursor();
 
-    output += QStringLiteral("SSH preflight result:\n");
+    preflightText += QStringLiteral("SSH preflight result:\n");
 
     bool knownHostAllowed = false;
     QString knownHostDecision = QStringLiteral("Not checked");
@@ -1689,11 +1741,11 @@ void MainWindow::runSftpProbeForSavedSession(const QString &sessionId)
     KnownHostsManager knownHosts;
 
     if (handshake.success) {
-        output += QStringLiteral("Status: SUCCESS\n");
-        output += QStringLiteral("Message: ") + handshake.message + QStringLiteral("\n");
-        output += QStringLiteral("Server banner: ") + handshake.serverBanner + QStringLiteral("\n");
-        output += QStringLiteral("Host key type: ") + handshake.hostKeyType + QStringLiteral("\n");
-        output += QStringLiteral("Host key fingerprint: ") + handshake.hostKeyFingerprint + QStringLiteral("\n\n");
+        preflightText += QStringLiteral("Status: SUCCESS\n");
+        preflightText += QStringLiteral("Message: ") + handshake.message + QStringLiteral("\n");
+        preflightText += QStringLiteral("Server banner: ") + handshake.serverBanner + QStringLiteral("\n");
+        preflightText += QStringLiteral("Host key type: ") + handshake.hostKeyType + QStringLiteral("\n");
+        preflightText += QStringLiteral("Host key fingerprint: ") + handshake.hostKeyFingerprint + QStringLiteral("\n\n");
 
         const KnownHostsManager::CheckResult check = knownHosts.checkHost(
             session.host,
@@ -1717,125 +1769,67 @@ void MainWindow::runSftpProbeForSavedSession(const QString &sessionId)
         knownHostDecision = knownHostResult.decision;
         knownHostExtra = knownHostResult.extra;
 
-        output += QStringLiteral("Known-host result:\n");
-        output += QStringLiteral("Decision: ") + knownHostDecision + QStringLiteral("\n");
-        output += QStringLiteral("Config file: ") + knownHosts.configFilePath() + QStringLiteral("\n");
+        preflightText += QStringLiteral("Known-host result:\n");
+        preflightText += QStringLiteral("Decision: ") + knownHostDecision + QStringLiteral("\n");
+        preflightText += QStringLiteral("Config file: ") + knownHosts.configFilePath() + QStringLiteral("\n");
 
         if (!knownHostExtra.isEmpty()) {
-            output += QStringLiteral("Extra: ") + knownHostExtra + QStringLiteral("\n");
+            preflightText += QStringLiteral("Extra: ") + knownHostExtra + QStringLiteral("\n");
         }
 
-        output += QStringLiteral("\n");
+        preflightText += QStringLiteral("\n");
     } else {
-        output += QStringLiteral("Status: FAILED\n");
-        output += QStringLiteral("Message: ") + handshake.message + QStringLiteral("\n");
-        output += QStringLiteral("libssh error code: ") + QString::number(handshake.sshErrorCode) + QStringLiteral("\n");
-        output += QStringLiteral("Error: ") + handshake.error + QStringLiteral("\n\n");
-        output += QStringLiteral("Known-host result:\n");
-        output += QStringLiteral("Decision: Not checked because handshake failed\n\n");
-        output += QStringLiteral("SFTP probe was NOT attempted.\n");
+        preflightText += QStringLiteral("Status: FAILED\n");
+        preflightText += QStringLiteral("Message: ") + handshake.message + QStringLiteral("\n");
+        preflightText += QStringLiteral("libssh error code: ") + QString::number(handshake.sshErrorCode) + QStringLiteral("\n");
+        preflightText += QStringLiteral("Error: ") + handshake.error + QStringLiteral("\n\n");
+        preflightText += QStringLiteral("Known-host result:\n");
+        preflightText += QStringLiteral("Decision: Not checked because handshake failed\n\n");
+        preflightText += QStringLiteral("SFTP browser was NOT opened.\n");
+        addStatusTab(QStringLiteral("sftp error"), preflightText);
+        statusBar()->showMessage(QStringLiteral("SFTP browser preflight failed for ") + tabTitle);
+        return;
     }
 
-    bool probeAttempted = false;
-    SftpProbeResult probeResult;
-
-    if (handshake.success && knownHostAllowed) {
-        output += QStringLiteral("Known-host decision allows SFTP probe.\n\n");
-
-        const SshHostKeyExpectation hostKeyExpectation = makeHostKeyExpectation(
-            session.host,
-            session.port,
-            handshake.hostKeyType,
-            handshake.hostKeyFingerprint,
-            knownHostDecision
-        );
-
-        const SshAuthMethod authMethod =
-            session.authType == SessionProfile::AuthType::Password
-                ? SshAuthMethod::Password
-                : SshAuthMethod::PrivateKey;
-
-        statusBar()->showMessage(QStringLiteral("Opening SFTP subsystem for ") + tabTitle + QStringLiteral("..."));
-        QApplication::setOverrideCursor(Qt::WaitCursor);
-        QApplication::processEvents();
-
-        probeResult = SftpProbe::listRemoteDirectory(
-            session.host,
-            session.port,
-            session.username,
-            authMethod,
-            secretValue,
-            hostKeyExpectation,
-            QStringLiteral(".")
-        );
-
-        QApplication::restoreOverrideCursor();
-        probeAttempted = true;
-
-        output += QStringLiteral("SFTP probe result:\n");
-
-        if (probeResult.hostKeyVerificationAttempted) {
-            output += QStringLiteral("Host-key verification before auth: ")
-                + (probeResult.hostKeyVerified ? QStringLiteral("VERIFIED") : QStringLiteral("FAILED"))
-                + QStringLiteral("\n");
-            output += QStringLiteral("SFTP connection key type: ") + probeResult.hostKeyType + QStringLiteral("\n");
-            output += QStringLiteral("SFTP connection fingerprint: ") + probeResult.hostKeyFingerprint + QStringLiteral("\n");
-        }
-
-        if (probeResult.success) {
-            output += QStringLiteral("Status: SUCCESS\n");
-            output += QStringLiteral("Message: ") + probeResult.message + QStringLiteral("\n");
-            output += QStringLiteral("Remote path: ") + probeResult.remotePath + QStringLiteral("\n");
-            output += QStringLiteral("Entries: ") + QString::number(probeResult.entries.size()) + QStringLiteral("\n\n");
-            output += QStringLiteral("Remote listing:\n");
-            output += QStringLiteral("TYPE        SIZE          MODIFIED               PERMISSIONS  NAME\n");
-            output += QStringLiteral("--------------------------------------------------------------------------\n");
-
-            for (const SftpRemoteEntry &entry : probeResult.entries) {
-                output += QStringLiteral("%1  %2  %3  %4  %5\n")
-                    .arg(entry.type.left(10), -10)
-                    .arg(QString::number(entry.sizeBytes), 12)
-                    .arg(entry.modifiedTime.left(20), -20)
-                    .arg(entry.permissions.left(11), -11)
-                    .arg(entry.name);
-            }
-
-            output += QStringLiteral("\nNext planned checkpoint:\n");
-            output += QStringLiteral("dev 0.1.7.4 — read-only remote file browser.\n");
-        } else {
-            output += QStringLiteral("Status: FAILED\n");
-            output += QStringLiteral("Message: ") + probeResult.message + QStringLiteral("\n");
-            output += QStringLiteral("Auth return code: ") + QString::number(probeResult.authReturnCode) + QStringLiteral("\n");
-            output += QStringLiteral("libssh error code: ") + QString::number(probeResult.sshErrorCode) + QStringLiteral("\n");
-            output += QStringLiteral("SFTP error code: ") + QString::number(probeResult.sftpErrorCode) + QStringLiteral("\n");
-            output += QStringLiteral("Error: ") + probeResult.error + QStringLiteral("\n\n");
-            output += QStringLiteral("Check:\n");
-            output += QStringLiteral("- SSH auth still works for this saved session\n");
-            output += QStringLiteral("- server allows the SFTP subsystem\n");
-            output += QStringLiteral("- remote user has permission to list the default directory\n");
-        }
-    } else if (handshake.success) {
-        output += QStringLiteral("Connection flow stopped at known-host decision.\n");
-        output += QStringLiteral("SFTP probe was NOT attempted.\n");
+    if (!knownHostAllowed) {
+        preflightText += QStringLiteral("Connection flow stopped at known-host decision.\n");
+        preflightText += QStringLiteral("SFTP browser was NOT opened.\n");
+        addStatusTab(QStringLiteral("sftp cancelled"), preflightText);
+        statusBar()->showMessage(QStringLiteral("SFTP browser cancelled by known-host decision for ") + tabTitle);
+        return;
     }
 
-    auto *probeTab = new QTextEdit(this);
-    probeTab->setReadOnly(true);
-    probeTab->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
-    probeTab->setPlainText(output);
+    preflightText += QStringLiteral("Known-host decision allows SFTP browser.\n\n");
+    preflightText += QStringLiteral("Opening read-only SFTP browser tab.\n");
 
-    const int tabIndex = m_tabs->addTab(probeTab, session.name + QStringLiteral(" sftp"));
+    const SshHostKeyExpectation hostKeyExpectation = makeHostKeyExpectation(
+        session.host,
+        session.port,
+        handshake.hostKeyType,
+        handshake.hostKeyFingerprint,
+        knownHostDecision
+    );
+
+    const SshAuthMethod authMethod =
+        session.authType == SessionProfile::AuthType::Password
+            ? SshAuthMethod::Password
+            : SshAuthMethod::PrivateKey;
+
+    auto *browserTab = new SftpBrowserTab(
+        session.name,
+        session.host,
+        session.port,
+        session.username,
+        authMethod,
+        secretValue,
+        hostKeyExpectation,
+        this
+    );
+
+    const int tabIndex = m_tabs->addTab(browserTab, session.name + QStringLiteral(" files"));
     m_tabs->setCurrentIndex(tabIndex);
 
-    if (probeAttempted && probeResult.success) {
-        statusBar()->showMessage(QStringLiteral("SFTP probe successful for ") + tabTitle);
-    } else if (probeAttempted) {
-        statusBar()->showMessage(QStringLiteral("SFTP probe failed for ") + tabTitle);
-    } else if (handshake.success && !knownHostAllowed) {
-        statusBar()->showMessage(QStringLiteral("SFTP probe cancelled by known-host decision for ") + tabTitle);
-    } else {
-        statusBar()->showMessage(QStringLiteral("SFTP probe preflight failed for ") + tabTitle);
-    }
+    statusBar()->showMessage(QStringLiteral("Opened read-only SFTP browser for ") + tabTitle);
 }
 
 
@@ -1859,7 +1853,7 @@ void MainWindow::showSessionContextMenu(const QPoint &position)
 
     QMenu menu(this);
     QAction *openWebTerminalAction = menu.addAction("Open xterm.js terminal");
-    QAction *fileManagerAction = menu.addAction("Open File Manager (SFTP probe)");
+    QAction *fileManagerAction = menu.addAction("Open File Manager (read-only)");
     QAction *connectAction = menu.addAction("Run auth test");
     QAction *openShellAction = menu.addAction("Open basic shell (fallback)");
     menu.addSeparator();
@@ -1873,7 +1867,7 @@ void MainWindow::showSessionContextMenu(const QPoint &position)
     } else if (selectedAction == openWebTerminalAction) {
         openSavedSessionWebTerminal(sessionId);
     } else if (selectedAction == fileManagerAction) {
-        runSftpProbeForSavedSession(sessionId);
+        openSftpBrowserForSavedSession(sessionId);
     } else if (selectedAction == openShellAction) {
         openSavedSessionShell(sessionId);
     } else if (selectedAction == editAction) {

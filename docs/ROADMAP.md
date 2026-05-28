@@ -44,11 +44,12 @@ Already implemented:
 
 Active File Transfer / File Manager track:
 
-Current checkpoint: `dev 0.1.7.3` — SFTP connection proof of concept.
+Current checkpoint: `dev 0.1.7.4.1` — read-only SFTP browser bugfix polish.
 
 ```text
 dev 0.1.7.2 — File transport architecture/design foundation [done]
-dev 0.1.7.3 — SFTP connection proof of concept [current]
+dev 0.1.7.3 — SFTP connection proof of concept [done]
+dev 0.1.7.4.1 — read-only SFTP browser bugfix polish [current]
 dev 0.1.7.4 — read-only remote file browser
 dev 0.1.7.5 — local + remote two-panel read-only UI
 dev 0.1.7.6 — single-file download
@@ -153,7 +154,7 @@ Expected before Apollo:
 
 ## Current release-prep step
 
-`dev 0.1.7.3` adds the first saved-session SFTP probe using libssh SFTP, while still avoiding a full file browser or transfers. `dev 0.1.7.2` started the File Transfer / File Manager development track with architecture documentation and a harmless UI placeholder. `dev 0.1.7.1` remains the closed terminal foundation baseline after native paste hardening. `dev 0.1.7.0` hardened terminal transport by moving SSH output through a byte-stream/Base64/WebChannel path, using streaming UTF-8 decoding in xterm.js, and making terminal input writes partial-write aware. `dev 0.1.6.x` completed the logging, Session Traffic, config safety, macOS DMG, repo hygiene, packaging, and SSH trust-chain foundations. `dev 0.1.5.x` completed Windows standalone deployment, known-host multi-key portability, and Windows libssh KEX compatibility work.
+`dev 0.1.7.4.1` polishes the first read-only SFTP browser after Linux/macOS testing feedback. `dev 0.1.7.4` added the first graphical read-only remote SFTP browser. `dev 0.1.7.3` added the first saved-session SFTP probe using libssh SFTP, while still avoiding transfers. `dev 0.1.7.2` started the File Transfer / File Manager development track with architecture documentation and a harmless UI placeholder. `dev 0.1.7.1` remains the closed terminal foundation baseline after native paste hardening. `dev 0.1.7.0` hardened terminal transport by moving SSH output through a byte-stream/Base64/WebChannel path, using streaming UTF-8 decoding in xterm.js, and making terminal input writes partial-write aware. `dev 0.1.6.x` completed the logging, Session Traffic, config safety, macOS DMG, repo hygiene, packaging, and SSH trust-chain foundations. `dev 0.1.5.x` completed Windows standalone deployment, known-host multi-key portability, and Windows libssh KEX compatibility work.
 
 ---
 
@@ -236,7 +237,8 @@ Next active feature track after the terminal foundation checkpoint:
 
 ```text
 dev 0.1.7.2 — File transport architecture/design foundation [done]
-dev 0.1.7.3 — SFTP connection proof of concept [current]
+dev 0.1.7.3 — SFTP connection proof of concept [done]
+dev 0.1.7.4.1 — Read-only SFTP browser bugfix polish [current]
 dev 0.1.7.4 — Read-only remote file browser
 ```
 
