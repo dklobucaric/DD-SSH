@@ -1,6 +1,6 @@
 # DD-SSH Known Limitations
 
-**Checkpoint:** dev 0.1.7.8 — Andromeda
+**Checkpoint:** dev 0.1.8.0.4.1 — Andromeda
 
 This document lists limitations that should be visible to testers. Nothing here is hidden or sugar-coated.
 
@@ -29,7 +29,7 @@ This document lists limitations that should be visible to testers. Nothing here 
 
 ## Feature limitations
 
-`dev 0.1.7.8` polishes progress/completion/cancel feedback for the existing single-file download and upload paths. It is intentionally not a complete file transfer tool yet: folder transfer, queue, sync, delete, rename, chmod, mkdir, overwrite metadata comparison, and SFTP traffic monitor integration are not implemented.
+`dev 0.1.8.0.4.1` keeps the conservative transfer queue foundation and stabilizes queue behavior before folder work. Running/pending queues are now included in exit safety, and queue/navigation controls are locked while a queue run is active. `dev 0.1.8.0.3` adds `Retry selected` for finished queue items. `dev 0.1.8.0.2` adds Overwrite all / Skip all decisions for repeated overwrite conflicts. `dev 0.1.8.0.1` fixes overwrite prompt visibility. `dev 0.1.8.0` adds a conservative transfer queue foundation for multiple individual files. It is intentionally not a complete file transfer tool yet: folder transfer, recursive transfer, parallel transfer, resume, sync, delete, rename, chmod, mkdir, overwrite metadata comparison, and SFTP traffic monitor integration are not implemented.
 
 Not implemented yet:
 

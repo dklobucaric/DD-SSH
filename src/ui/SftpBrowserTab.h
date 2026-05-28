@@ -29,6 +29,8 @@ public:
     );
 
     QString displayName() const;
+    bool hasTransferQueueWorkForExit() const;
+    QString transferQueueExitSummary() const;
 
 private:
     void setupUi();
@@ -46,6 +48,16 @@ private:
     void handleRemoteCellDoubleClicked(int row, int column);
     void downloadSelectedRemoteFile();
     void uploadSelectedLocalFile();
+    void queueSelectedRemoteDownloads();
+    void queueSelectedLocalUploads();
+    void startTransferQueue();
+    void clearFinishedTransferQueueItems();
+    void removeSelectedTransferQueueItems();
+    void retrySelectedTransferQueueItems();
+    void refreshTransferQueueTable();
+    void setTransferQueueBusy(bool busy);
+    void setQueueItemStatus(int index, const QString &status, const QString &message = QString());
+    QString transferQueueSummaryText() const;
     void populateRemoteTable(const QList<SftpRemoteEntry> &entries);
     void setRemoteBusy(bool busy);
     QString normalizedRemotePath(const QString &path) const;
@@ -64,11 +76,26 @@ private:
     QString m_currentLocalPath;
     QString m_currentRemotePath = QStringLiteral(".");
 
+    struct TransferQueueItem
+    {
+        QString direction;
+        QString displayName;
+        QString sourcePath;
+        QString targetPath;
+        quint64 sizeBytes = 0;
+        QString status = QStringLiteral("Pending");
+        QString message;
+    };
+
+    QList<TransferQueueItem> m_transferQueue;
+    bool m_transferQueueRunning = false;
+
     QLineEdit *m_localPathEdit = nullptr;
     QPushButton *m_localGoButton = nullptr;
     QPushButton *m_localUpButton = nullptr;
     QPushButton *m_localRefreshButton = nullptr;
     QPushButton *m_localUploadButton = nullptr;
+    QPushButton *m_localQueueUploadButton = nullptr;
     QLabel *m_localStatusLabel = nullptr;
     QFileSystemModel *m_localModel = nullptr;
     QTreeView *m_localTree = nullptr;
@@ -78,6 +105,14 @@ private:
     QPushButton *m_remoteUpButton = nullptr;
     QPushButton *m_remoteRefreshButton = nullptr;
     QPushButton *m_remoteDownloadButton = nullptr;
+    QPushButton *m_remoteQueueDownloadButton = nullptr;
     QLabel *m_remoteStatusLabel = nullptr;
     QTableWidget *m_remoteTable = nullptr;
+
+    QTableWidget *m_queueTable = nullptr;
+    QPushButton *m_queueStartButton = nullptr;
+    QPushButton *m_queueRetrySelectedButton = nullptr;
+    QPushButton *m_queueRemoveSelectedButton = nullptr;
+    QPushButton *m_queueClearFinishedButton = nullptr;
+    QLabel *m_queueStatusLabel = nullptr;
 };

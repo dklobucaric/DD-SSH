@@ -39,9 +39,19 @@ This directory contains the working documentation for DD-SSH.
 - [Release Artifacts](RELEASE_ARTIFACTS.md)
 - [Release Notes Template](RELEASE_NOTES_TEMPLATE.md) — future release checklist
 - [Release Checklist](RELEASE_CHECKLIST.md) — focused checkpoint smoke-test checklist
+- [Build/Test 0.1.8.0.4](BUILD_AND_TEST_0.1.8.0.4.md) — queue stabilization polish build/test notes
+- [Build/Test 0.1.8.0.3](BUILD_AND_TEST_0.1.8.0.3.md) — queue retry-selected polish build/test notes
+- [Build/Test 0.1.8.0.2](BUILD_AND_TEST_0.1.8.0.2.md) — queue overwrite-all polish build/test notes
+- [Build/Test 0.1.8.0.1](BUILD_AND_TEST_0.1.8.0.1.md) — queue overwrite prompt polish build/test notes
+- [Build/Test 0.1.8.0](BUILD_AND_TEST_0.1.8.0.md) — transfer queue foundation build/test notes
 - [Build/Test 0.1.7.8](BUILD_AND_TEST_0.1.7.8.md) — transfer progress/cancel polish build/test notes
 - [Build/Test 0.1.7.7](BUILD_AND_TEST_0.1.7.7.md) — single-file SFTP upload foundation build/test notes
 - [Build/Test 0.1.7.6.1](BUILD_AND_TEST_0.1.7.6.1.md) — single-file SFTP download polish build/test notes
+- [Testcase 0.1.8.0.4](TESTCASE_0.1.8.0.4.md) — queue stabilization polish validation checklist
+- [Testcase 0.1.8.0.3](TESTCASE_0.1.8.0.3.md) — queue retry-selected polish validation checklist
+- [Testcase 0.1.8.0.2](TESTCASE_0.1.8.0.2.md) — queue overwrite-all polish validation checklist
+- [Testcase 0.1.8.0.1](TESTCASE_0.1.8.0.1.md) — queue overwrite prompt polish validation checklist
+- [Testcase 0.1.8.0](TESTCASE_0.1.8.0.md) — transfer queue foundation validation checklist
 - [Testcase 0.1.7.8](TESTCASE_0.1.7.8.md) — transfer progress/cancel polish validation checklist
 - [Testcase 0.1.7.7](TESTCASE_0.1.7.7.md) — single-file SFTP upload foundation validation checklist
 - [Testcase 0.1.7.6.1](TESTCASE_0.1.7.6.1.md) — single-file SFTP download polish validation checklist
@@ -60,10 +70,10 @@ This directory contains the working documentation for DD-SSH.
 ## Current checkpoint
 
 ```text
-Version: dev 0.1.7.8
+Version: dev 0.1.8.0.4.1
 Codename: Andromeda
-Milestone: Transfer progress and cancel polish
-Phase: Single-file transfer UX hardening
+Milestone: Transfer queue foundation
+Phase: Transfer queue retry-selected polish
 ```
 
 
@@ -94,4 +104,7 @@ GitHub issue templates live under `.github/ISSUE_TEMPLATE/`.
 
 - docs/TERMINAL_TRANSPORT.md explains the byte-stream terminal transport hardening added in dev 0.1.7.0.
 
-- docs/FILE_TRANSFER_ARCHITECTURE.md explains the planned libssh SFTP/File Manager design and the dev 0.1.7.8 transfer progress/cancel polish checkpoint.
+- docs/FILE_TRANSFER_ARCHITECTURE.md explains the planned libssh SFTP/File Manager design and the dev 0.1.8.0.4.1 queue stabilization polish checkpoint.
+
+- docs/BUILD_AND_TEST_0.1.8.0.4.1.md — Build and test notes for the queue stabilization compile hotfix.
+- docs/TESTCASE_0.1.8.0.4.1.md — Testcase for the queue stabilization compile hotfix.

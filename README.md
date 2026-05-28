@@ -17,17 +17,22 @@ DD-SSH is designed for practical sysadmin use: saved sessions, one portable JSON
 
 ## Current status
 
-**Development checkpoint:** `dev 0.1.7.8`
+**Development checkpoint:** `dev 0.1.8.0.4.1`
 **Codename:** Andromeda
-**Milestone:** Transfer progress and cancel polish
-**Current phase:** Single-file transfer UX hardening
+**Milestone:** Transfer queue foundation
+**Current phase:** Transfer queue stabilization polish
 
 DD-SSH is now moving from the closed terminal-foundation baseline into the File Transfer / File Manager development track. It is not a stable 1.0 release yet, but the core terminal workflow is functional and has been validated on Linux, Windows 10/11, and Intel macOS. Native Windows builds, a standalone Windows deployment folder, a Debian package, and a macOS Intel `.app` / `.dmg` tester flow have been tested.
 
-The current checkpoint is intentionally small: `dev 0.1.7.8` polishes the existing single-file download and upload flow. Transfer dialogs now show formatted progress, raw bytes, elapsed time, transfer speed, clearer completion messages, and explicit cancel feedback. Download and upload remain single-file only; this checkpoint does not add folder transfer, queue, sync, delete/rename, or SFTP traffic counters yet.
+The current checkpoint is intentionally small: `dev 0.1.8.0.4.1` stabilizes the transfer queue before folder-transfer work. It strengthens exit safety when an SFTP queue has running or pending work, locks queue/navigation controls while a queue run is active, and improves the no-pending-items message. Existing immediate single-file download/upload actions, overwrite-all queue decisions, retry-selected behavior, and sequential one-at-a-time queue execution remain available. Folder transfer, parallel transfers, resume, sync, delete/rename, and SFTP traffic counters remain intentionally deferred.
 
 Recent checkpoints:
 
+- `dev 0.1.8.0.4.1` stabilizes the queue foundation before folder work: exit safety now warns about running/pending SFTP queues, queue/navigation controls lock while a queue run is active, and `Start queue` gives a clearer no-pending-items message.
+- `dev 0.1.8.0.3` adds `Retry selected` for finished queue items so selected `Done`, `Failed`, `Cancelled`, or `Skipped` transfers can be moved back to `Pending` and run again.
+- `dev 0.1.8.0.2` adds queue overwrite/skip-all decisions so repeated overwrite prompts do not have to be answered one file at a time.
+- `dev 0.1.8.0.1` fixes queue overwrite prompt ordering so overwrite questions appear in front of the user instead of being hidden by the queue progress dialog.
+- `dev 0.1.8.0` adds the first SFTP transfer queue foundation: queue multiple individual downloads/uploads, run them sequentially, track status, remove selected, and clear finished items.
 - `dev 0.1.7.8` polishes single-file SFTP transfer progress and cancel feedback: transfer dialogs show progress, speed, elapsed time, completion summaries, and clearer cancellation messages.
 - `dev 0.1.5.6` proved the Windows standalone deployment folder can run outside the build tree without manually extending `PATH`.
 - `dev 0.1.5.7` fixed portable `known_hosts` behavior so one shared `dd-ssh.json` can carry multiple legitimate host-key algorithms per `host:port`.
@@ -50,7 +55,7 @@ Recent checkpoints:
 - `dev 0.1.7.1` hardens native xterm.js paste handling: toolbar Paste, right-click paste, Ctrl+Shift+V, and macOS Command+V now route through the same DD-SSH safe paste path and should not leak bracketed paste markers such as `^[[200~` into the remote shell.
 - `dev 0.1.7.0` hardens terminal transport: SSH output is carried as bytes to the WebEngine terminal, decoded with a streaming UTF-8 decoder, and input writes are partial-write aware so large paste/input is not silently truncated.
 
-In `dev 0.1.7.8`, DD-SSH keeps the deliberately narrow single-file transfer boundary but improves transfer feedback. The focus is making download/upload progress and cancellation clearer before moving toward more complex transfer features. Folder transfer, queue, sync, delete/rename, and SFTP traffic integration remain intentionally deferred.
+In `dev 0.1.8.0.4.1`, DD-SSH keeps the deliberately narrow single-file boundary for each transfer item and stabilizes queue behavior before recursive folder transfer. Queue processing remains sequential and conservative: no folder transfer, no parallel execution, no resume, no sync engine, and no SFTP Session Traffic integration yet.
 
 The future file-transfer design is documented in `docs/FILE_TRANSFER_ARCHITECTURE.md`. File transfer will use libssh SFTP APIs, not shell command parsing hacks. Terminal tabs and future File Manager tabs are intentionally separated so the working terminal foundation remains stable.
 

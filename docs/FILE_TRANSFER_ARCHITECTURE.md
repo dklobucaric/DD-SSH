@@ -1,8 +1,8 @@
 # DD-SSH File Transfer Architecture
 
-**Checkpoint:** dev 0.1.7.8 — Andromeda  
-**Status:** Transfer progress and cancel polish  
-**Runtime behavior:** saved-session File Manager can browse local/remote directories, download one selected remote file, upload one selected local file, and show improved progress/completion/cancel feedback
+**Checkpoint:** dev 0.1.8.0.4.1 — Andromeda  
+**Status:** Transfer queue foundation  
+**Runtime behavior:** saved-session File Manager can browse local/remote directories, perform immediate one-file download/upload, queue multiple individual file downloads/uploads, and run queued items sequentially
 
 ---
 
@@ -21,29 +21,36 @@ The future File Manager should eventually provide:
 - single-file upload
 - overwrite warnings
 - progress and cancel handling
-- transfer queue
+- folder upload/download
+- recursive transfer
+- parallel transfer execution
+- resume
+- drag/drop
 - folder transfer experiments
 - diagnostic logging that never records file contents or secrets
 - Session Traffic integration for SFTP bytes where practical
 
-`dev 0.1.7.8` keeps the deliberately narrow single-file transfer boundary and polishes the user-visible transfer feedback: progress percent, transferred size, speed, elapsed time, completion summaries, and explicit cancel messages. `dev 0.1.7.7` added the first local-to-remote upload path, and `dev 0.1.7.6.1` preserved and polished the remote-to-local download path. Both transfer directions preserve the existing saved-session, known-host, host-key verification, auth, and libssh SFTP flow. The File Manager still does **not** implement folder transfer, queue, sync, delete, rename, chmod/mkdir, or SFTP traffic monitor integration yet.
+`dev 0.1.8.0.4.1` stabilizes the conservative transfer queue foundation before folder-transfer work: exit safety now reports running/pending queue work, queue/navigation controls are locked during a queue run, and no-pending-items feedback is clearer. `dev 0.1.8.0.3` polishes the first conservative transfer queue foundation with `Retry selected` for finished queue items. `dev 0.1.8.0.2` added Overwrite all / Skip all decisions for repeated overwrite conflicts. `dev 0.1.8.0` adds the queue foundation on top of the existing single-file upload/download paths. Users can queue multiple individual remote files for download and multiple individual local files for upload, then run the queue sequentially one item at a time. Existing immediate single-file actions remain available. The File Manager still does **not** implement folder transfer, recursive transfer, parallel execution, resume, sync, delete, rename, chmod/mkdir, or SFTP traffic monitor integration yet.
 
 ---
 
-## dev 0.1.7.8 transfer progress/cancel boundary
+## dev 0.1.8.0 transfer queue boundary
 
-`dev 0.1.7.8` does not add a new transfer type. Instead, it hardens the user feedback around the existing one-file download and one-file upload actions:
+`dev 0.1.8.0` adds a queue wrapper around the existing single-file transfer operations:
 
-- progress dialog shows transferred size / total size
-- progress percent is shown when total size is known
-- speed and elapsed time are visible while the transfer runs
-- completion dialogs show formatted size, raw bytes, elapsed time, and average speed
-- download cancellation explains that the local target was not replaced because DD-SSH writes through a safe temporary file
-- upload cancellation explains that a partial remote file may remain on the server
+- `Queue download(s)` adds multiple selected remote files to the queue
+- `Queue upload(s)` adds multiple selected local files to the queue
+- the queue table shows Status / Direction / Name / Size / Source / Target
+- `Start queue` processes pending items sequentially, one file at a time
+- queue item statuses are Pending / Running / Done / Failed / Cancelled / Skipped
+- `Remove selected` removes selected non-running queue items
+- `Clear finished` removes Done / Failed / Cancelled / Skipped items
+- existing immediate `Download selected now` and `Upload selected now` remain available
+- queued transfers reuse the progress, speed, elapsed-time, completion, and cancel feedback from `dev 0.1.7.8`
 
-`dev 0.1.7.7` previously added `Upload selected` to the local panel, `dev 0.1.7.6.1` polished the first download path, and `dev 0.1.7.5` added the first two-panel File Manager foundation.
+`dev 0.1.7.8` previously polished transfer progress/cancel handling, `dev 0.1.7.7` added upload, `dev 0.1.7.6.1` polished download, and `dev 0.1.7.5` added the first two-panel File Manager foundation.
 
-## Non-goals for dev 0.1.7.8
+## Non-goals for dev 0.1.8.0
 
 This checkpoint intentionally does not add:
 
@@ -51,7 +58,11 @@ This checkpoint intentionally does not add:
 - delete
 - rename
 - chmod/chown
-- transfer queue
+- folder upload/download
+- recursive transfer
+- parallel transfer execution
+- resume
+- drag/drop
 - sync engine
 - SFTP traffic monitor integration
 - config schema migration
@@ -59,7 +70,7 @@ This checkpoint intentionally does not add:
 - known-host behavior changes
 - encryption/master-password changes
 
-This is a progress/cancel polish checkpoint, not a full file-transfer implementation.
+This is a queue-foundation checkpoint, not a full file-transfer implementation.
 
 ---
 
@@ -79,7 +90,7 @@ Saved session context menu
    -> local panel refresh after success
 ```
 
-The local panel uses Qt filesystem browsing and does not touch the SSH/SFTP stack except as the destination path. The remote panel continues to use the proven saved-session → known-host preflight → approved host-key verification → auth → libssh SFTP path. Upload, folder transfer, queue, sync, and SFTP traffic integration remain deferred.
+The local panel uses Qt filesystem browsing and does not touch the SSH/SFTP stack except as the destination path. The remote panel continues to use the proven saved-session → known-host preflight → approved host-key verification → auth → libssh SFTP path. Folder transfer, recursive transfer, parallel transfer, resume, sync, and SFTP traffic integration remain deferred.
 
 ## dev 0.1.7.4 runtime browser
 
@@ -356,14 +367,32 @@ permissions display string if practical
 - overwrite warning
 - progress/cancel if safe
 
-### dev 0.1.7.8 — transfer progress/cancel polish [current]
+### dev 0.1.7.8 — transfer progress/cancel polish [passed]
 
-- progress percent / transferred size / total size
-- speed and elapsed time during transfer
-- completion summaries include formatted size, raw bytes, elapsed time, and average speed
-- clearer cancellation messages for download and upload
 
-Further checkpoints should add queueing, folder transfer experiments, logging, traffic integration, and cross-platform stabilization.
+### dev 0.1.8.0.4.1 — transfer queue stabilization polish [current]
+
+`dev 0.1.8.0.4.1` deliberately avoids new transfer capabilities and tightens the existing queue foundation before recursive folder work. File Manager tabs now expose whether their queue has running or pending work so the main window can include that state in exit safety confirmation. During a queue run, queue controls, local/remote navigation controls, file panels, and the queue table are locked to avoid mid-transfer path changes or queue mutation.
+
+The queue still processes one file at a time. Folder transfer, recursive traversal, parallel transfer, resume, sync, delete/rename/chmod/mkdir, and SFTP traffic monitor integration remain deferred.
+
+### dev 0.1.8.0.3 — transfer queue retry-selected polish [passed]
+
+`dev 0.1.8.0.3` keeps the queue sequential and one-file-at-a-time, but adds a safe retry path for selected finished items. `Done`, `Failed`, `Cancelled`, and `Skipped` queue items can be moved back to `Pending` with `Retry selected`, then processed again with `Start queue`. Existing overwrite/skip/overwrite-all decisions are reused when the retried item hits an existing target.
+
+### dev 0.1.8.0.2 — transfer queue overwrite-all polish
+
+`dev 0.1.8.0.2` keeps the queue sequential and one-file-at-a-time, but improves repeated overwrite conflicts. When queued downloads or uploads hit existing targets, the user can choose `Overwrite`, `Skip`, `Overwrite all`, `Skip all`, or `Cancel queue`. The all-decisions apply only to the same transfer direction during the current queue run.
+
+### dev 0.1.8.0 — transfer queue foundation
+
+- queue multiple individual remote files for download
+- queue multiple individual local files for upload
+- run queue sequentially, one item at a time
+- show queue status table and finished/failed/cancelled/skipped states
+- keep immediate one-file download/upload actions available
+
+Further checkpoints should add folder transfer experiments, logging, traffic integration, and cross-platform stabilization.
 
 ---
 
@@ -488,6 +517,16 @@ This proves the first remote browser UI without risking the tested terminal base
 
 ### dev 0.1.7.7 — single-file upload foundation [passed]
 
-### dev 0.1.7.8 — transfer progress/cancel polish [current]
+### dev 0.1.7.8 — transfer progress/cancel polish [passed]
 
-Remote SFTP Size sorting uses raw byte counts instead of formatted display strings. Transfer dialogs now report formatted size, raw bytes, elapsed time, average speed, and clearer cancellation results. Overwrite metadata comparison remains deferred.
+### dev 0.1.8.0.3 — transfer queue retry-selected polish [passed]
+
+`dev 0.1.8.0.3` keeps the queue sequential and one-file-at-a-time, but adds a safe retry path for selected finished items. `Done`, `Failed`, `Cancelled`, and `Skipped` queue items can be moved back to `Pending` with `Retry selected`, then processed again with `Start queue`. Existing overwrite/skip/overwrite-all decisions are reused when the retried item hits an existing target.
+
+### dev 0.1.8.0.2 — transfer queue overwrite-all polish
+
+`dev 0.1.8.0.2` keeps the queue sequential and one-file-at-a-time, but improves repeated overwrite conflicts. When queued downloads or uploads hit existing targets, the user can choose `Overwrite`, `Skip`, `Overwrite all`, `Skip all`, or `Cancel queue`. The all-decisions apply only to the same transfer direction during the current queue run.
+
+### dev 0.1.8.0 — transfer queue foundation
+
+Queue foundation adds multiple individual file items and sequential execution while preserving existing transfer safety behavior. Overwrite metadata comparison, folder transfer, parallel transfer, and SFTP traffic integration remain deferred.

@@ -1015,12 +1015,34 @@ QStringList MainWindow::openSftpBrowserNames() const
     return names;
 }
 
+QStringList MainWindow::activeSftpTransferQueueSummaries() const
+{
+    QStringList summaries;
+
+    if (m_tabs == nullptr) {
+        return summaries;
+    }
+
+    for (int i = 0; i < m_tabs->count(); ++i) {
+        QWidget *widget = m_tabs->widget(i);
+
+        if (auto *sftpBrowser = dynamic_cast<SftpBrowserTab *>(widget)) {
+            if (sftpBrowser->hasTransferQueueWorkForExit()) {
+                summaries.append(sftpBrowser->transferQueueExitSummary());
+            }
+        }
+    }
+
+    return summaries;
+}
+
 bool MainWindow::confirmExitWithOpenConnectionTabs()
 {
     const QStringList activeTerminals = activeSshTerminalNames();
     const QStringList openSftpBrowsers = openSftpBrowserNames();
+    const QStringList activeQueues = activeSftpTransferQueueSummaries();
 
-    if (activeTerminals.isEmpty() && openSftpBrowsers.isEmpty()) {
+    if (activeTerminals.isEmpty() && openSftpBrowsers.isEmpty() && activeQueues.isEmpty()) {
         return true;
     }
 
@@ -1046,6 +1068,17 @@ bool MainWindow::confirmExitWithOpenConnectionTabs()
         if (openSftpBrowsers.size() > maxShownItems) {
             message += QStringLiteral("\n- ...");
         }
+    }
+
+    if (!activeQueues.isEmpty()) {
+        message += QStringLiteral("\n\nSFTP transfer queue work still present:");
+        for (int i = 0; i < activeQueues.size() && i < maxShownItems; ++i) {
+            message += QStringLiteral("\n- ") + activeQueues.at(i);
+        }
+        if (activeQueues.size() > maxShownItems) {
+            message += QStringLiteral("\n- ...");
+        }
+        message += QStringLiteral("\n\nWarning: closing while a queue is running or pending will stop/lose that queue state. Finished files stay on disk/server, but pending queue entries are not saved.");
     }
 
     message += QStringLiteral("\n\nClose these tabs and exit DD-SSH?");

@@ -44,7 +44,7 @@ Already implemented:
 
 Active File Transfer / File Manager track:
 
-Current checkpoint: `dev 0.1.7.8` — transfer progress and cancel polish.
+Current checkpoint: `dev 0.1.8.0.4.1` — transfer queue stabilization polish.
 
 ```text
 dev 0.1.7.2 — File transport architecture/design foundation [done]
@@ -55,8 +55,12 @@ dev 0.1.7.5 — local + remote two-panel read-only UI [done]
 dev 0.1.7.6 — single-file download [superseded by 0.1.7.6.1]
 dev 0.1.7.6.1 — single-file download polish [passed]
 dev 0.1.7.7 — single-file upload [passed]
-dev 0.1.7.8 — transfer progress/cancel polish [current]
-dev 0.1.8.0 — transfer queue foundation [next]
+dev 0.1.7.8 — transfer progress/cancel polish [passed]
+dev 0.1.8.0.4.1 — transfer queue stabilization polish [current]
+dev 0.1.8.0.3 — transfer queue retry-selected polish [passed]
+dev 0.1.8.0.2 — transfer queue overwrite-all polish
+dev 0.1.8.0.1 — transfer queue overwrite prompt polish
+dev 0.1.8.0 — transfer queue foundation [passed/pending full smoke]
 dev 0.1.8.1 — folder transfer experiment
 dev 0.1.8.2 — file manager safety polish
 dev 0.1.8.3 — file transport logging + Session Traffic integration
@@ -155,7 +159,7 @@ Expected before Apollo:
 
 ## Current release-prep step
 
-`dev 0.1.7.8` polishes transfer progress, speed/elapsed reporting, completion summaries, and cancel feedback for both download and upload. `dev 0.1.7.7` added the first single-file local-to-remote upload action. `dev 0.1.7.6.1` polishes remote size sorting and the download completion message. `dev 0.1.7.6` added the first single-file SFTP download action on top of the two-panel File Manager. `dev 0.1.7.5` added the first two-panel read-only File Manager foundation with local and remote browsing side by side. `dev 0.1.7.4.1` polished the first read-only SFTP browser after Linux/macOS testing feedback. `dev 0.1.7.4` added the first graphical read-only remote SFTP browser. `dev 0.1.7.3` added the first saved-session SFTP probe using libssh SFTP, while still avoiding transfers. `dev 0.1.7.2` started the File Transfer / File Manager development track with architecture documentation and a harmless UI placeholder. `dev 0.1.7.1` remains the closed terminal foundation baseline after native paste hardening. `dev 0.1.7.0` hardened terminal transport by moving SSH output through a byte-stream/Base64/WebChannel path, using streaming UTF-8 decoding in xterm.js, and making terminal input writes partial-write aware. `dev 0.1.6.x` completed the logging, Session Traffic, config safety, macOS DMG, repo hygiene, packaging, and SSH trust-chain foundations. `dev 0.1.5.x` completed Windows standalone deployment, known-host multi-key portability, and Windows libssh KEX compatibility work.
+`dev 0.1.8.0.4.1` stabilizes the transfer queue before folder-transfer work by strengthening exit safety for running/pending queue work, locking queue/navigation controls while a queue run is active, and improving the no-pending-items message. `dev 0.1.8.0.3` adds Retry selected for finished queue items. `dev 0.1.8.0.2` adds Overwrite all / Skip all decisions for repeated queue overwrite conflicts. `dev 0.1.8.0.1` fixes queue overwrite prompt ordering so overwrite decisions are not hidden behind progress dialogs. `dev 0.1.8.0` added the first conservative transfer queue foundation for multiple individual file uploads/downloads, processed one at a time. `dev 0.1.7.8` polishes transfer progress, speed/elapsed reporting, completion summaries, and cancel feedback for both download and upload. `dev 0.1.7.7` added the first single-file local-to-remote upload action. `dev 0.1.7.6.1` polishes remote size sorting and the download completion message. `dev 0.1.7.6` added the first single-file SFTP download action on top of the two-panel File Manager. `dev 0.1.7.5` added the first two-panel read-only File Manager foundation with local and remote browsing side by side. `dev 0.1.7.4.1` polished the first read-only SFTP browser after Linux/macOS testing feedback. `dev 0.1.7.4` added the first graphical read-only remote SFTP browser. `dev 0.1.7.3` added the first saved-session SFTP probe using libssh SFTP, while still avoiding transfers. `dev 0.1.7.2` started the File Transfer / File Manager development track with architecture documentation and a harmless UI placeholder. `dev 0.1.7.1` remains the closed terminal foundation baseline after native paste hardening. `dev 0.1.7.0` hardened terminal transport by moving SSH output through a byte-stream/Base64/WebChannel path, using streaming UTF-8 decoding in xterm.js, and making terminal input writes partial-write aware. `dev 0.1.6.x` completed the logging, Session Traffic, config safety, macOS DMG, repo hygiene, packaging, and SSH trust-chain foundations. `dev 0.1.5.x` completed Windows standalone deployment, known-host multi-key portability, and Windows libssh KEX compatibility work.
 
 ---
 
@@ -245,8 +249,13 @@ dev 0.1.7.5 — Local + remote read-only file manager foundation [done]
 dev 0.1.7.6 — Single-file download foundation [superseded by 0.1.7.6.1]
 dev 0.1.7.6.1 — Single-file download polish [passed]
 dev 0.1.7.7 — Single-file upload foundation [passed]
-dev 0.1.7.8 — Transfer progress/cancel polish [current]
-dev 0.1.8.0 — Transfer queue foundation [next]
+dev 0.1.7.8 — Transfer progress/cancel polish [passed]
+dev 0.1.8.0 — Transfer queue foundation [done]
+dev 0.1.8.0.1 — Transfer queue overwrite prompt polish [done]
+dev 0.1.8.0.2 — Transfer queue overwrite-all polish [done]
+dev 0.1.8.0.4.1 — Transfer queue stabilization polish [current]
+dev 0.1.8.0.3 — Transfer queue retry-selected polish [passed]
+dev 0.1.8.1 — Folder transfer experiment [next]
 ```
 
 ## 0.1.7.0 terminal transport hardening

@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.24)
 
 project(DD_SSH
-    VERSION 0.1.7
+    VERSION 0.1.8
     DESCRIPTION "A clean cross-platform SSH client and session manager"
     LANGUAGES CXX
 )
 
-set(DD_SSH_VERSION_STRING "dev 0.1.7.8")
+set(DD_SSH_VERSION_STRING "dev 0.1.8.0.4.1")
 set(DD_SSH_CODENAME_STRING "Andromeda")
-set(DD_SSH_MILESTONE_STRING "Transfer progress and cancel polish")
+set(DD_SSH_MILESTONE_STRING "Transfer queue foundation")
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

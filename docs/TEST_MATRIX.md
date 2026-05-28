@@ -1,8 +1,95 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.7.8 — Andromeda  
-**Milestone:** Transfer progress and cancel polish  
-**Phase:** Single-file transfer progress/cancel feedback
+**Checkpoint:** dev 0.1.8.0.4.1 — Andromeda  
+**Milestone:** Transfer queue foundation  
+**Phase:** Transfer queue stabilization polish
+
+## dev 0.1.8.0.4.1 — transfer queue stabilization polish smoke test
+
+[ ] About shows dev 0.1.8.0.4.1  
+[ ] File Manager opens from a saved session  
+[ ] Local panel lists local files  
+[ ] Remote panel lists remote SFTP files  
+[ ] Queue table shows Status / Direction / Name / Size / Source / Target  
+[ ] Queue one or more files and start the queue  
+[ ] While the queue is running, Start queue / Retry selected / Remove selected / Clear finished are disabled  
+[ ] While the queue is running, local/remote path fields and navigation controls are disabled  
+[ ] While the queue is running, local and remote file panels are disabled  
+[ ] Closing DD-SSH with a running queue shows exit confirmation including SFTP transfer queue work  
+[ ] Closing DD-SSH with pending queue items shows exit confirmation including SFTP transfer queue work  
+[ ] Cancel in the exit dialog keeps DD-SSH open  
+[ ] Start queue with no Pending items shows a clear no-pending-items message  
+[ ] `Retry selected` still moves Done/Failed/Cancelled/Skipped items back to Pending  
+[ ] Existing queue Overwrite / Skip / Overwrite all / Skip all decisions still work  
+[ ] Existing `Download selected now` still downloads one selected remote file  
+[ ] Existing `Upload selected now` still uploads one selected local file  
+[ ] Terminal xterm.js still connects  
+[ ] Paste / Ctrl+C still work  
+[ ] Terminal Session Traffic still works for terminal tabs only; SFTP queue traffic is not expected yet  
+
+## dev 0.1.8.0.3 — transfer queue retry-selected polish smoke test
+
+[ ] About shows dev 0.1.8.0.3  
+[ ] File Manager opens from a saved session  
+[ ] Local panel lists local files  
+[ ] Remote panel lists remote SFTP files  
+[ ] Queue table shows Status / Direction / Name / Size / Source / Target  
+[ ] `Retry selected` button is visible between `Start queue` and `Remove selected`  
+[ ] Queue multiple remote downloads and run them to Done  
+[ ] Select one or more Done queue items and click `Retry selected`  
+[ ] Selected Done items return to Pending  
+[ ] `Start queue` processes the requeued download items again  
+[ ] Overwrite / Skip / Overwrite all / Skip all decisions still work for retried download items  
+[ ] Queue multiple local uploads and run them to Done  
+[ ] Select one or more Done upload items and click `Retry selected`  
+[ ] Selected Done upload items return to Pending  
+[ ] `Start queue` processes the requeued upload items again  
+[ ] Cancelled, Failed, and Skipped items can be moved back to Pending with `Retry selected`  
+[ ] Pending items remain Pending if selected for retry  
+[ ] Running items cannot be retried while the queue is active  
+[ ] `Remove selected` still removes selected non-running queue items  
+[ ] `Clear finished` still removes Done/Failed/Cancelled/Skipped queue items  
+[ ] Queue remains sequential; parallel transfer is not expected  
+[ ] Existing `Download selected now` still downloads one selected remote file  
+[ ] Existing `Upload selected now` still uploads one selected local file  
+[ ] Terminal xterm.js still connects  
+[ ] Paste / Ctrl+C still work  
+[ ] Terminal Session Traffic still works for terminal tabs only; SFTP queue traffic is not expected yet  
+
+## dev 0.1.8.0.2 — transfer queue overwrite-all polish smoke test
+
+[ ] About shows dev 0.1.8.0.2  
+
+[ ] Queue overwrite dialog offers Overwrite, Skip, Overwrite all, Skip all, and Cancel queue  
+[ ] Overwrite all applies to remaining existing local download targets in the current queue run  
+[ ] Overwrite all applies to remaining existing remote upload targets in the current queue run  
+[ ] Skip all skips remaining matching overwrite conflicts in the current queue run  
+[ ] Queue upload overwrite prompt is visible on top, not hidden behind progress  
+[ ] Queue download overwrite prompt is visible before progress starts  
+[ ] No/Skip marks item Skipped and queue continues  
+[ ] Cancel marks item Cancelled and stops queue cleanly  
+[ ] File Manager opens from a saved session  
+[ ] Local panel lists local files  
+[ ] Remote panel lists remote SFTP files  
+[ ] Existing `Download selected now` still downloads one selected remote file  
+[ ] Existing `Upload selected now` still uploads one selected local file  
+[ ] Selecting multiple remote files and clicking `Queue download(s)` adds multiple queue rows  
+[ ] Selecting multiple local files and clicking `Queue upload(s)` adds multiple queue rows  
+[ ] Queue table shows Status / Direction / Name / Size / Source / Target  
+[ ] `Start queue` processes items one at a time  
+[ ] Download queue items end as Done and appear in the local folder  
+[ ] Upload queue items end as Done and appear in the remote folder  
+[ ] Existing local overwrite prompt appears for queued downloads when needed  
+[ ] Existing remote overwrite prompt/skip behavior appears for queued uploads when needed  
+[ ] Cancelling a queued download reports that the local target was not replaced  
+[ ] Cancelling a queued upload reports that a partial remote file may remain  
+[ ] `Remove selected` removes selected non-running queue items  
+[ ] `Clear finished` removes Done/Failed/Cancelled/Skipped queue items  
+[ ] Folders are skipped/refused; folder transfer is not implemented yet  
+[ ] Queue is sequential; parallel transfer is not expected  
+[ ] Terminal xterm.js still connects  
+[ ] Paste / Ctrl+C still work  
+[ ] Terminal Session Traffic still works for terminal tabs only; SFTP queue traffic is not expected yet  
 
 ## dev 0.1.7.8 — transfer progress/cancel polish smoke test
 

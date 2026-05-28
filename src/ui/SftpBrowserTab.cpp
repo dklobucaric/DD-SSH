@@ -2,6 +2,7 @@
 #include "sftp/SftpProbe.h"
 #include "core/AppLogger.h"
 
+#include <QAbstractButton>
 #include <QAbstractItemView>
 #include <QApplication>
 #include <QDir>
@@ -25,6 +26,10 @@
 #include <QTreeView>
 #include <QVariant>
 #include <QVBoxLayout>
+
+#include <algorithm>
+#include <functional>
+#include <utility>
 
 namespace {
 QString formatUnitValue(double value, const QString &suffix)
@@ -135,6 +140,60 @@ QString formatTransferSummary(quint64 bytesTransferred, quint64 totalBytes, qint
     return summary;
 }
 
+
+enum class QueueOverwriteDecision
+{
+    OverwriteOne,
+    SkipOne,
+    OverwriteAll,
+    SkipAll,
+    CancelQueue
+};
+
+QueueOverwriteDecision askQueueOverwriteDecision(
+    QWidget *parent,
+    const QString &title,
+    const QString &targetPath,
+    const QString &replacementDescription
+)
+{
+    QMessageBox box(parent);
+    box.setIcon(QMessageBox::Warning);
+    box.setWindowTitle(title);
+    box.setText(QStringLiteral("Queue target already exists:\n%1\n\nOverwrite it with %2?").arg(targetPath, replacementDescription));
+    box.setInformativeText(QStringLiteral("Choose one item, all remaining queue conflicts of this direction, or stop the queue."));
+
+    QAbstractButton *overwriteButton = box.addButton(QStringLiteral("Overwrite"), QMessageBox::AcceptRole);
+    QAbstractButton *skipButton = box.addButton(QStringLiteral("Skip"), QMessageBox::NoRole);
+    QAbstractButton *overwriteAllButton = box.addButton(QStringLiteral("Overwrite all"), QMessageBox::AcceptRole);
+    QAbstractButton *skipAllButton = box.addButton(QStringLiteral("Skip all"), QMessageBox::NoRole);
+    QAbstractButton *cancelButton = box.addButton(QStringLiteral("Cancel queue"), QMessageBox::RejectRole);
+
+    box.setDefaultButton(qobject_cast<QPushButton *>(overwriteButton));
+    box.setEscapeButton(qobject_cast<QPushButton *>(cancelButton));
+    box.exec();
+
+    QAbstractButton *clicked = box.clickedButton();
+
+    if (clicked == overwriteButton) {
+        return QueueOverwriteDecision::OverwriteOne;
+    }
+
+    if (clicked == skipButton) {
+        return QueueOverwriteDecision::SkipOne;
+    }
+
+    if (clicked == overwriteAllButton) {
+        return QueueOverwriteDecision::OverwriteAll;
+    }
+
+    if (clicked == skipAllButton) {
+        return QueueOverwriteDecision::SkipAll;
+    }
+
+    return QueueOverwriteDecision::CancelQueue;
+}
+
 class SizeTableWidgetItem final : public QTableWidgetItem
 {
 public:
@@ -206,6 +265,36 @@ QString SftpBrowserTab::displayName() const
         + QStringLiteral(")");
 }
 
+bool SftpBrowserTab::hasTransferQueueWorkForExit() const
+{
+    if (m_transferQueueRunning) {
+        return true;
+    }
+
+    for (const TransferQueueItem &item : m_transferQueue) {
+        if (item.status == QStringLiteral("Pending") || item.status == QStringLiteral("Running")) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+QString SftpBrowserTab::transferQueueExitSummary() const
+{
+    const QString prefix = displayName();
+
+    if (m_transferQueue.isEmpty()) {
+        return prefix + QStringLiteral(": queue empty");
+    }
+
+    QString state = m_transferQueueRunning
+        ? QStringLiteral("RUNNING")
+        : QStringLiteral("not running");
+
+    return prefix + QStringLiteral(": ") + state + QStringLiteral(", ") + transferQueueSummaryText();
+}
+
 void SftpBrowserTab::setupUi()
 {
     auto *mainLayout = new QVBoxLayout(this);
@@ -248,9 +337,13 @@ void SftpBrowserTab::setupUi()
     m_localRefreshButton = new QPushButton(QStringLiteral("Refresh"), localPanel);
     localPathLayout->addWidget(m_localRefreshButton);
 
-    m_localUploadButton = new QPushButton(QStringLiteral("Upload selected"), localPanel);
-    m_localUploadButton->setToolTip(QStringLiteral("Upload the selected local file into the currently open remote folder. Folder upload, queue, and sync are not implemented yet."));
+    m_localUploadButton = new QPushButton(QStringLiteral("Upload selected now"), localPanel);
+    m_localUploadButton->setToolTip(QStringLiteral("Upload the first selected local file into the currently open remote folder immediately."));
     localPathLayout->addWidget(m_localUploadButton);
+
+    m_localQueueUploadButton = new QPushButton(QStringLiteral("Queue upload(s)"), localPanel);
+    m_localQueueUploadButton->setToolTip(QStringLiteral("Add selected local files to the transfer queue. Folder upload is intentionally not implemented yet."));
+    localPathLayout->addWidget(m_localQueueUploadButton);
 
     localLayout->addLayout(localPathLayout);
 
@@ -260,7 +353,7 @@ void SftpBrowserTab::setupUi()
 
     m_localTree = new QTreeView(localPanel);
     m_localTree->setModel(m_localModel);
-    m_localTree->setSelectionMode(QAbstractItemView::SingleSelection);
+    m_localTree->setSelectionMode(QAbstractItemView::ExtendedSelection);
     m_localTree->setSelectionBehavior(QAbstractItemView::SelectRows);
     m_localTree->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_localTree->setAlternatingRowColors(false);
@@ -298,9 +391,13 @@ void SftpBrowserTab::setupUi()
     m_remoteRefreshButton = new QPushButton(QStringLiteral("Refresh"), remotePanel);
     remotePathLayout->addWidget(m_remoteRefreshButton);
 
-    m_remoteDownloadButton = new QPushButton(QStringLiteral("Download selected"), remotePanel);
-    m_remoteDownloadButton->setToolTip(QStringLiteral("Download the selected remote file into the currently open local folder. Folder download is not implemented yet."));
+    m_remoteDownloadButton = new QPushButton(QStringLiteral("Download selected now"), remotePanel);
+    m_remoteDownloadButton->setToolTip(QStringLiteral("Download the first selected remote file into the currently open local folder immediately."));
     remotePathLayout->addWidget(m_remoteDownloadButton);
+
+    m_remoteQueueDownloadButton = new QPushButton(QStringLiteral("Queue download(s)"), remotePanel);
+    m_remoteQueueDownloadButton->setToolTip(QStringLiteral("Add selected remote files to the transfer queue. Folder download is intentionally not implemented yet."));
+    remotePathLayout->addWidget(m_remoteQueueDownloadButton);
 
     remoteLayout->addLayout(remotePathLayout);
 
@@ -314,7 +411,7 @@ void SftpBrowserTab::setupUi()
         QStringLiteral("Permissions")
     });
     m_remoteTable->setSelectionBehavior(QAbstractItemView::SelectRows);
-    m_remoteTable->setSelectionMode(QAbstractItemView::SingleSelection);
+    m_remoteTable->setSelectionMode(QAbstractItemView::ExtendedSelection);
     m_remoteTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_remoteTable->setAlternatingRowColors(false);
     m_remoteTable->horizontalHeader()->setStretchLastSection(false);
@@ -336,8 +433,51 @@ void SftpBrowserTab::setupUi()
     splitter->setStretchFactor(1, 1);
     mainLayout->addWidget(splitter, 1);
 
+    auto *queueTitle = new QLabel(QStringLiteral("Transfer queue (foundation — one file at a time)"), this);
+    queueTitle->setToolTip(QStringLiteral("This checkpoint can queue multiple individual files and run them sequentially. Folder transfer, parallel transfer, resume, and sync are intentionally not implemented yet."));
+    mainLayout->addWidget(queueTitle);
+
+    m_queueTable = new QTableWidget(this);
+    m_queueTable->setColumnCount(6);
+    m_queueTable->setHorizontalHeaderLabels(QStringList{
+        QStringLiteral("Status"),
+        QStringLiteral("Direction"),
+        QStringLiteral("Name"),
+        QStringLiteral("Size"),
+        QStringLiteral("Source"),
+        QStringLiteral("Target")
+    });
+    m_queueTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+    m_queueTable->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    m_queueTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    m_queueTable->setAlternatingRowColors(false);
+    m_queueTable->verticalHeader()->setVisible(false);
+    m_queueTable->horizontalHeader()->setStretchLastSection(false);
+    m_queueTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    m_queueTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+    m_queueTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+    m_queueTable->horizontalHeader()->setSectionResizeMode(3, QHeaderView::ResizeToContents);
+    m_queueTable->horizontalHeader()->setSectionResizeMode(4, QHeaderView::Stretch);
+    m_queueTable->horizontalHeader()->setSectionResizeMode(5, QHeaderView::Stretch);
+    m_queueTable->setMaximumHeight(170);
+    mainLayout->addWidget(m_queueTable);
+
+    auto *queueControlsLayout = new QHBoxLayout();
+    m_queueStartButton = new QPushButton(QStringLiteral("Start queue"), this);
+    m_queueRetrySelectedButton = new QPushButton(QStringLiteral("Retry selected"), this);
+    m_queueRetrySelectedButton->setToolTip(QStringLiteral("Move selected Done, Failed, Cancelled, or Skipped queue items back to Pending so Start queue can run them again."));
+    m_queueRemoveSelectedButton = new QPushButton(QStringLiteral("Remove selected"), this);
+    m_queueClearFinishedButton = new QPushButton(QStringLiteral("Clear finished"), this);
+    m_queueStatusLabel = new QLabel(QStringLiteral("Queue: empty"), this);
+    queueControlsLayout->addWidget(m_queueStartButton);
+    queueControlsLayout->addWidget(m_queueRetrySelectedButton);
+    queueControlsLayout->addWidget(m_queueRemoveSelectedButton);
+    queueControlsLayout->addWidget(m_queueClearFinishedButton);
+    queueControlsLayout->addWidget(m_queueStatusLabel, 1);
+    mainLayout->addLayout(queueControlsLayout);
+
     auto *transferNotice = new QLabel(
-        QStringLiteral("Single-file download and upload are enabled with progress, speed, elapsed-time, completion, and cancel feedback. Delete, rename, folder transfer, queue, and sync actions are intentionally disabled."),
+        QStringLiteral("Single-file download/upload still works. Queue foundation adds multiple individual files, runs them one by one, and can retry selected finished items. Folder transfer, parallel transfer, resume, delete, rename, and sync are intentionally disabled."),
         this
     );
     transferNotice->setWordWrap(true);
@@ -349,6 +489,10 @@ void SftpBrowserTab::setupUi()
 
     connect(m_localUploadButton, &QPushButton::clicked, this, [this]() {
         uploadSelectedLocalFile();
+    });
+
+    connect(m_localQueueUploadButton, &QPushButton::clicked, this, [this]() {
+        queueSelectedLocalUploads();
     });
 
     connect(m_localGoButton, &QPushButton::clicked, this, [this]() {
@@ -375,6 +519,10 @@ void SftpBrowserTab::setupUi()
         downloadSelectedRemoteFile();
     });
 
+    connect(m_remoteQueueDownloadButton, &QPushButton::clicked, this, [this]() {
+        queueSelectedRemoteDownloads();
+    });
+
     connect(m_remoteGoButton, &QPushButton::clicked, this, [this]() {
         openRemotePathFromEditor();
     });
@@ -390,6 +538,24 @@ void SftpBrowserTab::setupUi()
     connect(m_remoteTable, &QTableWidget::cellDoubleClicked, this, [this](int row, int column) {
         handleRemoteCellDoubleClicked(row, column);
     });
+
+    connect(m_queueStartButton, &QPushButton::clicked, this, [this]() {
+        startTransferQueue();
+    });
+
+    connect(m_queueRetrySelectedButton, &QPushButton::clicked, this, [this]() {
+        retrySelectedTransferQueueItems();
+    });
+
+    connect(m_queueRemoveSelectedButton, &QPushButton::clicked, this, [this]() {
+        removeSelectedTransferQueueItems();
+    });
+
+    connect(m_queueClearFinishedButton, &QPushButton::clicked, this, [this]() {
+        clearFinishedTransferQueueItems();
+    });
+
+    refreshTransferQueueTable();
 }
 
 QString SftpBrowserTab::normalizedLocalPath(const QString &path) const
@@ -523,6 +689,14 @@ void SftpBrowserTab::setRemoteBusy(bool busy)
 
     if (m_localUploadButton != nullptr) {
         m_localUploadButton->setEnabled(!busy);
+    }
+
+    if (m_remoteQueueDownloadButton != nullptr) {
+        m_remoteQueueDownloadButton->setEnabled(!busy && !m_transferQueueRunning);
+    }
+
+    if (m_localQueueUploadButton != nullptr) {
+        m_localQueueUploadButton->setEnabled(!busy && !m_transferQueueRunning);
     }
 
     if (m_remotePathEdit != nullptr) {
@@ -1212,6 +1386,803 @@ void SftpBrowserTab::uploadSelectedLocalFile()
         QStringLiteral("Could not upload local file:\n%1\n\nTarget:\n%2\n\n%3\n\nError:\n%4")
             .arg(localFilePath, remoteTargetPath, result.message, result.error)
     );
+}
+
+
+void SftpBrowserTab::queueSelectedRemoteDownloads()
+{
+    if (m_remoteTable == nullptr || m_remoteTable->selectionModel() == nullptr) {
+        return;
+    }
+
+    const QModelIndexList selectedRows = m_remoteTable->selectionModel()->selectedRows(0);
+
+    if (selectedRows.isEmpty()) {
+        QMessageBox::information(
+            this,
+            QStringLiteral("No remote files selected — DD-SSH"),
+            QStringLiteral("Select one or more remote files first, then click Queue download(s).")
+        );
+        return;
+    }
+
+    const QFileInfo localFolderInfo(m_currentLocalPath);
+
+    if (!localFolderInfo.exists() || !localFolderInfo.isDir()) {
+        QMessageBox::warning(
+            this,
+            QStringLiteral("Local destination unavailable — DD-SSH"),
+            QStringLiteral("The current local destination is not a valid folder:\n%1").arg(m_currentLocalPath)
+        );
+        return;
+    }
+
+    int added = 0;
+    int skipped = 0;
+
+    for (const QModelIndex &index : selectedRows) {
+        const int row = index.row();
+        QTableWidgetItem *nameItem = m_remoteTable->item(row, 0);
+        QTableWidgetItem *typeItem = m_remoteTable->item(row, 1);
+        QTableWidgetItem *sizeItem = m_remoteTable->item(row, 2);
+
+        if (nameItem == nullptr || typeItem == nullptr) {
+            ++skipped;
+            continue;
+        }
+
+        const QString name = nameItem->data(Qt::UserRole).toString();
+        const QString type = typeItem->data(Qt::UserRole).toString();
+
+        if (name.trimmed().isEmpty() || name == QStringLiteral(".") || name == QStringLiteral("..") || isDirectoryType(type)) {
+            ++skipped;
+            continue;
+        }
+
+        if (type.compare(QStringLiteral("file"), Qt::CaseInsensitive) != 0
+            && type.compare(QStringLiteral("symlink"), Qt::CaseInsensitive) != 0) {
+            ++skipped;
+            continue;
+        }
+
+        TransferQueueItem item;
+        item.direction = QStringLiteral("Download");
+        item.displayName = name;
+        item.sourcePath = joinedRemotePath(m_currentRemotePath, name);
+        item.targetPath = QDir(m_currentLocalPath).filePath(QFileInfo(name).fileName());
+        item.sizeBytes = sizeItem != nullptr ? static_cast<quint64>(sizeItem->data(Qt::UserRole).toULongLong()) : 0ULL;
+        item.status = QStringLiteral("Pending");
+        item.message = QStringLiteral("Queued for download");
+        m_transferQueue.append(item);
+        ++added;
+    }
+
+    refreshTransferQueueTable();
+
+    if (m_queueStatusLabel != nullptr) {
+        m_queueStatusLabel->setText(QStringLiteral("Queue: added %1 download item(s), skipped %2 folder/unsupported item(s). %3")
+            .arg(added)
+            .arg(skipped)
+            .arg(transferQueueSummaryText()));
+    }
+}
+
+void SftpBrowserTab::queueSelectedLocalUploads()
+{
+    if (m_localTree == nullptr || m_localTree->selectionModel() == nullptr || m_localModel == nullptr) {
+        return;
+    }
+
+    const QModelIndexList selectedRows = m_localTree->selectionModel()->selectedRows(0);
+
+    if (selectedRows.isEmpty()) {
+        QMessageBox::information(
+            this,
+            QStringLiteral("No local files selected — DD-SSH"),
+            QStringLiteral("Select one or more local files first, then click Queue upload(s).")
+        );
+        return;
+    }
+
+    int added = 0;
+    int skipped = 0;
+
+    for (const QModelIndex &index : selectedRows) {
+        if (!index.isValid()) {
+            ++skipped;
+            continue;
+        }
+
+        const QString localFilePath = m_localModel->filePath(index);
+        const QFileInfo localInfo(localFilePath);
+
+        if (!localInfo.exists() || localInfo.isDir() || !localInfo.isFile()) {
+            ++skipped;
+            continue;
+        }
+
+        TransferQueueItem item;
+        item.direction = QStringLiteral("Upload");
+        item.displayName = localInfo.fileName();
+        item.sourcePath = localInfo.absoluteFilePath();
+        item.targetPath = joinedRemotePath(m_currentRemotePath, localInfo.fileName());
+        item.sizeBytes = static_cast<quint64>(localInfo.size());
+        item.status = QStringLiteral("Pending");
+        item.message = QStringLiteral("Queued for upload");
+        m_transferQueue.append(item);
+        ++added;
+    }
+
+    refreshTransferQueueTable();
+
+    if (m_queueStatusLabel != nullptr) {
+        m_queueStatusLabel->setText(QStringLiteral("Queue: added %1 upload item(s), skipped %2 folder/unsupported item(s). %3")
+            .arg(added)
+            .arg(skipped)
+            .arg(transferQueueSummaryText()));
+    }
+}
+
+void SftpBrowserTab::startTransferQueue()
+{
+    if (m_transferQueueRunning) {
+        return;
+    }
+
+    int pendingCount = 0;
+    for (const TransferQueueItem &item : std::as_const(m_transferQueue)) {
+        if (item.status == QStringLiteral("Pending")) {
+            ++pendingCount;
+        }
+    }
+
+    if (pendingCount == 0) {
+        if (m_queueStatusLabel != nullptr) {
+            m_queueStatusLabel->setText(QStringLiteral("Queue: no pending items. Use Retry selected or add new files before starting."));
+        }
+
+        QMessageBox::information(
+            this,
+            QStringLiteral("No pending queue items — DD-SSH"),
+            QStringLiteral("There are no pending transfer items in the queue.\n\nAdd files to the queue or use Retry selected on finished/skipped/cancelled items first.")
+        );
+        return;
+    }
+
+    m_transferQueueRunning = true;
+    setTransferQueueBusy(true);
+
+    int doneCount = 0;
+    int failedCount = 0;
+    int cancelledCount = 0;
+    int skippedCount = 0;
+    bool shouldStopQueue = false;
+    bool overwriteAllDownloads = false;
+    bool skipAllExistingDownloads = false;
+    bool overwriteAllUploads = false;
+    bool skipAllExistingUploads = false;
+
+    for (int i = 0; i < m_transferQueue.size(); ++i) {
+        if (shouldStopQueue) {
+            break;
+        }
+
+        TransferQueueItem &item = m_transferQueue[i];
+
+        if (item.status != QStringLiteral("Pending")) {
+            continue;
+        }
+
+        setQueueItemStatus(i, QStringLiteral("Running"), QStringLiteral("Checking target"));
+
+        if (item.direction == QStringLiteral("Download")) {
+            const QFileInfo targetInfo(item.targetPath);
+            const QFileInfo targetFolderInfo(targetInfo.absolutePath());
+
+            if (!targetFolderInfo.exists() || !targetFolderInfo.isDir()) {
+                setQueueItemStatus(i, QStringLiteral("Failed"), QStringLiteral("Local destination folder is not available"));
+                ++failedCount;
+                continue;
+            }
+
+            if (QFileInfo::exists(item.targetPath)) {
+                if (skipAllExistingDownloads) {
+                    setQueueItemStatus(i, QStringLiteral("Skipped"), QStringLiteral("Skipped existing local file (skip all)"));
+                    ++skippedCount;
+                    continue;
+                }
+
+                if (!overwriteAllDownloads) {
+                    const QueueOverwriteDecision overwriteDecision = askQueueOverwriteDecision(
+                        this,
+                        QStringLiteral("Overwrite local file? — DD-SSH"),
+                        item.targetPath,
+                        QStringLiteral("the remote file")
+                    );
+
+                    if (overwriteDecision == QueueOverwriteDecision::CancelQueue) {
+                        setQueueItemStatus(i, QStringLiteral("Cancelled"), QStringLiteral("Queue stopped before overwrite"));
+                        ++cancelledCount;
+                        shouldStopQueue = true;
+                        break;
+                    }
+
+                    if (overwriteDecision == QueueOverwriteDecision::SkipOne) {
+                        setQueueItemStatus(i, QStringLiteral("Skipped"), QStringLiteral("Skipped existing local file"));
+                        ++skippedCount;
+                        continue;
+                    }
+
+                    if (overwriteDecision == QueueOverwriteDecision::SkipAll) {
+                        skipAllExistingDownloads = true;
+                        setQueueItemStatus(i, QStringLiteral("Skipped"), QStringLiteral("Skipped existing local file (skip all)"));
+                        ++skippedCount;
+                        continue;
+                    }
+
+                    if (overwriteDecision == QueueOverwriteDecision::OverwriteAll) {
+                        overwriteAllDownloads = true;
+                    }
+                }
+            }
+
+            setQueueItemStatus(i, QStringLiteral("Running"), QStringLiteral("Transferring"));
+
+            QElapsedTimer transferTimer;
+            transferTimer.start();
+            bool progressWasCancelled = false;
+
+            QProgressDialog progress(
+                QStringLiteral("Queue item %1/%2: download %3 ...")
+                    .arg(i + 1)
+                    .arg(m_transferQueue.size())
+                    .arg(item.displayName),
+                QStringLiteral("Cancel item"),
+                0,
+                100,
+                this
+            );
+            progress.setWindowTitle(QStringLiteral("SFTP transfer queue — DD-SSH"));
+            progress.setWindowModality(Qt::ApplicationModal);
+            progress.setMinimumDuration(0);
+            progress.setValue(0);
+            progress.show();
+            progress.raise();
+            progress.activateWindow();
+            QApplication::processEvents();
+
+            const SftpDownloadResult result = SftpProbe::downloadRemoteFile(
+                m_host,
+                m_port,
+                m_username,
+                m_authMethod,
+                m_secretValue,
+                m_hostKeyExpectation,
+                item.sourcePath,
+                item.targetPath,
+                [&progress, &progressWasCancelled, &transferTimer, &item](quint64 bytesTransferred, quint64 totalBytes, const QString &message) -> bool {
+                    int percent = 0;
+
+                    if (totalBytes > 0) {
+                        percent = static_cast<int>(qMin<quint64>(100, (bytesTransferred * 100ULL) / totalBytes));
+                    } else if (bytesTransferred > 0) {
+                        percent = 50;
+                    }
+
+                    progress.setValue(percent);
+                    progress.setLabelText(formatTransferProgressLabel(
+                        QStringLiteral("Queue download"),
+                        message + QStringLiteral(" — ") + item.displayName,
+                        bytesTransferred,
+                        totalBytes,
+                        transferTimer.elapsed()
+                    ));
+                    QApplication::processEvents();
+
+                    if (progress.wasCanceled()) {
+                        progressWasCancelled = true;
+                        return false;
+                    }
+
+                    return true;
+                }
+            );
+
+            const qint64 elapsedMs = transferTimer.elapsed();
+            progress.close();
+            QApplication::processEvents();
+
+            if (result.success) {
+                setQueueItemStatus(i, QStringLiteral("Done"), QStringLiteral("Downloaded %1 (%2), %3, %4")
+                    .arg(formatSize(result.bytesTransferred), formatRawBytes(result.bytesTransferred), formatDuration(elapsedMs), formatTransferRate(result.bytesTransferred, elapsedMs)));
+                ++doneCount;
+                refreshLocalDirectory();
+            } else if (result.cancelled || progressWasCancelled) {
+                setQueueItemStatus(i, QStringLiteral("Cancelled"), QStringLiteral("Download cancelled; local target was not replaced"));
+                ++cancelledCount;
+
+                const QMessageBox::StandardButton continueDecision = QMessageBox::question(
+                    this,
+                    QStringLiteral("Queue item cancelled — DD-SSH"),
+                    QStringLiteral("Download cancelled:\n%1\n\nLocal target was not replaced because DD-SSH uses a safe temporary download file.\n\nContinue with remaining queued items?").arg(item.displayName),
+                    QMessageBox::Yes | QMessageBox::No,
+                    QMessageBox::No
+                );
+
+                if (continueDecision != QMessageBox::Yes) {
+                    shouldStopQueue = true;
+                }
+            } else {
+                setQueueItemStatus(i, QStringLiteral("Failed"), result.message + QStringLiteral(" — ") + result.error);
+                ++failedCount;
+            }
+        } else if (item.direction == QStringLiteral("Upload")) {
+            const QFileInfo localInfo(item.sourcePath);
+
+            if (!localInfo.exists() || !localInfo.isFile()) {
+                setQueueItemStatus(i, QStringLiteral("Failed"), QStringLiteral("Local source file is not available"));
+                ++failedCount;
+                continue;
+            }
+
+            bool allowOverwrite = overwriteAllUploads;
+            bool uploadRetriedAfterOverwriteApproval = overwriteAllUploads;
+
+            while (true) {
+                setQueueItemStatus(i, QStringLiteral("Running"), allowOverwrite ? QStringLiteral("Transferring with overwrite") : QStringLiteral("Checking remote target"));
+
+                QElapsedTimer transferTimer;
+                transferTimer.start();
+                bool progressWasCancelled = false;
+
+                QProgressDialog progress(
+                    QStringLiteral("Queue item %1/%2: upload %3 ...")
+                        .arg(i + 1)
+                        .arg(m_transferQueue.size())
+                        .arg(item.displayName),
+                    QStringLiteral("Cancel item"),
+                    0,
+                    100,
+                    this
+                );
+                progress.setWindowTitle(QStringLiteral("SFTP transfer queue — DD-SSH"));
+                progress.setWindowModality(Qt::ApplicationModal);
+                progress.setMinimumDuration(0);
+                progress.setValue(0);
+                progress.show();
+                progress.raise();
+                progress.activateWindow();
+                QApplication::processEvents();
+
+                const SftpUploadResult result = SftpProbe::uploadLocalFile(
+                    m_host,
+                    m_port,
+                    m_username,
+                    m_authMethod,
+                    m_secretValue,
+                    m_hostKeyExpectation,
+                    item.sourcePath,
+                    item.targetPath,
+                    allowOverwrite,
+                    [&progress, &progressWasCancelled, &transferTimer, &item](quint64 bytesTransferred, quint64 totalBytes, const QString &message) -> bool {
+                        int percent = 0;
+
+                        if (totalBytes > 0) {
+                            percent = static_cast<int>(qMin<quint64>(100, (bytesTransferred * 100ULL) / totalBytes));
+                        } else if (bytesTransferred > 0) {
+                            percent = 50;
+                        }
+
+                        progress.setValue(percent);
+                        progress.setLabelText(formatTransferProgressLabel(
+                            QStringLiteral("Queue upload"),
+                            message + QStringLiteral(" — ") + item.displayName,
+                            bytesTransferred,
+                            totalBytes,
+                            transferTimer.elapsed()
+                        ));
+                        QApplication::processEvents();
+
+                        if (progress.wasCanceled()) {
+                            progressWasCancelled = true;
+                            return false;
+                        }
+
+                        return true;
+                    }
+                );
+
+                const qint64 elapsedMs = transferTimer.elapsed();
+                progress.close();
+                QApplication::processEvents();
+
+                if (result.remoteTargetIsDirectory) {
+                    setQueueItemStatus(i, QStringLiteral("Failed"), QStringLiteral("Remote target is a directory"));
+                    ++failedCount;
+                    break;
+                }
+
+                if (result.remoteAlreadyExists && !allowOverwrite && !uploadRetriedAfterOverwriteApproval) {
+                    if (skipAllExistingUploads) {
+                        setQueueItemStatus(i, QStringLiteral("Skipped"), QStringLiteral("Skipped existing remote file (skip all)"));
+                        ++skippedCount;
+                        break;
+                    }
+
+                    const QueueOverwriteDecision overwriteDecision = askQueueOverwriteDecision(
+                        this,
+                        QStringLiteral("Overwrite remote file? — DD-SSH"),
+                        item.targetPath,
+                        QStringLiteral("the local file")
+                    );
+
+                    if (overwriteDecision == QueueOverwriteDecision::CancelQueue) {
+                        setQueueItemStatus(i, QStringLiteral("Cancelled"), QStringLiteral("Queue stopped before remote overwrite"));
+                        ++cancelledCount;
+                        shouldStopQueue = true;
+                        break;
+                    }
+
+                    if (overwriteDecision == QueueOverwriteDecision::SkipOne) {
+                        setQueueItemStatus(i, QStringLiteral("Skipped"), QStringLiteral("Skipped existing remote file"));
+                        ++skippedCount;
+                        break;
+                    }
+
+                    if (overwriteDecision == QueueOverwriteDecision::SkipAll) {
+                        skipAllExistingUploads = true;
+                        setQueueItemStatus(i, QStringLiteral("Skipped"), QStringLiteral("Skipped existing remote file (skip all)"));
+                        ++skippedCount;
+                        break;
+                    }
+
+                    if (overwriteDecision == QueueOverwriteDecision::OverwriteAll) {
+                        overwriteAllUploads = true;
+                    }
+
+                    allowOverwrite = true;
+                    uploadRetriedAfterOverwriteApproval = true;
+                    continue;
+                }
+
+                if (result.success) {
+                    setQueueItemStatus(i, QStringLiteral("Done"), QStringLiteral("Uploaded %1 (%2), %3, %4")
+                        .arg(formatSize(result.bytesTransferred), formatRawBytes(result.bytesTransferred), formatDuration(elapsedMs), formatTransferRate(result.bytesTransferred, elapsedMs)));
+                    ++doneCount;
+                    refreshRemoteDirectory();
+                } else if (result.cancelled || progressWasCancelled) {
+                    setQueueItemStatus(i, QStringLiteral("Cancelled"), QStringLiteral("Upload cancelled; partial remote file may remain"));
+                    ++cancelledCount;
+                    refreshRemoteDirectory();
+
+                    const QMessageBox::StandardButton continueDecision = QMessageBox::question(
+                        this,
+                        QStringLiteral("Queue item cancelled — DD-SSH"),
+                        QStringLiteral("Upload cancelled:\n%1\n\nA partial remote file may remain on the server. Refresh/check the remote folder before retrying.\n\nContinue with remaining queued items?").arg(item.displayName),
+                        QMessageBox::Yes | QMessageBox::No,
+                        QMessageBox::No
+                    );
+
+                    if (continueDecision != QMessageBox::Yes) {
+                        shouldStopQueue = true;
+                    }
+                } else {
+                    setQueueItemStatus(i, QStringLiteral("Failed"), result.message + QStringLiteral(" — ") + result.error);
+                    ++failedCount;
+                }
+
+                break;
+            }
+        } else {
+            setQueueItemStatus(i, QStringLiteral("Failed"), QStringLiteral("Unknown transfer direction"));
+            ++failedCount;
+        }
+    }
+
+    m_transferQueueRunning = false;
+    setTransferQueueBusy(false);
+    refreshTransferQueueTable();
+
+    if (m_queueStatusLabel != nullptr) {
+        m_queueStatusLabel->setText(QStringLiteral("Queue finished: done %1, failed %2, cancelled %3, skipped %4. %5")
+            .arg(doneCount)
+            .arg(failedCount)
+            .arg(cancelledCount)
+            .arg(skippedCount)
+            .arg(transferQueueSummaryText()));
+    }
+
+    QMessageBox::information(
+        this,
+        QStringLiteral("Transfer queue finished — DD-SSH"),
+        QStringLiteral("Transfer queue finished.\n\nDone: %1\nFailed: %2\nCancelled: %3\nSkipped: %4")
+            .arg(doneCount)
+            .arg(failedCount)
+            .arg(cancelledCount)
+            .arg(skippedCount)
+    );
+}
+
+void SftpBrowserTab::clearFinishedTransferQueueItems()
+{
+    if (m_transferQueueRunning) {
+        return;
+    }
+
+    QList<TransferQueueItem> kept;
+
+    for (const TransferQueueItem &item : std::as_const(m_transferQueue)) {
+        if (item.status == QStringLiteral("Pending") || item.status == QStringLiteral("Running")) {
+            kept.append(item);
+        }
+    }
+
+    m_transferQueue = kept;
+    refreshTransferQueueTable();
+}
+
+void SftpBrowserTab::retrySelectedTransferQueueItems()
+{
+    if (m_transferQueueRunning || m_queueTable == nullptr || m_queueTable->selectionModel() == nullptr) {
+        return;
+    }
+
+    const QModelIndexList selectedRows = m_queueTable->selectionModel()->selectedRows(0);
+
+    if (selectedRows.isEmpty()) {
+        QMessageBox::information(
+            this,
+            QStringLiteral("No queue items selected — DD-SSH"),
+            QStringLiteral("Select one or more finished queue items first, then click Retry selected.")
+        );
+        return;
+    }
+
+    int requeued = 0;
+    int alreadyPending = 0;
+    int skippedRunning = 0;
+    int notRetryable = 0;
+
+    for (const QModelIndex &index : selectedRows) {
+        const int row = index.row();
+
+        if (row < 0 || row >= m_transferQueue.size()) {
+            continue;
+        }
+
+        TransferQueueItem &item = m_transferQueue[row];
+
+        if (item.status == QStringLiteral("Running")) {
+            ++skippedRunning;
+            continue;
+        }
+
+        if (item.status == QStringLiteral("Pending")) {
+            ++alreadyPending;
+            continue;
+        }
+
+        if (item.status == QStringLiteral("Done")
+            || item.status == QStringLiteral("Failed")
+            || item.status == QStringLiteral("Cancelled")
+            || item.status == QStringLiteral("Skipped")) {
+            item.status = QStringLiteral("Pending");
+            item.message = QStringLiteral("Requeued for retry");
+            ++requeued;
+            continue;
+        }
+
+        ++notRetryable;
+    }
+
+    refreshTransferQueueTable();
+
+    if (m_queueStatusLabel != nullptr) {
+        m_queueStatusLabel->setText(QStringLiteral("Queue: requeued %1 item(s), already pending %2, running skipped %3, not retryable %4. %5")
+            .arg(requeued)
+            .arg(alreadyPending)
+            .arg(skippedRunning)
+            .arg(notRetryable)
+            .arg(transferQueueSummaryText()));
+    }
+}
+
+void SftpBrowserTab::removeSelectedTransferQueueItems()
+{
+    if (m_transferQueueRunning || m_queueTable == nullptr || m_queueTable->selectionModel() == nullptr) {
+        return;
+    }
+
+    const QModelIndexList selectedRows = m_queueTable->selectionModel()->selectedRows(0);
+
+    if (selectedRows.isEmpty()) {
+        return;
+    }
+
+    QList<int> rows;
+    for (const QModelIndex &index : selectedRows) {
+        rows.append(index.row());
+    }
+    std::sort(rows.begin(), rows.end(), std::greater<int>());
+
+    for (int row : rows) {
+        if (row >= 0 && row < m_transferQueue.size() && m_transferQueue[row].status != QStringLiteral("Running")) {
+            m_transferQueue.removeAt(row);
+        }
+    }
+
+    refreshTransferQueueTable();
+}
+
+void SftpBrowserTab::refreshTransferQueueTable()
+{
+    if (m_queueTable == nullptr) {
+        return;
+    }
+
+    m_queueTable->setSortingEnabled(false);
+    m_queueTable->clearContents();
+    m_queueTable->setRowCount(m_transferQueue.size());
+
+    for (int row = 0; row < m_transferQueue.size(); ++row) {
+        const TransferQueueItem &item = m_transferQueue.at(row);
+
+        auto *statusItem = makeReadOnlyItem(item.status);
+        statusItem->setToolTip(item.message);
+
+        auto *directionItem = makeReadOnlyItem(item.direction);
+        auto *nameItem = makeReadOnlyItem(item.displayName);
+        auto *sizeItem = new SizeTableWidgetItem(item.sizeBytes);
+        auto *sourceItem = makeReadOnlyItem(item.sourcePath);
+        sourceItem->setToolTip(item.sourcePath);
+        auto *targetItem = makeReadOnlyItem(item.targetPath);
+        targetItem->setToolTip(item.targetPath);
+
+        m_queueTable->setItem(row, 0, statusItem);
+        m_queueTable->setItem(row, 1, directionItem);
+        m_queueTable->setItem(row, 2, nameItem);
+        m_queueTable->setItem(row, 3, sizeItem);
+        m_queueTable->setItem(row, 4, sourceItem);
+        m_queueTable->setItem(row, 5, targetItem);
+    }
+
+    if (m_queueStatusLabel != nullptr && !m_transferQueueRunning) {
+        m_queueStatusLabel->setText(QStringLiteral("Queue: ") + transferQueueSummaryText());
+    }
+}
+
+void SftpBrowserTab::setTransferQueueBusy(bool busy)
+{
+    if (m_queueStartButton != nullptr) {
+        m_queueStartButton->setEnabled(!busy);
+    }
+
+    if (m_queueRetrySelectedButton != nullptr) {
+        m_queueRetrySelectedButton->setEnabled(!busy);
+    }
+
+    if (m_queueRemoveSelectedButton != nullptr) {
+        m_queueRemoveSelectedButton->setEnabled(!busy);
+    }
+
+    if (m_queueClearFinishedButton != nullptr) {
+        m_queueClearFinishedButton->setEnabled(!busy);
+    }
+
+    if (m_localGoButton != nullptr) {
+        m_localGoButton->setEnabled(!busy);
+    }
+
+    if (m_localUpButton != nullptr) {
+        m_localUpButton->setEnabled(!busy);
+    }
+
+    if (m_localRefreshButton != nullptr) {
+        m_localRefreshButton->setEnabled(!busy);
+    }
+
+    if (m_localPathEdit != nullptr) {
+        m_localPathEdit->setEnabled(!busy);
+    }
+
+    if (m_remoteGoButton != nullptr) {
+        m_remoteGoButton->setEnabled(!busy);
+    }
+
+    if (m_remoteUpButton != nullptr) {
+        m_remoteUpButton->setEnabled(!busy);
+    }
+
+    if (m_remoteRefreshButton != nullptr) {
+        m_remoteRefreshButton->setEnabled(!busy);
+    }
+
+    if (m_remotePathEdit != nullptr) {
+        m_remotePathEdit->setEnabled(!busy);
+    }
+
+    if (m_localUploadButton != nullptr) {
+        m_localUploadButton->setEnabled(!busy);
+    }
+
+    if (m_localQueueUploadButton != nullptr) {
+        m_localQueueUploadButton->setEnabled(!busy);
+    }
+
+    if (m_remoteDownloadButton != nullptr) {
+        m_remoteDownloadButton->setEnabled(!busy);
+    }
+
+    if (m_remoteQueueDownloadButton != nullptr) {
+        m_remoteQueueDownloadButton->setEnabled(!busy);
+    }
+
+    if (m_localTree != nullptr) {
+        m_localTree->setEnabled(!busy);
+    }
+
+    if (m_remoteTable != nullptr) {
+        m_remoteTable->setEnabled(!busy);
+    }
+
+    if (m_queueTable != nullptr) {
+        m_queueTable->setEnabled(!busy);
+    }
+
+    if (m_queueStatusLabel != nullptr && busy) {
+        m_queueStatusLabel->setText(QStringLiteral("Queue: running ... navigation and queue editing are locked until the current run finishes."));
+    }
+}
+
+void SftpBrowserTab::setQueueItemStatus(int index, const QString &status, const QString &message)
+{
+    if (index < 0 || index >= m_transferQueue.size()) {
+        return;
+    }
+
+    m_transferQueue[index].status = status;
+    m_transferQueue[index].message = message;
+    refreshTransferQueueTable();
+    QApplication::processEvents();
+}
+
+QString SftpBrowserTab::transferQueueSummaryText() const
+{
+    if (m_transferQueue.isEmpty()) {
+        return QStringLiteral("empty");
+    }
+
+    int pending = 0;
+    int running = 0;
+    int done = 0;
+    int failed = 0;
+    int cancelled = 0;
+    int skipped = 0;
+
+    for (const TransferQueueItem &item : m_transferQueue) {
+        if (item.status == QStringLiteral("Pending")) {
+            ++pending;
+        } else if (item.status == QStringLiteral("Running")) {
+            ++running;
+        } else if (item.status == QStringLiteral("Done")) {
+            ++done;
+        } else if (item.status == QStringLiteral("Failed")) {
+            ++failed;
+        } else if (item.status == QStringLiteral("Cancelled")) {
+            ++cancelled;
+        } else if (item.status == QStringLiteral("Skipped")) {
+            ++skipped;
+        }
+    }
+
+    return QStringLiteral("%1 item(s): pending %2, running %3, done %4, failed %5, cancelled %6, skipped %7")
+        .arg(m_transferQueue.size())
+        .arg(pending)
+        .arg(running)
+        .arg(done)
+        .arg(failed)
+        .arg(cancelled)
+        .arg(skipped);
 }
 
 void SftpBrowserTab::populateRemoteTable(const QList<SftpRemoteEntry> &entries)

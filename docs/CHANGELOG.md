@@ -1,3 +1,130 @@
+## dev 0.1.8.0.4.1 — Andromeda
+
+Compile hotfix for the transfer queue stabilization checkpoint.
+
+### Fixed
+- Fixed a compile-breaking multi-line `QStringLiteral` in `src/ui/SftpBrowserTab.cpp` that prevented `dev 0.1.8.0.4` from compiling.
+- Queue stabilization behavior remains the same: exit safety for running/pending queue work, queue/navigation locking during queue runs, and clearer no-pending-items feedback.
+
+
+Transfer queue stabilization polish checkpoint.
+
+### Fixed / polished
+- Exit safety now includes SFTP transfer queue work when a File Manager tab has a running queue or pending queue items.
+- Exit confirmation warns that running/pending queue state is not persisted when closing DD-SSH.
+- Queue controls, local/remote navigation controls, file panels, and queue table are locked while a queue run is active.
+- `Start queue` gives a clearer message when there are no `Pending` queue items and suggests adding files or using `Retry selected`.
+
+### Preserved
+- Sequential one-at-a-time queue execution.
+- Existing immediate single-file download/upload actions.
+- Existing queue decisions: `Overwrite`, `Skip`, `Overwrite all`, `Skip all`, and `Cancel queue`.
+- Existing `Retry selected` behavior for `Done`, `Failed`, `Cancelled`, and `Skipped` items.
+- No folder transfer, parallel transfer, resume, sync, or SFTP traffic monitor integration yet.
+
+### Documentation
+- Added `docs/BUILD_AND_TEST_0.1.8.0.4.1.md` and `docs/TESTCASE_0.1.8.0.4.1.md`.
+
+## dev 0.1.8.0.3 — Andromeda
+
+Transfer queue retry-selected polish checkpoint.
+
+### Added / polished
+- Added `Retry selected` to the File Manager transfer queue controls.
+- Selected `Done`, `Failed`, `Cancelled`, or `Skipped` queue items can be moved back to `Pending`.
+- Requeued items keep their original direction, source path, target path, display name, and size.
+- Existing `Start queue` then processes the requeued items through the same overwrite/skip/overwrite-all flow.
+- `Pending` items are left unchanged and `Running` items cannot be retried while the queue is active.
+
+### Preserved
+- Sequential one-at-a-time queue execution.
+- Existing immediate single-file download/upload actions.
+- Existing queue overwrite decisions with `Overwrite`, `Skip`, `Overwrite all`, `Skip all`, and `Cancel queue`.
+- No folder transfer, parallel transfer, resume, sync, or SFTP traffic monitor integration yet.
+
+### Documentation
+- Added `docs/BUILD_AND_TEST_0.1.8.0.3.md` and `docs/TESTCASE_0.1.8.0.3.md`.
+
+## dev 0.1.8.0.2 — Andromeda
+
+Transfer queue overwrite-all polish checkpoint.
+
+### Added / polished
+- Added queue overwrite decisions with `Overwrite`, `Skip`, `Overwrite all`, `Skip all`, and `Cancel queue`.
+- `Overwrite all` applies to remaining queued conflicts of the same direction for the current queue run.
+- `Skip all` skips remaining queued conflicts of the same direction for the current queue run.
+- Queue download overwrite prompts remain before progress starts.
+- Queue upload overwrite prompts remain visible after the temporary progress dialog closes.
+
+### Preserved
+- Sequential one-at-a-time queue execution.
+- Existing immediate single-file download/upload actions.
+- Existing progress, elapsed time, average speed, and cancel feedback.
+- No folder transfer, parallel transfer, retry engine, sync, or SFTP traffic monitor integration yet.
+
+### Documentation
+- Added `docs/BUILD_AND_TEST_0.1.8.0.2.md` and `docs/TESTCASE_0.1.8.0.2.md`.
+
+## dev 0.1.8.0.1 — Andromeda
+
+Transfer queue bugfix polish checkpoint.
+
+### Fixed
+- Fixed queue overwrite prompts appearing underneath the queue progress dialog.
+- Queue download overwrite decisions are now requested before the queue progress dialog is shown for that item.
+- Queue upload overwrite prompts now close the temporary progress dialog before asking the user, then reopen progress only after overwrite is approved.
+- Queue item cancel/continue prompts now appear after the progress dialog is closed.
+
+### Preserved
+- Sequential one-at-a-time queue execution.
+- Existing immediate single-file download/upload actions.
+- Existing progress, elapsed time, average speed, and cancel feedback.
+- No folder transfer, parallel transfer, retry engine, sync, or SFTP traffic monitor integration yet.
+
+### Documentation
+- Added `docs/BUILD_AND_TEST_0.1.8.0.1.md` and `docs/TESTCASE_0.1.8.0.1.md`.
+
+## dev 0.1.8.0 — Andromeda
+
+Transfer queue foundation checkpoint.
+
+### Added
+
+- Added the first File Manager transfer queue foundation.
+- Added `Queue download(s)` for multiple selected remote files.
+- Added `Queue upload(s)` for multiple selected local files.
+- Added a queue table with status, direction, name, size, source path, and target path.
+- Added `Start queue`, `Remove selected`, and `Clear finished` controls.
+- Queue processing runs one file at a time, intentionally avoiding parallel transfers for this foundation checkpoint.
+- Queue items report `Pending`, `Running`, `Done`, `Failed`, `Cancelled`, and `Skipped` states.
+- Existing one-file immediate download/upload actions remain available as `Download selected now` and `Upload selected now`.
+- Queue download preserves safe local download behavior through the existing `QSaveFile`-based download path.
+- Queue upload preserves the existing warning that cancelled uploads may leave a partial remote file.
+
+### Preserved
+
+- Existing single-file download/upload behavior remains available.
+- Existing progress/speed/elapsed/cancel feedback remains available.
+- Existing two-panel local/remote browsing remains available.
+- Existing folder transfer blocking remains in place.
+- Existing terminal/xterm.js runtime remains isolated from File Manager transfer work.
+- Known-host multi-key support, Windows KEX workaround, diagnostic logging, terminal Session Traffic, config import/export, and native paste hardening should not regress.
+
+### Not included
+
+- No folder upload/download or recursive transfer.
+- No parallel transfer execution.
+- No resume.
+- No drag/drop.
+- No checksum comparison.
+- No delete/rename/chmod/mkdir.
+- No SFTP traffic integration in the live Session Traffic monitor yet.
+- No overwrite metadata comparison dialog yet.
+
+### Docs
+
+- Added `docs/BUILD_AND_TEST_0.1.8.0.md` and `docs/TESTCASE_0.1.8.0.md`.
+
 ## dev 0.1.7.8 — Andromeda
 
 Transfer progress and cancel polish checkpoint.

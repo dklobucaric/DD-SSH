@@ -42,6 +42,7 @@ private:
     void restoreLatestConfigBackup();
     QStringList activeSshTerminalNames() const;
     QStringList openSftpBrowserNames() const;
+    QStringList activeSftpTransferQueueSummaries() const;
     bool confirmExitWithOpenConnectionTabs();
     void requestDisconnectForActiveSshTerminals();
     void showNewSessionDialog();
