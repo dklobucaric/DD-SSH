@@ -45,6 +45,7 @@ private:
     void goRemoteUp();
     void handleRemoteCellDoubleClicked(int row, int column);
     void downloadSelectedRemoteFile();
+    void uploadSelectedLocalFile();
     void populateRemoteTable(const QList<SftpRemoteEntry> &entries);
     void setRemoteBusy(bool busy);
     QString normalizedRemotePath(const QString &path) const;
@@ -67,6 +68,7 @@ private:
     QPushButton *m_localGoButton = nullptr;
     QPushButton *m_localUpButton = nullptr;
     QPushButton *m_localRefreshButton = nullptr;
+    QPushButton *m_localUploadButton = nullptr;
     QLabel *m_localStatusLabel = nullptr;
     QFileSystemModel *m_localModel = nullptr;
     QTreeView *m_localTree = nullptr;

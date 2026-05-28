@@ -1,3 +1,60 @@
+## dev 0.1.7.7 — Andromeda
+
+Single-file SFTP upload foundation checkpoint.
+
+### Added
+
+- Added the first local-to-remote transfer action in the File Manager: `Upload selected`.
+- Selecting one local file uploads it into the currently open remote SFTP folder.
+- Added overwrite warning when the remote target file already exists in the current listing.
+- Added stale-listing safety: if the remote file exists but was not visible in the current browser listing, upload stops and asks the user to refresh before overwriting.
+- Added a basic modal progress dialog with cancel support for the upload operation.
+- Remote panel refreshes after successful upload.
+- Upload uses the existing saved-session secret loading, SSH preflight, known-host decision flow, host-key verification before auth, libssh authentication, and SFTP subsystem path.
+
+### Preserved
+
+- Existing single-file download behavior remains available.
+- Existing two-panel local/remote browsing remains available.
+- Existing terminal/xterm.js runtime remains isolated from the File Manager tab.
+- Known-host multi-key support, Windows KEX workaround, diagnostic logging, Session Traffic for terminal tabs, config import/export, and native paste hardening should not regress.
+
+### Not included
+
+- No folder upload or recursive transfer.
+- No delete/rename/chmod/mkdir.
+- No transfer queue or sync engine.
+- No SFTP traffic integration in the live Session Traffic monitor yet.
+- Overwrite dialog metadata comparison remains later transfer polish.
+
+### Docs
+
+- Added `docs/BUILD_AND_TEST_0.1.7.7.md` and `docs/TESTCASE_0.1.7.7.md`.
+
+## dev 0.1.7.6.1 — Andromeda
+
+Single-file SFTP download polish bugfix checkpoint.
+
+### Fixed / polished
+
+- Remote SFTP `Size` column sorting now uses the raw byte count instead of the formatted display text, so values like `94 B`, `77 KB`, and `90 MB` sort correctly by actual size.
+- Download completion dialog now reports both the formatted size and raw byte count, for example: `Downloaded: 95 MB (99,614,720 bytes)`.
+- Human-readable file sizes trim unnecessary `.0` decimals while preserving useful fractional values.
+
+### Preserved
+
+- Existing single-file download behavior remains unchanged.
+- Existing overwrite prompt, folder-download blocking, progress dialog, local refresh, terminal runtime, known-host flow, Windows KEX workaround, and native paste paths should not regress.
+
+### Deferred intentionally
+
+- Overwrite dialog metadata comparison (existing/new size and modified date) remains later transfer polish.
+- Upload, folder transfer, queue, sync, cancel polish, and SFTP traffic monitor integration remain out of scope.
+
+### Docs
+
+- Added `docs/BUILD_AND_TEST_0.1.7.6.1.md` and `docs/TESTCASE_0.1.7.6.1.md`.
+
 ## dev 0.1.7.6 — Andromeda
 
 Single-file SFTP download foundation checkpoint.

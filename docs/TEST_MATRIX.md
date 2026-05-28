@@ -1,8 +1,41 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.7.6 — Andromeda  
-**Milestone:** Single-file SFTP download foundation  
-**Phase:** First single-file remote download into the current local folder
+**Checkpoint:** dev 0.1.7.7 — Andromeda  
+**Milestone:** Single-file SFTP download polish  
+**Phase:** Remote size sorting and completion-size message polish
+
+## dev 0.1.7.7 — single-file SFTP upload smoke test
+
+[ ] About shows dev 0.1.7.7  
+[ ] File Manager opens with Local files and Remote files panels  
+[ ] Remote listing still works  
+[ ] Download selected still works for a small file  
+[ ] Select one local file and click Upload selected  
+[ ] Upload progress dialog appears  
+[ ] Uploaded file appears in the current remote folder after refresh  
+[ ] Remote overwrite prompt appears when uploading the same filename again  
+[ ] Cancel on overwrite does not overwrite the remote file  
+[ ] Folder upload is rejected clearly  
+[ ] Terminal xterm.js session still opens and paste/Ctrl+C still work  
+[ ] Session Traffic for terminal tabs still works  
+[ ] SFTP traffic is still not expected in the live traffic widget yet  
+
+## dev 0.1.7.6.1 — single-file SFTP download polish smoke test
+
+[ ] About shows dev 0.1.7.6.1  
+[ ] File Manager opens with local and remote panels  
+[ ] Remote SFTP listing still works  
+[ ] Remote `Name` sorting still works  
+[ ] Remote `Type` sorting still works  
+[ ] Remote `Size` sorting orders by raw byte count across B / KB / MB / GB values  
+[ ] Select one remote file and click `Download selected`  
+[ ] Download still writes the file into the current local folder  
+[ ] Existing local target still shows overwrite warning  
+[ ] Progress dialog still appears during download  
+[ ] Completion message shows `Downloaded: <formatted size> (<raw bytes> bytes)`  
+[ ] Local panel refreshes after successful download  
+[ ] Attempting to download a remote folder is still refused clearly  
+[ ] Existing xterm.js terminal, paste paths, Ctrl+C interrupt, known-host checks, and logging still work  
 
 ## dev 0.1.7.6 — single-file SFTP download smoke test
 

@@ -47,14 +47,15 @@
 ### File transfer / File Manager
 
 - Architecture documentation exists in `docs/FILE_TRANSFER_ARCHITECTURE.md`
-- Saved-session context menu includes `Open File Manager (download enabled)`
+- Saved-session context menu includes `Open File Manager (transfer enabled)`
 - The File Manager uses saved session data, existing known-host preflight, approved host-key verification before auth, libssh SFTP initialization, and remote directory listing
-- Left panel browses local files as the current download destination using Qt filesystem APIs
+- Left panel browses local files as the current download destination and upload source using Qt filesystem APIs
 - Right panel browses remote SFTP directories with path, `Go`, `↑ Up`, `Refresh`, and name/type/size/modified/permissions columns
 - Double-clicking directories navigates into them
 - `Download selected` downloads one selected remote file into the currently open local folder
-- Overwrite warning and basic progress dialog are included for single-file download
-- Upload, delete, rename, folder transfer, queue, sync, and SFTP traffic monitor integration are not implemented yet
+- `Upload selected` uploads one selected local file into the currently open remote folder
+- Overwrite warning and basic progress dialog are included for single-file download and upload
+- Delete, rename, folder transfer, queue, sync, and SFTP traffic monitor integration are not implemented yet
 
 ### Config
 
@@ -141,4 +142,4 @@ The repository now includes public-alpha preparation documents:
 
 ## SFTP browser polish
 
-`dev 0.1.7.6` adds the first single-file SFTP download action on top of the two-panel File Manager foundation from `dev 0.1.7.5`. `dev 0.1.7.4.1` disabled alternating row colors for readable dark-theme tables, included SFTP browser tabs in app-exit safety confirmation, and hinted tab scrolling for crowded tab bars.
+`dev 0.1.7.6.1` polishes the first single-file SFTP download action by fixing remote size sorting and completion-size reporting. `dev 0.1.7.6` added the first single-file SFTP download action on top of the two-panel File Manager foundation from `dev 0.1.7.5`. `dev 0.1.7.4.1` disabled alternating row colors for readable dark-theme tables, included SFTP browser tabs in app-exit safety confirmation, and hinted tab scrolling for crowded tab bars.

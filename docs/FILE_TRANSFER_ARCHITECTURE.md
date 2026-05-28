@@ -1,8 +1,8 @@
 # DD-SSH File Transfer Architecture
 
-**Checkpoint:** dev 0.1.7.6 — Andromeda  
-**Status:** Single-file SFTP download foundation  
-**Runtime behavior:** saved-session File Manager can browse local/remote directories and download one selected remote file into the current local folder
+**Checkpoint:** dev 0.1.7.7 — Andromeda  
+**Status:** Single-file SFTP upload foundation  
+**Runtime behavior:** saved-session File Manager can browse local/remote directories, download one selected remote file, and upload one selected local file
 
 ---
 
@@ -26,27 +26,27 @@ The future File Manager should eventually provide:
 - diagnostic logging that never records file contents or secrets
 - Session Traffic integration for SFTP bytes where practical
 
-`dev 0.1.7.6` implements the first deliberately narrow transfer path: single remote file download into the currently open local folder. It preserves the existing saved-session, known-host, host-key verification, auth, and libssh SFTP flow. It does **not** implement upload, folder transfer, queue, sync, delete, rename, chmod/mkdir, or SFTP traffic monitor integration yet.
+`dev 0.1.7.7` adds the first deliberately narrow local-to-remote transfer path: upload one selected local file into the currently open remote folder. `dev 0.1.7.6.1` preserved and polished the remote-to-local download path. Both transfer directions preserve the existing saved-session, known-host, host-key verification, auth, and libssh SFTP flow. The File Manager still does **not** implement folder transfer, queue, sync, delete, rename, chmod/mkdir, or SFTP traffic monitor integration yet.
 
 ---
 
-## dev 0.1.7.6 single-file download boundary
+## dev 0.1.7.7 single-file upload boundary
 
-`dev 0.1.7.6` adds `Download selected` to the remote panel. The user selects one remote file, confirms overwrite if needed, sees a basic progress dialog, and the local panel refreshes after success. The local panel is the destination selector. The right panel remains the remote SFTP browser.
+`dev 0.1.7.7` adds `Upload selected` to the local panel. The user selects one local file, confirms remote overwrite if needed, sees a basic progress dialog, and the remote panel refreshes after success. The right panel remains the remote SFTP destination selector.
 
-`dev 0.1.7.5` previously added the first two-panel read-only File Manager foundation.
+`dev 0.1.7.6.1` previously polished the first download path, and `dev 0.1.7.5` added the first two-panel File Manager foundation.
 
-## Non-goals for dev 0.1.7.6
+## Non-goals for dev 0.1.7.7
 
 This checkpoint intentionally does not add:
 
-- local/remote two-panel browser
-- upload
+- recursive folder upload/download
 - delete
 - rename
 - chmod/chown
-- recursive folder transfer
 - transfer queue
+- sync engine
+- SFTP traffic monitor integration
 - config schema migration
 - terminal transport changes
 - known-host behavior changes
@@ -62,7 +62,7 @@ This is a first-download checkpoint, not a full file-transfer implementation.
 
 ```text
 Saved session context menu
-   -> Open File Manager (download enabled)
+   -> Open File Manager (transfer enabled)
    -> left: local filesystem browser / download target
    -> right: remote SFTP browser
    -> select one remote file
@@ -469,3 +469,9 @@ The browser:
 - does not touch terminal tabs
 
 This proves the first remote browser UI without risking the tested terminal baseline.
+
+### dev 0.1.7.6.1 — single-file download polish [passed]
+
+### dev 0.1.7.7 — single-file upload foundation [current]
+
+Remote SFTP Size sorting uses raw byte counts instead of formatted display strings, and completion dialogs report formatted size plus raw bytes. Overwrite metadata comparison remains deferred.

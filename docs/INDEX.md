@@ -39,6 +39,10 @@ This directory contains the working documentation for DD-SSH.
 - [Release Artifacts](RELEASE_ARTIFACTS.md)
 - [Release Notes Template](RELEASE_NOTES_TEMPLATE.md) — future release checklist
 - [Release Checklist](RELEASE_CHECKLIST.md) — focused checkpoint smoke-test checklist
+- [Build/Test 0.1.7.7](BUILD_AND_TEST_0.1.7.7.md) — single-file SFTP upload foundation build/test notes
+- [Build/Test 0.1.7.6.1](BUILD_AND_TEST_0.1.7.6.1.md) — single-file SFTP download polish build/test notes
+- [Testcase 0.1.7.7](TESTCASE_0.1.7.7.md) — single-file SFTP upload foundation validation checklist
+- [Testcase 0.1.7.6.1](TESTCASE_0.1.7.6.1.md) — single-file SFTP download polish validation checklist
 - [Build/Test 0.1.7.6](BUILD_AND_TEST_0.1.7.6.md) — single-file SFTP download build/test notes
 - [Testcase 0.1.7.6](TESTCASE_0.1.7.6.md) — single-file SFTP download validation checklist
 - [Build/Test 0.1.7.4.1](BUILD_AND_TEST_0.1.7.4.1.md) — read-only SFTP browser bugfix polish build/test notes
@@ -54,10 +58,10 @@ This directory contains the working documentation for DD-SSH.
 ## Current checkpoint
 
 ```text
-Version: dev 0.1.7.6
+Version: dev 0.1.7.7
 Codename: Andromeda
-Milestone: Single-file SFTP download foundation
-Phase: First remote file download into the current local folder
+Milestone: Single-file SFTP upload foundation
+Phase: First local file upload into the current remote folder
 ```
 
 
@@ -88,4 +92,4 @@ GitHub issue templates live under `.github/ISSUE_TEMPLATE/`.
 
 - docs/TERMINAL_TRANSPORT.md explains the byte-stream terminal transport hardening added in dev 0.1.7.0.
 
-- docs/FILE_TRANSFER_ARCHITECTURE.md explains the planned libssh SFTP/File Manager design and the dev 0.1.7.6 single-file download checkpoint.
+- docs/FILE_TRANSFER_ARCHITECTURE.md explains the planned libssh SFTP/File Manager design and the dev 0.1.7.7 single-file upload checkpoint.

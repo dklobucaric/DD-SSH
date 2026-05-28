@@ -39,6 +39,29 @@ struct SftpDownloadResult
 
 using SftpDownloadProgressCallback = std::function<bool(quint64 bytesTransferred, quint64 totalBytes, const QString &message)>;
 
+struct SftpUploadResult
+{
+    bool success = false;
+    bool cancelled = false;
+    bool remoteAlreadyExists = false;
+    bool remoteTargetIsDirectory = false;
+    QString message;
+    QString error;
+    int sshErrorCode = 0;
+    int authReturnCode = 0;
+    int sftpErrorCode = 0;
+    bool hostKeyVerificationAttempted = false;
+    bool hostKeyVerified = false;
+    QString hostKeyType;
+    QString hostKeyFingerprint;
+    QString localPath;
+    QString remotePath;
+    quint64 bytesTransferred = 0;
+    quint64 totalBytes = 0;
+};
+
+using SftpUploadProgressCallback = std::function<bool(quint64 bytesTransferred, quint64 totalBytes, const QString &message)>;
+
 struct SftpProbeResult
 {
     bool success = false;
@@ -78,5 +101,18 @@ public:
         const QString &remotePath,
         const QString &localPath,
         SftpDownloadProgressCallback progressCallback = {}
+    );
+
+    static SftpUploadResult uploadLocalFile(
+        const QString &host,
+        int port,
+        const QString &username,
+        SshAuthMethod authMethod,
+        const QString &secretValue,
+        const SshHostKeyExpectation &hostKeyExpectation,
+        const QString &localPath,
+        const QString &remotePath,
+        bool allowOverwrite,
+        SftpUploadProgressCallback progressCallback = {}
     );
 };

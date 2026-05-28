@@ -6,9 +6,9 @@ project(DD_SSH
     LANGUAGES CXX
 )
 
-set(DD_SSH_VERSION_STRING "dev 0.1.7.6")
+set(DD_SSH_VERSION_STRING "dev 0.1.7.7")
 set(DD_SSH_CODENAME_STRING "Andromeda")
-set(DD_SSH_MILESTONE_STRING "Single-file SFTP download foundation")
+set(DD_SSH_MILESTONE_STRING "Single-file SFTP upload foundation")
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

@@ -1563,7 +1563,7 @@ void MainWindow::addWelcomeTab()
         "A clean cross-platform SSH client and session manager.\n\n"
         "Double-click a saved session on the left to open the xterm.js terminal.\n\n"
         "Current milestone:\n"
-        "Local and remote read-only file manager foundation — two-panel browser, no transfers yet\n\n"
+        "Two-panel SFTP file manager — single-file download and upload foundation\n\n"
         "Working now:\n"
         "- saved sessions loaded from dd-ssh.json\n"
         "- portable plaintext secrets in dd-ssh.json\n"
@@ -1581,7 +1581,7 @@ void MainWindow::addWelcomeTab()
         "- cross-platform app icon resources for Qt, Windows, Linux, and macOS prep\n"
         "- Windows standalone deployment helper validated on real Windows 10/11 machines\n"
         "- app exit protection when active SSH terminals are still connected\n"
-        "- two-panel File Manager / SFTP download action for the 0.1.7.x SFTP development track\n\n"
+        "- two-panel File Manager / SFTP download and upload actions for the 0.1.7.x SFTP development track\n\n"
         "Main menus:\n"
         "- File: Open Config Folder, Export Config, Import Config, Restore Latest Backup, Exit\n"
         "- Session: New Session, Connect / Auth test, Edit selected session\n"
@@ -1601,7 +1601,7 @@ void MainWindow::addWelcomeTab()
         "- docs/FILE_TRANSFER_ARCHITECTURE.md explains the planned SFTP/File Manager foundation and two-panel browser path\n\n"
         "Current development focus:\n"
         "- keep dev 0.1.7.1 as the closed terminal foundation baseline\n"
-        "- introduce a read-only file manager without changing SSH terminal runtime behavior\n"
+        "- introduce safe single-file transfer actions without changing SSH terminal runtime behavior\n"
         "- use libssh SFTP API for remote directory browsing, not shell command parsing hacks\n"
         "- keep terminal tabs and future File Manager tabs separated by design\n\n"
         "Codename roadmap:\n"
@@ -1670,8 +1670,8 @@ void MainWindow::openSftpBrowserForSavedSession(const QString &sessionId)
             : session.keyRef;
 
     QString preflightText;
-    preflightText += QStringLiteral("DD-SSH file manager download preflight\n\n");
-    preflightText += QStringLiteral("Checkpoint: dev 0.1.7.6 — single-file SFTP download foundation\n\n");
+    preflightText += QStringLiteral("DD-SSH file manager transfer preflight\n\n");
+    preflightText += QStringLiteral("Checkpoint: dev 0.1.7.7 — single-file SFTP upload foundation\n\n");
     preflightText += QStringLiteral("Session: ") + session.name + QStringLiteral("\n");
     preflightText += QStringLiteral("Session id: ") + session.id + QStringLiteral("\n");
     preflightText += QStringLiteral("Group: ") + (session.group.trimmed().isEmpty() ? QStringLiteral("(none)") : session.group) + QStringLiteral("\n\n");
@@ -1689,7 +1689,7 @@ void MainWindow::openSftpBrowserForSavedSession(const QString &sessionId)
     preflightText += QStringLiteral("- browse local directories and remote SFTP directories side by side with Refresh, Up, editable paths, and double-click folder navigation\n");
     preflightText += QStringLiteral("- download one selected remote file into the current local folder\n");
     preflightText += QStringLiteral("- show overwrite warning and basic download progress\n");
-    preflightText += QStringLiteral("- no upload, delete, rename, folder transfer, transfer queue, or sync yet\n\n");
+    preflightText += QStringLiteral("- no delete, rename, folder transfer, transfer queue, or sync yet\n\n");
 
     QString secretValue;
     QString secretType;
@@ -1807,7 +1807,7 @@ void MainWindow::openSftpBrowserForSavedSession(const QString &sessionId)
     }
 
     preflightText += QStringLiteral("Known-host decision allows SFTP file manager.\n\n");
-    preflightText += QStringLiteral("Opening two-panel file manager tab with single-file download enabled.\n");
+    preflightText += QStringLiteral("Opening two-panel file manager tab with single-file download/upload enabled.\n");
 
     const SshHostKeyExpectation hostKeyExpectation = makeHostKeyExpectation(
         session.host,
@@ -1860,7 +1860,7 @@ void MainWindow::showSessionContextMenu(const QPoint &position)
 
     QMenu menu(this);
     QAction *openWebTerminalAction = menu.addAction("Open xterm.js terminal");
-    QAction *fileManagerAction = menu.addAction("Open File Manager (download enabled)");
+    QAction *fileManagerAction = menu.addAction("Open File Manager (transfer enabled)");
     QAction *connectAction = menu.addAction("Run auth test");
     QAction *openShellAction = menu.addAction("Open basic shell (fallback)");
     menu.addSeparator();

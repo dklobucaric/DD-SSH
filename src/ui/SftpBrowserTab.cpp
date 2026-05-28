@@ -8,9 +8,11 @@
 #include <QFileInfo>
 #include <QFileSystemModel>
 #include <QHeaderView>
+#include <QItemSelectionModel>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
+#include <QLocale>
 #include <QMessageBox>
 #include <QModelIndex>
 #include <QProgressDialog>
@@ -24,6 +26,15 @@
 #include <QVBoxLayout>
 
 namespace {
+QString formatUnitValue(double value, const QString &suffix)
+{
+    QString number = QString::number(value, 'f', 1);
+    if (number.endsWith(QStringLiteral(".0"))) {
+        number.chop(2);
+    }
+    return number + QStringLiteral(" ") + suffix;
+}
+
 QString formatSize(quint64 bytes)
 {
     if (bytes < 1024ULL) {
@@ -33,15 +44,37 @@ QString formatSize(quint64 bytes)
     const double value = static_cast<double>(bytes);
 
     if (bytes < 1024ULL * 1024ULL) {
-        return QString::number(value / 1024.0, 'f', 1) + QStringLiteral(" KB");
+        return formatUnitValue(value / 1024.0, QStringLiteral("KB"));
     }
 
     if (bytes < 1024ULL * 1024ULL * 1024ULL) {
-        return QString::number(value / (1024.0 * 1024.0), 'f', 1) + QStringLiteral(" MB");
+        return formatUnitValue(value / (1024.0 * 1024.0), QStringLiteral("MB"));
     }
 
-    return QString::number(value / (1024.0 * 1024.0 * 1024.0), 'f', 1) + QStringLiteral(" GB");
+    return formatUnitValue(value / (1024.0 * 1024.0 * 1024.0), QStringLiteral("GB"));
 }
+
+QString formatRawBytes(quint64 bytes)
+{
+    return QLocale(QLocale::English).toString(static_cast<qulonglong>(bytes)) + QStringLiteral(" bytes");
+}
+
+class SizeTableWidgetItem final : public QTableWidgetItem
+{
+public:
+    explicit SizeTableWidgetItem(quint64 bytes)
+        : QTableWidgetItem(formatSize(bytes))
+    {
+        setData(Qt::UserRole, QVariant::fromValue<qulonglong>(bytes));
+        setFlags(flags() & ~Qt::ItemIsEditable);
+        setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    }
+
+    bool operator<(const QTableWidgetItem &other) const override
+    {
+        return data(Qt::UserRole).toULongLong() < other.data(Qt::UserRole).toULongLong();
+    }
+};
 
 bool isDirectoryType(const QString &type)
 {
@@ -108,7 +141,7 @@ void SftpBrowserTab::setupUi()
             .arg(m_username, m_host, QString::number(m_port)),
         this
     );
-    headerLabel->setToolTip(QStringLiteral("This checkpoint supports read-only browsing plus single-file remote download to the current local folder. Upload, delete, rename, queue, and folder transfer actions are intentionally not implemented yet."));
+    headerLabel->setToolTip(QStringLiteral("This checkpoint supports single-file download and single-file upload. Delete, rename, queue, sync, and folder transfer actions are intentionally not implemented yet."));
     mainLayout->addWidget(headerLabel);
 
     auto *splitter = new QSplitter(Qt::Horizontal, this);
@@ -119,7 +152,7 @@ void SftpBrowserTab::setupUi()
     localLayout->setContentsMargins(0, 0, 4, 0);
     localLayout->setSpacing(6);
 
-    auto *localTitle = new QLabel(QStringLiteral("Local files (download target)"), localPanel);
+    auto *localTitle = new QLabel(QStringLiteral("Local files (download target / upload source)"), localPanel);
     localLayout->addWidget(localTitle);
 
     auto *localPathLayout = new QHBoxLayout();
@@ -138,6 +171,10 @@ void SftpBrowserTab::setupUi()
 
     m_localRefreshButton = new QPushButton(QStringLiteral("Refresh"), localPanel);
     localPathLayout->addWidget(m_localRefreshButton);
+
+    m_localUploadButton = new QPushButton(QStringLiteral("Upload selected"), localPanel);
+    m_localUploadButton->setToolTip(QStringLiteral("Upload the selected local file into the currently open remote folder. Folder upload, queue, and sync are not implemented yet."));
+    localPathLayout->addWidget(m_localUploadButton);
 
     localLayout->addLayout(localPathLayout);
 
@@ -165,7 +202,7 @@ void SftpBrowserTab::setupUi()
     remoteLayout->setContentsMargins(4, 0, 0, 0);
     remoteLayout->setSpacing(6);
 
-    auto *remoteTitle = new QLabel(QStringLiteral("Remote files (SFTP — download only)"), remotePanel);
+    auto *remoteTitle = new QLabel(QStringLiteral("Remote files (SFTP — download/upload)"), remotePanel);
     remoteLayout->addWidget(remoteTitle);
 
     auto *remotePathLayout = new QHBoxLayout();
@@ -186,7 +223,7 @@ void SftpBrowserTab::setupUi()
     remotePathLayout->addWidget(m_remoteRefreshButton);
 
     m_remoteDownloadButton = new QPushButton(QStringLiteral("Download selected"), remotePanel);
-    m_remoteDownloadButton->setToolTip(QStringLiteral("Download the selected remote file into the currently open local folder. Folder download and upload are not implemented yet."));
+    m_remoteDownloadButton->setToolTip(QStringLiteral("Download the selected remote file into the currently open local folder. Folder download is not implemented yet."));
     remotePathLayout->addWidget(m_remoteDownloadButton);
 
     remoteLayout->addLayout(remotePathLayout);
@@ -224,7 +261,7 @@ void SftpBrowserTab::setupUi()
     mainLayout->addWidget(splitter, 1);
 
     auto *transferNotice = new QLabel(
-        QStringLiteral("Single-file remote download is enabled in this checkpoint. Upload, delete, rename, folder transfer, queue, and sync actions are intentionally disabled."),
+        QStringLiteral("Single-file download and upload are enabled in this checkpoint. Delete, rename, folder transfer, queue, and sync actions are intentionally disabled."),
         this
     );
     transferNotice->setWordWrap(true);
@@ -232,6 +269,10 @@ void SftpBrowserTab::setupUi()
 
     connect(m_localRefreshButton, &QPushButton::clicked, this, [this]() {
         refreshLocalDirectory();
+    });
+
+    connect(m_localUploadButton, &QPushButton::clicked, this, [this]() {
+        uploadSelectedLocalFile();
     });
 
     connect(m_localGoButton, &QPushButton::clicked, this, [this]() {
@@ -300,7 +341,7 @@ void SftpBrowserTab::setLocalPath(const QString &path)
 
     if (!info.isDir()) {
         if (m_localStatusLabel != nullptr) {
-            m_localStatusLabel->setText(QStringLiteral("Selected local file: ") + normalized + QStringLiteral(" — upload is not implemented yet"));
+            m_localStatusLabel->setText(QStringLiteral("Selected local file: ") + normalized + QStringLiteral(" — use Upload selected to send it into the current remote folder"));
         }
         return;
     }
@@ -382,7 +423,7 @@ void SftpBrowserTab::handleLocalDoubleClicked(const QModelIndex &index)
     }
 
     if (m_localStatusLabel != nullptr) {
-        m_localStatusLabel->setText(QStringLiteral("Selected local file: ") + selectedPath + QStringLiteral(" — upload is not implemented yet"));
+        m_localStatusLabel->setText(QStringLiteral("Selected local file: ") + selectedPath + QStringLiteral(" — use Upload selected to send it into the current remote folder"));
     }
 }
 
@@ -402,6 +443,10 @@ void SftpBrowserTab::setRemoteBusy(bool busy)
 
     if (m_remoteDownloadButton != nullptr) {
         m_remoteDownloadButton->setEnabled(!busy);
+    }
+
+    if (m_localUploadButton != nullptr) {
+        m_localUploadButton->setEnabled(!busy);
     }
 
     if (m_remotePathEdit != nullptr) {
@@ -776,8 +821,8 @@ void SftpBrowserTab::downloadSelectedRemoteFile()
         QMessageBox::information(
             this,
             QStringLiteral("Download complete — DD-SSH"),
-            QStringLiteral("Downloaded remote file:\n%1\n\nTo local file:\n%2\n\nBytes: %3")
-                .arg(remoteFilePath, localTargetPath, formatSize(result.bytesTransferred))
+            QStringLiteral("Downloaded remote file:\n%1\n\nTo local file:\n%2\n\nDownloaded: %3 (%4)")
+                .arg(remoteFilePath, localTargetPath, formatSize(result.bytesTransferred), formatRawBytes(result.bytesTransferred))
         );
         return;
     }
@@ -801,6 +846,253 @@ void SftpBrowserTab::downloadSelectedRemoteFile()
     );
 }
 
+
+void SftpBrowserTab::uploadSelectedLocalFile()
+{
+    if (m_localTree == nullptr || m_localModel == nullptr) {
+        return;
+    }
+
+    const QModelIndexList selectedRows = m_localTree->selectionModel() != nullptr
+        ? m_localTree->selectionModel()->selectedRows(0)
+        : QModelIndexList{};
+
+    QModelIndex selectedIndex;
+
+    if (!selectedRows.isEmpty()) {
+        selectedIndex = selectedRows.first();
+    } else {
+        selectedIndex = m_localTree->currentIndex();
+        if (selectedIndex.isValid() && selectedIndex.column() != 0) {
+            selectedIndex = selectedIndex.siblingAtColumn(0);
+        }
+    }
+
+    if (!selectedIndex.isValid()) {
+        QMessageBox::information(
+            this,
+            QStringLiteral("No local file selected — DD-SSH"),
+            QStringLiteral("Select one local file first, then click Upload selected.")
+        );
+        return;
+    }
+
+    const QString localFilePath = m_localModel->filePath(selectedIndex);
+    const QFileInfo localInfo(localFilePath);
+
+    if (!localInfo.exists()) {
+        QMessageBox::warning(
+            this,
+            QStringLiteral("Local file not found — DD-SSH"),
+            QStringLiteral("The selected local file no longer exists:\n%1").arg(localFilePath)
+        );
+        return;
+    }
+
+    if (localInfo.isDir()) {
+        QMessageBox::information(
+            this,
+            QStringLiteral("Folder upload not implemented — DD-SSH"),
+            QStringLiteral("This checkpoint uploads one selected local file only. Folder transfer is planned for a later checkpoint.")
+        );
+        return;
+    }
+
+    if (!localInfo.isFile()) {
+        const QMessageBox::StandardButton decision = QMessageBox::question(
+            this,
+            QStringLiteral("Upload unusual local entry? — DD-SSH"),
+            QStringLiteral("The selected local entry is not reported as a regular file:\n%1\n\nUpload it anyway?").arg(localFilePath),
+            QMessageBox::Yes | QMessageBox::No,
+            QMessageBox::No
+        );
+
+        if (decision != QMessageBox::Yes) {
+            return;
+        }
+    }
+
+    const QString fileName = localInfo.fileName();
+
+    if (fileName.trimmed().isEmpty()) {
+        QMessageBox::warning(
+            this,
+            QStringLiteral("Invalid local filename — DD-SSH"),
+            QStringLiteral("Could not derive a remote filename from the selected local path.")
+        );
+        return;
+    }
+
+    const QString remoteTargetPath = joinedRemotePath(m_currentRemotePath, fileName);
+    bool remoteExistsInCurrentListing = false;
+    bool remoteTargetIsDirectory = false;
+
+    if (m_remoteTable != nullptr) {
+        for (int row = 0; row < m_remoteTable->rowCount(); ++row) {
+            QTableWidgetItem *nameItem = m_remoteTable->item(row, 0);
+            QTableWidgetItem *typeItem = m_remoteTable->item(row, 1);
+
+            if (nameItem == nullptr || typeItem == nullptr) {
+                continue;
+            }
+
+            const QString remoteName = nameItem->data(Qt::UserRole).toString();
+
+            if (remoteName == fileName) {
+                remoteExistsInCurrentListing = true;
+                remoteTargetIsDirectory = isDirectoryType(typeItem->data(Qt::UserRole).toString());
+                break;
+            }
+        }
+    }
+
+    bool allowOverwrite = false;
+
+    if (remoteExistsInCurrentListing) {
+        if (remoteTargetIsDirectory) {
+            QMessageBox::warning(
+                this,
+                QStringLiteral("Remote target is a folder — DD-SSH"),
+                QStringLiteral("A remote folder with the same name already exists:\n%1\n\nChoose a different remote path or rename the local file before uploading.").arg(remoteTargetPath)
+            );
+            return;
+        }
+
+        const QMessageBox::StandardButton overwriteDecision = QMessageBox::warning(
+            this,
+            QStringLiteral("Overwrite remote file? — DD-SSH"),
+            QStringLiteral("The remote file already exists:\n%1\n\nOverwrite it with the selected local file?" ).arg(remoteTargetPath),
+            QMessageBox::Yes | QMessageBox::Cancel,
+            QMessageBox::Cancel
+        );
+
+        if (overwriteDecision != QMessageBox::Yes) {
+            if (m_remoteStatusLabel != nullptr) {
+                m_remoteStatusLabel->setText(statusPrefix() + QStringLiteral("upload cancelled before overwrite: ") + remoteTargetPath);
+            }
+            return;
+        }
+
+        allowOverwrite = true;
+    }
+
+    AppLogger::info(QStringLiteral("SFTP browser upload requested: session=\"") + m_sessionName
+        + QStringLiteral("\", localPath=") + localFilePath
+        + QStringLiteral(", remotePath=") + remoteTargetPath);
+
+    QProgressDialog progress(
+        QStringLiteral("Uploading %1 ...").arg(fileName),
+        QStringLiteral("Cancel"),
+        0,
+        100,
+        this
+    );
+    progress.setWindowTitle(QStringLiteral("SFTP upload — DD-SSH"));
+    progress.setWindowModality(Qt::ApplicationModal);
+    progress.setMinimumDuration(0);
+    progress.setValue(0);
+
+    setRemoteBusy(true);
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+
+    if (m_remoteStatusLabel != nullptr) {
+        m_remoteStatusLabel->setText(statusPrefix() + QStringLiteral("uploading ") + remoteTargetPath + QStringLiteral(" ..."));
+    }
+
+    bool progressWasCancelled = false;
+
+    const SftpUploadResult result = SftpProbe::uploadLocalFile(
+        m_host,
+        m_port,
+        m_username,
+        m_authMethod,
+        m_secretValue,
+        m_hostKeyExpectation,
+        localFilePath,
+        remoteTargetPath,
+        allowOverwrite,
+        [&progress, &progressWasCancelled](quint64 bytesTransferred, quint64 totalBytes, const QString &message) -> bool {
+            int percent = 0;
+
+            if (totalBytes > 0) {
+                percent = static_cast<int>(qMin<quint64>(100, (bytesTransferred * 100ULL) / totalBytes));
+            } else if (bytesTransferred > 0) {
+                percent = 50;
+            }
+
+            progress.setValue(percent);
+            progress.setLabelText(
+                QStringLiteral("%1\n%2 / %3")
+                    .arg(message, formatSize(bytesTransferred), totalBytes > 0 ? formatSize(totalBytes) : QStringLiteral("unknown"))
+            );
+            QApplication::processEvents();
+
+            if (progress.wasCanceled()) {
+                progressWasCancelled = true;
+                return false;
+            }
+
+            return true;
+        }
+    );
+
+    QApplication::restoreOverrideCursor();
+    setRemoteBusy(false);
+
+    if (result.success) {
+        progress.setValue(100);
+        refreshRemoteDirectory();
+
+        if (m_localStatusLabel != nullptr) {
+            m_localStatusLabel->setText(QStringLiteral("Uploaded local file: ") + localFilePath);
+        }
+
+        if (m_remoteStatusLabel != nullptr) {
+            m_remoteStatusLabel->setText(statusPrefix() + QStringLiteral("uploaded ") + fileName + QStringLiteral(" — ") + formatSize(result.bytesTransferred));
+        }
+
+        QMessageBox::information(
+            this,
+            QStringLiteral("Upload complete — DD-SSH"),
+            QStringLiteral("Uploaded local file:\n%1\n\nTo remote file:\n%2\n\nUploaded: %3 (%4)")
+                .arg(localFilePath, remoteTargetPath, formatSize(result.bytesTransferred), formatRawBytes(result.bytesTransferred))
+        );
+        return;
+    }
+
+    if (result.remoteAlreadyExists && !allowOverwrite && !remoteExistsInCurrentListing) {
+        QMessageBox::warning(
+            this,
+            QStringLiteral("Remote file exists — DD-SSH"),
+            QStringLiteral("The remote file already exists, but it was not visible in the current listing or the listing was stale:\n%1\n\nRefresh the remote folder and try again if you want to overwrite it.").arg(remoteTargetPath)
+        );
+        if (m_remoteStatusLabel != nullptr) {
+            m_remoteStatusLabel->setText(statusPrefix() + QStringLiteral("upload stopped: remote file already exists"));
+        }
+        refreshRemoteDirectory();
+        return;
+    }
+
+    if (result.cancelled || progressWasCancelled) {
+        if (m_remoteStatusLabel != nullptr) {
+            m_remoteStatusLabel->setText(statusPrefix() + QStringLiteral("upload cancelled: ") + remoteTargetPath + QStringLiteral(" — partial remote file may remain"));
+        }
+        refreshRemoteDirectory();
+        return;
+    }
+
+    if (m_remoteStatusLabel != nullptr) {
+        m_remoteStatusLabel->setText(statusPrefix() + QStringLiteral("upload failed: ") + result.message);
+    }
+
+    QMessageBox::warning(
+        this,
+        QStringLiteral("Upload failed — DD-SSH"),
+        QStringLiteral("Could not upload local file:\n%1\n\nTarget:\n%2\n\n%3\n\nError:\n%4")
+            .arg(localFilePath, remoteTargetPath, result.message, result.error)
+    );
+}
+
 void SftpBrowserTab::populateRemoteTable(const QList<SftpRemoteEntry> &entries)
 {
     if (m_remoteTable == nullptr) {
@@ -820,9 +1112,7 @@ void SftpBrowserTab::populateRemoteTable(const QList<SftpRemoteEntry> &entries)
         QTableWidgetItem *typeItem = makeReadOnlyItem(entry.type);
         typeItem->setData(Qt::UserRole, entry.type);
 
-        QTableWidgetItem *sizeItem = makeReadOnlyItem(formatSize(entry.sizeBytes));
-        sizeItem->setData(Qt::UserRole, QVariant::fromValue<qulonglong>(entry.sizeBytes));
-        sizeItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        QTableWidgetItem *sizeItem = new SizeTableWidgetItem(entry.sizeBytes);
 
         QTableWidgetItem *modifiedItem = makeReadOnlyItem(entry.modifiedTime);
         QTableWidgetItem *permissionsItem = makeReadOnlyItem(entry.permissions);
