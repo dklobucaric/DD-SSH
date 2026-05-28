@@ -1581,7 +1581,7 @@ void MainWindow::addWelcomeTab()
         "- cross-platform app icon resources for Qt, Windows, Linux, and macOS prep\n"
         "- Windows standalone deployment helper validated on real Windows 10/11 machines\n"
         "- app exit protection when active SSH terminals are still connected\n"
-        "- read-only two-panel File Manager / SFTP file manager action for the 0.1.7.x SFTP development track\n\n"
+        "- two-panel File Manager / SFTP download action for the 0.1.7.x SFTP development track\n\n"
         "Main menus:\n"
         "- File: Open Config Folder, Export Config, Import Config, Restore Latest Backup, Exit\n"
         "- Session: New Session, Connect / Auth test, Edit selected session\n"
@@ -1670,8 +1670,8 @@ void MainWindow::openSftpBrowserForSavedSession(const QString &sessionId)
             : session.keyRef;
 
     QString preflightText;
-    preflightText += QStringLiteral("DD-SSH read-only file manager preflight\n\n");
-    preflightText += QStringLiteral("Checkpoint: dev 0.1.7.5 — local and remote read-only file manager foundation\n\n");
+    preflightText += QStringLiteral("DD-SSH file manager download preflight\n\n");
+    preflightText += QStringLiteral("Checkpoint: dev 0.1.7.6 — single-file SFTP download foundation\n\n");
     preflightText += QStringLiteral("Session: ") + session.name + QStringLiteral("\n");
     preflightText += QStringLiteral("Session id: ") + session.id + QStringLiteral("\n");
     preflightText += QStringLiteral("Group: ") + (session.group.trimmed().isEmpty() ? QStringLiteral("(none)") : session.group) + QStringLiteral("\n\n");
@@ -1682,12 +1682,14 @@ void MainWindow::openSftpBrowserForSavedSession(const QString &sessionId)
     preflightText += QStringLiteral("Secret ref: ") + secretRef + QStringLiteral("\n");
     preflightText += QStringLiteral("Secret value: loaded from dd-ssh.json, hidden from display\n\n");
     preflightText += QStringLiteral("Scope:\n");
-    preflightText += QStringLiteral("- open a graphical read-only two-panel file manager tab\n");
+    preflightText += QStringLiteral("- open a graphical two-panel file manager tab\n");
     preflightText += QStringLiteral("- use saved session data and plain-v1 secret references\n");
     preflightText += QStringLiteral("- use existing known-host prompt and trust-chain preflight\n");
     preflightText += QStringLiteral("- verify the approved host key again before SFTP authentication\n");
     preflightText += QStringLiteral("- browse local directories and remote SFTP directories side by side with Refresh, Up, editable paths, and double-click folder navigation\n");
-    preflightText += QStringLiteral("- no upload, download, delete, rename, queue, or transfer progress yet\n\n");
+    preflightText += QStringLiteral("- download one selected remote file into the current local folder\n");
+    preflightText += QStringLiteral("- show overwrite warning and basic download progress\n");
+    preflightText += QStringLiteral("- no upload, delete, rename, folder transfer, transfer queue, or sync yet\n\n");
 
     QString secretValue;
     QString secretType;
@@ -1805,7 +1807,7 @@ void MainWindow::openSftpBrowserForSavedSession(const QString &sessionId)
     }
 
     preflightText += QStringLiteral("Known-host decision allows SFTP file manager.\n\n");
-    preflightText += QStringLiteral("Opening read-only two-panel file manager tab.\n");
+    preflightText += QStringLiteral("Opening two-panel file manager tab with single-file download enabled.\n");
 
     const SshHostKeyExpectation hostKeyExpectation = makeHostKeyExpectation(
         session.host,
@@ -1834,7 +1836,7 @@ void MainWindow::openSftpBrowserForSavedSession(const QString &sessionId)
     const int tabIndex = m_tabs->addTab(browserTab, session.name + QStringLiteral(" files"));
     m_tabs->setCurrentIndex(tabIndex);
 
-    statusBar()->showMessage(QStringLiteral("Opened read-only file manager for ") + tabTitle);
+    statusBar()->showMessage(QStringLiteral("Opened file manager for ") + tabTitle);
 }
 
 
@@ -1858,7 +1860,7 @@ void MainWindow::showSessionContextMenu(const QPoint &position)
 
     QMenu menu(this);
     QAction *openWebTerminalAction = menu.addAction("Open xterm.js terminal");
-    QAction *fileManagerAction = menu.addAction("Open File Manager (read-only two-panel)");
+    QAction *fileManagerAction = menu.addAction("Open File Manager (download enabled)");
     QAction *connectAction = menu.addAction("Run auth test");
     QAction *openShellAction = menu.addAction("Open basic shell (fallback)");
     menu.addSeparator();

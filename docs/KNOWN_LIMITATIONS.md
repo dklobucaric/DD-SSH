@@ -1,6 +1,6 @@
 # DD-SSH Known Limitations
 
-**Checkpoint:** dev 0.1.7.5 — Andromeda
+**Checkpoint:** dev 0.1.7.6 — Andromeda
 
 This document lists limitations that should be visible to testers. Nothing here is hidden or sugar-coated.
 
@@ -29,11 +29,11 @@ This document lists limitations that should be visible to testers. Nothing here 
 
 ## Feature limitations
 
-`dev 0.1.7.5` adds the first two-panel read-only file manager foundation. It can browse local and remote directories side by side, but it is still read-only and not a transfer tool yet.
+`dev 0.1.7.6` adds the first single-file remote download action. It is intentionally not a complete file transfer tool yet: upload, folder transfer, queue, sync, delete, rename, chmod, and mkdir are not implemented.
 
 Not implemented yet:
 
-- Upload, download, and two-panel local/remote file browsing
+- Upload and folder transfer
 - Delete, rename, chmod, mkdir, transfer queue, recursive folder transfer
 - Multi-Exec
 - Keep-alive settings
@@ -102,4 +102,4 @@ Known macOS alpha notes:
 
 ## SFTP traffic monitor
 
-SFTP activity is not yet included in the live Session Traffic monitor. This is planned for the upload/download transfer phase, not the first read-only browser polish checkpoint.
+SFTP activity is not yet included in the live Session Traffic monitor. This is planned for a later transfer polish phase, not the first single-file download checkpoint.

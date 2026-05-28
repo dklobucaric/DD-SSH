@@ -1,23 +1,34 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.7.5 — Andromeda  
-**Milestone:** Local + remote read-only file manager foundation  
-**Phase:** First two-panel read-only file manager, no transfers yet
+**Checkpoint:** dev 0.1.7.6 — Andromeda  
+**Milestone:** Single-file SFTP download foundation  
+**Phase:** First single-file remote download into the current local folder
 
-## dev 0.1.7.5 — local + remote read-only file manager smoke test
+## dev 0.1.7.6 — single-file SFTP download smoke test
 
-[ ] About shows dev 0.1.7.5  
-[ ] Saved-session context menu shows `Open File Manager (read-only two-panel)`  
+[ ] About shows dev 0.1.7.6  
+[ ] Saved-session context menu shows `Open File Manager (download enabled)`  
 [ ] File Manager opens with a local panel on the left and remote SFTP panel on the right  
 [ ] Local panel starts at the user's home directory or a valid local path  
-[ ] Local `Go`, `↑ Up`, `Refresh`, and double-click folder navigation work  
-[ ] Local file selection does not upload/open/modify anything  
-[ ] Remote panel still lists remote `.` on a known SFTP-enabled server  
-[ ] Remote `Go`, `↑ Up`, `Refresh`, and double-click folder navigation still work  
-[ ] No upload/download/delete/rename buttons are present  
+[ ] Remote panel lists a known SFTP-enabled server  
+[ ] Select one remote file and click `Download selected`  
+[ ] Download writes the file into the currently open local folder  
+[ ] Existing local target shows an overwrite warning  
+[ ] Cancel on overwrite leaves the local file unchanged  
+[ ] Progress dialog appears during download  
+[ ] Local panel refreshes after successful download  
+[ ] Downloaded file size matches the remote file size  
+[ ] Attempting to download a remote folder is refused clearly  
+[ ] Upload/delete/rename/folder transfer/queue actions are not present yet  
 [ ] Exit safety still lists open File Manager/SFTP tabs  
 [ ] Existing xterm.js terminal, paste paths, Ctrl+C interrupt, known-host checks, and logging still work  
 [ ] Session Traffic still reports terminal traffic only; SFTP transfer counters are not expected yet  
+
+## dev 0.1.7.5 — local + remote read-only file manager smoke test
+
+[PASS] Linux smoke test passed  
+[PASS] macOS smoke test passed  
+[PASS] Windows smoke test passed  
 
 ## dev 0.1.7.4.1 — read-only SFTP browser bugfix smoke test
 

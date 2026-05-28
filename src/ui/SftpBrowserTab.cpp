@@ -13,6 +13,7 @@
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QModelIndex>
+#include <QProgressDialog>
 #include <QPushButton>
 #include <QSplitter>
 #include <QStringList>
@@ -103,11 +104,11 @@ void SftpBrowserTab::setupUi()
     mainLayout->setSpacing(6);
 
     auto *headerLabel = new QLabel(
-        QStringLiteral("Read-only two-panel file manager — local files ⇄ %1@%2:%3")
+        QStringLiteral("Two-panel file manager — local files ⇄ %1@%2:%3")
             .arg(m_username, m_host, QString::number(m_port)),
         this
     );
-    headerLabel->setToolTip(QStringLiteral("This checkpoint can browse local and remote directories only. Upload, download, delete, rename, queue, and transfer progress actions are intentionally not implemented yet."));
+    headerLabel->setToolTip(QStringLiteral("This checkpoint supports read-only browsing plus single-file remote download to the current local folder. Upload, delete, rename, queue, and folder transfer actions are intentionally not implemented yet."));
     mainLayout->addWidget(headerLabel);
 
     auto *splitter = new QSplitter(Qt::Horizontal, this);
@@ -118,7 +119,7 @@ void SftpBrowserTab::setupUi()
     localLayout->setContentsMargins(0, 0, 4, 0);
     localLayout->setSpacing(6);
 
-    auto *localTitle = new QLabel(QStringLiteral("Local files (read-only)"), localPanel);
+    auto *localTitle = new QLabel(QStringLiteral("Local files (download target)"), localPanel);
     localLayout->addWidget(localTitle);
 
     auto *localPathLayout = new QHBoxLayout();
@@ -164,7 +165,7 @@ void SftpBrowserTab::setupUi()
     remoteLayout->setContentsMargins(4, 0, 0, 0);
     remoteLayout->setSpacing(6);
 
-    auto *remoteTitle = new QLabel(QStringLiteral("Remote files (read-only SFTP)"), remotePanel);
+    auto *remoteTitle = new QLabel(QStringLiteral("Remote files (SFTP — download only)"), remotePanel);
     remoteLayout->addWidget(remoteTitle);
 
     auto *remotePathLayout = new QHBoxLayout();
@@ -183,6 +184,10 @@ void SftpBrowserTab::setupUi()
 
     m_remoteRefreshButton = new QPushButton(QStringLiteral("Refresh"), remotePanel);
     remotePathLayout->addWidget(m_remoteRefreshButton);
+
+    m_remoteDownloadButton = new QPushButton(QStringLiteral("Download selected"), remotePanel);
+    m_remoteDownloadButton->setToolTip(QStringLiteral("Download the selected remote file into the currently open local folder. Folder download and upload are not implemented yet."));
+    remotePathLayout->addWidget(m_remoteDownloadButton);
 
     remoteLayout->addLayout(remotePathLayout);
 
@@ -219,7 +224,7 @@ void SftpBrowserTab::setupUi()
     mainLayout->addWidget(splitter, 1);
 
     auto *transferNotice = new QLabel(
-        QStringLiteral("Transfers are intentionally disabled in this checkpoint. Double-click folders to browse; selecting files does not upload or download yet."),
+        QStringLiteral("Single-file remote download is enabled in this checkpoint. Upload, delete, rename, folder transfer, queue, and sync actions are intentionally disabled."),
         this
     );
     transferNotice->setWordWrap(true);
@@ -247,6 +252,10 @@ void SftpBrowserTab::setupUi()
 
     connect(m_remoteRefreshButton, &QPushButton::clicked, this, [this]() {
         refreshRemoteDirectory();
+    });
+
+    connect(m_remoteDownloadButton, &QPushButton::clicked, this, [this]() {
+        downloadSelectedRemoteFile();
     });
 
     connect(m_remoteGoButton, &QPushButton::clicked, this, [this]() {
@@ -291,7 +300,7 @@ void SftpBrowserTab::setLocalPath(const QString &path)
 
     if (!info.isDir()) {
         if (m_localStatusLabel != nullptr) {
-            m_localStatusLabel->setText(QStringLiteral("Selected local file: ") + normalized + QStringLiteral(" — transfers are not implemented yet"));
+            m_localStatusLabel->setText(QStringLiteral("Selected local file: ") + normalized + QStringLiteral(" — upload is not implemented yet"));
         }
         return;
     }
@@ -373,7 +382,7 @@ void SftpBrowserTab::handleLocalDoubleClicked(const QModelIndex &index)
     }
 
     if (m_localStatusLabel != nullptr) {
-        m_localStatusLabel->setText(QStringLiteral("Selected local file: ") + selectedPath + QStringLiteral(" — transfers are not implemented yet"));
+        m_localStatusLabel->setText(QStringLiteral("Selected local file: ") + selectedPath + QStringLiteral(" — upload is not implemented yet"));
     }
 }
 
@@ -389,6 +398,10 @@ void SftpBrowserTab::setRemoteBusy(bool busy)
 
     if (m_remoteRefreshButton != nullptr) {
         m_remoteRefreshButton->setEnabled(!busy);
+    }
+
+    if (m_remoteDownloadButton != nullptr) {
+        m_remoteDownloadButton->setEnabled(!busy);
     }
 
     if (m_remotePathEdit != nullptr) {
@@ -573,7 +586,7 @@ void SftpBrowserTab::handleRemoteCellDoubleClicked(int row, int)
 
     if (!isDirectoryType(type)) {
         if (m_remoteStatusLabel != nullptr) {
-            m_remoteStatusLabel->setText(statusPrefix() + QStringLiteral("selected remote file ") + name + QStringLiteral(" — transfers are not implemented yet"));
+            m_remoteStatusLabel->setText(statusPrefix() + QStringLiteral("selected remote file ") + name + QStringLiteral(" — use Download selected to save it into the current local folder"));
         }
         return;
     }
@@ -591,6 +604,201 @@ void SftpBrowserTab::handleRemoteCellDoubleClicked(int row, int)
     }
 
     refreshRemoteDirectory();
+}
+
+void SftpBrowserTab::downloadSelectedRemoteFile()
+{
+    if (m_remoteTable == nullptr) {
+        return;
+    }
+
+    const QList<QTableWidgetSelectionRange> selections = m_remoteTable->selectedRanges();
+
+    if (selections.isEmpty()) {
+        QMessageBox::information(
+            this,
+            QStringLiteral("No remote file selected — DD-SSH"),
+            QStringLiteral("Select one remote file first, then click Download selected.")
+        );
+        return;
+    }
+
+    const int row = selections.first().topRow();
+
+    QTableWidgetItem *nameItem = m_remoteTable->item(row, 0);
+    QTableWidgetItem *typeItem = m_remoteTable->item(row, 1);
+
+    if (nameItem == nullptr || typeItem == nullptr) {
+        return;
+    }
+
+    const QString name = nameItem->data(Qt::UserRole).toString();
+    const QString type = typeItem->data(Qt::UserRole).toString();
+
+    if (name.trimmed().isEmpty() || name == QStringLiteral(".") || name == QStringLiteral("..")) {
+        QMessageBox::information(
+            this,
+            QStringLiteral("Cannot download this entry — DD-SSH"),
+            QStringLiteral("The selected remote entry is not a regular file.")
+        );
+        return;
+    }
+
+    if (isDirectoryType(type)) {
+        QMessageBox::information(
+            this,
+            QStringLiteral("Folder download not implemented — DD-SSH"),
+            QStringLiteral("This checkpoint downloads one selected remote file only. Folder transfer is planned for a later checkpoint.")
+        );
+        return;
+    }
+
+    if (type.compare(QStringLiteral("file"), Qt::CaseInsensitive) != 0
+        && type.compare(QStringLiteral("symlink"), Qt::CaseInsensitive) != 0) {
+        const QMessageBox::StandardButton decision = QMessageBox::question(
+            this,
+            QStringLiteral("Download unusual remote entry? — DD-SSH"),
+            QStringLiteral("The selected remote entry type is '%1'.\n\nDownload it anyway?").arg(type),
+            QMessageBox::Yes | QMessageBox::No,
+            QMessageBox::No
+        );
+
+        if (decision != QMessageBox::Yes) {
+            return;
+        }
+    }
+
+    const QFileInfo localFolderInfo(m_currentLocalPath);
+
+    if (!localFolderInfo.exists() || !localFolderInfo.isDir()) {
+        QMessageBox::warning(
+            this,
+            QStringLiteral("Local destination unavailable — DD-SSH"),
+            QStringLiteral("The current local destination is not a valid folder:\n%1").arg(m_currentLocalPath)
+        );
+        return;
+    }
+
+    const QString remoteFilePath = joinedRemotePath(m_currentRemotePath, name);
+    const QString localTargetPath = QDir(m_currentLocalPath).filePath(QFileInfo(name).fileName());
+
+    if (QFileInfo::exists(localTargetPath)) {
+        const QMessageBox::StandardButton overwriteDecision = QMessageBox::warning(
+            this,
+            QStringLiteral("Overwrite local file? — DD-SSH"),
+            QStringLiteral("The local file already exists:\n%1\n\nOverwrite it with the selected remote file?" ).arg(localTargetPath),
+            QMessageBox::Yes | QMessageBox::Cancel,
+            QMessageBox::Cancel
+        );
+
+        if (overwriteDecision != QMessageBox::Yes) {
+            if (m_localStatusLabel != nullptr) {
+                m_localStatusLabel->setText(QStringLiteral("Download cancelled before overwrite: ") + localTargetPath);
+            }
+            return;
+        }
+    }
+
+    AppLogger::info(QStringLiteral("SFTP browser download requested: session=\"") + m_sessionName
+        + QStringLiteral("\", remotePath=") + remoteFilePath
+        + QStringLiteral(", localPath=") + localTargetPath);
+
+    QProgressDialog progress(
+        QStringLiteral("Downloading %1 ...").arg(name),
+        QStringLiteral("Cancel"),
+        0,
+        100,
+        this
+    );
+    progress.setWindowTitle(QStringLiteral("SFTP download — DD-SSH"));
+    progress.setWindowModality(Qt::ApplicationModal);
+    progress.setMinimumDuration(0);
+    progress.setValue(0);
+
+    setRemoteBusy(true);
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+
+    if (m_remoteStatusLabel != nullptr) {
+        m_remoteStatusLabel->setText(statusPrefix() + QStringLiteral("downloading ") + remoteFilePath + QStringLiteral(" ..."));
+    }
+
+    bool progressWasCancelled = false;
+
+    const SftpDownloadResult result = SftpProbe::downloadRemoteFile(
+        m_host,
+        m_port,
+        m_username,
+        m_authMethod,
+        m_secretValue,
+        m_hostKeyExpectation,
+        remoteFilePath,
+        localTargetPath,
+        [&progress, &progressWasCancelled](quint64 bytesTransferred, quint64 totalBytes, const QString &message) -> bool {
+            int percent = 0;
+
+            if (totalBytes > 0) {
+                percent = static_cast<int>(qMin<quint64>(100, (bytesTransferred * 100ULL) / totalBytes));
+            } else if (bytesTransferred > 0) {
+                percent = 50;
+            }
+
+            progress.setValue(percent);
+            progress.setLabelText(
+                QStringLiteral("%1\n%2 / %3")
+                    .arg(message, formatSize(bytesTransferred), totalBytes > 0 ? formatSize(totalBytes) : QStringLiteral("unknown"))
+            );
+            QApplication::processEvents();
+
+            if (progress.wasCanceled()) {
+                progressWasCancelled = true;
+                return false;
+            }
+
+            return true;
+        }
+    );
+
+    QApplication::restoreOverrideCursor();
+    setRemoteBusy(false);
+
+    if (result.success) {
+        progress.setValue(100);
+        refreshLocalDirectory();
+
+        if (m_localStatusLabel != nullptr) {
+            m_localStatusLabel->setText(QStringLiteral("Downloaded remote file to: ") + localTargetPath);
+        }
+
+        if (m_remoteStatusLabel != nullptr) {
+            m_remoteStatusLabel->setText(statusPrefix() + QStringLiteral("downloaded ") + name + QStringLiteral(" — ") + formatSize(result.bytesTransferred));
+        }
+
+        QMessageBox::information(
+            this,
+            QStringLiteral("Download complete — DD-SSH"),
+            QStringLiteral("Downloaded remote file:\n%1\n\nTo local file:\n%2\n\nBytes: %3")
+                .arg(remoteFilePath, localTargetPath, formatSize(result.bytesTransferred))
+        );
+        return;
+    }
+
+    if (result.cancelled || progressWasCancelled) {
+        if (m_remoteStatusLabel != nullptr) {
+            m_remoteStatusLabel->setText(statusPrefix() + QStringLiteral("download cancelled: ") + remoteFilePath);
+        }
+        return;
+    }
+
+    if (m_remoteStatusLabel != nullptr) {
+        m_remoteStatusLabel->setText(statusPrefix() + QStringLiteral("download failed: ") + result.message);
+    }
+
+    QMessageBox::warning(
+        this,
+        QStringLiteral("Download failed — DD-SSH"),
+        QStringLiteral("Could not download remote file:\n%1\n\nTarget:\n%2\n\n%3\n\nError:\n%4")
+            .arg(remoteFilePath, localTargetPath, result.message, result.error)
+    );
 }
 
 void SftpBrowserTab::populateRemoteTable(const QList<SftpRemoteEntry> &entries)

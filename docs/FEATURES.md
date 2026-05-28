@@ -47,12 +47,14 @@
 ### File transfer / File Manager
 
 - Architecture documentation exists in `docs/FILE_TRANSFER_ARCHITECTURE.md`
-- Saved-session context menu includes `Open File Manager (read-only two-panel)`
+- Saved-session context menu includes `Open File Manager (download enabled)`
 - The File Manager uses saved session data, existing known-host preflight, approved host-key verification before auth, libssh SFTP initialization, and remote directory listing
-- Left panel browses local files read-only using Qt filesystem APIs
-- Right panel browses remote SFTP directories read-only with path, `Go`, `↑ Up`, `Refresh`, and name/type/size/modified/permissions columns
+- Left panel browses local files as the current download destination using Qt filesystem APIs
+- Right panel browses remote SFTP directories with path, `Go`, `↑ Up`, `Refresh`, and name/type/size/modified/permissions columns
 - Double-clicking directories navigates into them
-- Upload, download, delete, rename, queue, and transfer progress/cancel UI are not implemented yet
+- `Download selected` downloads one selected remote file into the currently open local folder
+- Overwrite warning and basic progress dialog are included for single-file download
+- Upload, delete, rename, folder transfer, queue, sync, and SFTP traffic monitor integration are not implemented yet
 
 ### Config
 
@@ -139,4 +141,4 @@ The repository now includes public-alpha preparation documents:
 
 ## SFTP browser polish
 
-`dev 0.1.7.5` adds the first read-only two-panel File Manager foundation: local filesystem browser on the left and remote SFTP browser on the right. Transfer actions remain intentionally disabled. `dev 0.1.7.4.1` disabled alternating row colors for readable dark-theme tables, included SFTP browser tabs in app-exit safety confirmation, and hinted tab scrolling for crowded tab bars.
+`dev 0.1.7.6` adds the first single-file SFTP download action on top of the two-panel File Manager foundation from `dev 0.1.7.5`. `dev 0.1.7.4.1` disabled alternating row colors for readable dark-theme tables, included SFTP browser tabs in app-exit safety confirmation, and hinted tab scrolling for crowded tab bars.

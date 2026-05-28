@@ -1,28 +1,29 @@
-## dev 0.1.7.5 — Andromeda
+## dev 0.1.7.6 — Andromeda
 
-Local + remote read-only file manager foundation checkpoint.
+Single-file SFTP download foundation checkpoint.
 
 ### Added
 
-- Extended the early SFTP browser into a two-panel read-only file manager tab.
-- Left panel now browses the local filesystem read-only using Qt's filesystem model.
-- Right panel keeps the existing remote read-only SFTP browser path.
-- Added local path field, `Go`, `↑ Up`, `Refresh`, and double-click folder navigation.
-- Selecting or double-clicking files only updates status text; it does not upload, download, open, delete, or modify files.
-- Saved-session context menu now exposes `Open File Manager (read-only two-panel)`.
-- Added `docs/BUILD_AND_TEST_0.1.7.5.md` and `docs/TESTCASE_0.1.7.5.md`.
+- Added the first remote-to-local transfer action in the File Manager: `Download selected`.
+- Selecting one remote file downloads it into the currently open local folder.
+- Added overwrite warning when the local destination file already exists.
+- Added a basic modal progress dialog with cancel support for the download operation.
+- Local panel refreshes after successful download.
+- Download uses the existing saved-session secret loading, SSH preflight, known-host decision flow, host-key verification before auth, libssh authentication, and SFTP subsystem path.
+- Added `docs/BUILD_AND_TEST_0.1.7.6.md` and `docs/TESTCASE_0.1.7.6.md`.
 
 ### Preserved
 
-- Existing SFTP trust/auth/listing path remains the remote browser backend.
+- Existing two-panel local/remote browsing remains available.
 - Existing terminal/xterm.js runtime remains isolated from the File Manager tab.
 - Known-host multi-key support, Windows KEX workaround, diagnostic logging, Session Traffic for terminal tabs, config import/export, and native paste hardening should not regress.
 
 ### Not included
 
-- No upload/download.
+- No upload.
+- No folder download or recursive transfer.
 - No delete/rename/chmod/mkdir.
-- No queue, progress/cancel transfer UI, recursive transfer, or sync engine.
+- No transfer queue or sync engine.
 - No SFTP traffic integration in the live Session Traffic monitor yet.
 
 ## dev 0.1.7.4.1 — Andromeda

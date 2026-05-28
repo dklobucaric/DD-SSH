@@ -17,14 +17,14 @@ DD-SSH is designed for practical sysadmin use: saved sessions, one portable JSON
 
 ## Current status
 
-**Development checkpoint:** `dev 0.1.7.5`
+**Development checkpoint:** `dev 0.1.7.6`
 **Codename:** Andromeda
-**Milestone:** Local + remote read-only file manager foundation
-**Current phase:** First two-panel read-only file manager: local browser + remote SFTP browser, no transfers yet
+**Milestone:** Single-file SFTP download foundation
+**Current phase:** First single-file remote download: remote SFTP file → current local folder
 
 DD-SSH is now moving from the closed terminal-foundation baseline into the File Transfer / File Manager development track. It is not a stable 1.0 release yet, but the core terminal workflow is functional and has been validated on Linux, Windows 10/11, and Intel macOS. Native Windows builds, a standalone Windows deployment folder, a Debian package, and a macOS Intel `.app` / `.dmg` tester flow have been tested.
 
-The current checkpoint is intentionally small: `dev 0.1.7.5` adds the first two-panel read-only file manager foundation. The left panel browses the local filesystem read-only, and the right panel keeps the existing remote SFTP browser. It keeps SSH preflight, the existing known-host decision flow, host-key verification before authentication, SFTP directory listing, local/remote path fields, `Go`, `↑ Up`, `Refresh`, and double-click folder navigation. It does not implement upload, download, delete, rename, queue, SFTP traffic counters, or progress/cancel transfer UI yet.
+The current checkpoint is intentionally small: `dev 0.1.7.6` adds the first single-file SFTP download path. The left panel remains the local destination browser, and the right panel remains the remote SFTP browser. Selecting one remote file and clicking `Download selected` downloads it into the currently open local folder, with an overwrite warning, basic progress dialog, and local refresh after success. It does not implement upload, delete, rename, folder transfer, queue, sync, or SFTP traffic counters yet.
 
 Recent checkpoints:
 
@@ -38,7 +38,8 @@ Recent checkpoints:
 - `dev 0.1.6.7` adds a compact Session Traffic indicator in the status bar for the active terminal tab, showing live received/sent rates and totals.
 - `dev 0.1.6.8` adds config import/export safety previews while keeping the human-readable JSON format unchanged.
 - `dev 0.1.6.9` is a small bugfix stabilization checkpoint for toolbar and config-dialog button labels.
-- `dev 0.1.7.5` adds the first two-panel read-only file manager foundation: local browser on the left, remote SFTP browser on the right, both read-only and no transfers yet.
+- `dev 0.1.7.6` adds the first single-file SFTP download path: select one remote file and download it into the current local folder with overwrite warning and basic progress.
+- `dev 0.1.7.5` added the first two-panel read-only file manager foundation: local browser on the left, remote SFTP browser on the right, both read-only and no transfers yet.
 - `dev 0.1.7.4.1` polishes the first read-only SFTP browser: exit safety now lists SFTP browser tabs, alternating table rows are disabled for dark-theme readability, and tab scroll-button hints are forced for crowded tab bars on macOS/Windows/Linux.
 - `dev 0.1.7.4` added the first graphical read-only SFTP remote browser: saved session → known-host preflight → host-key verification before auth → SFTP listing table with path, Go, Up, Refresh, and double-click folder navigation.
 - `dev 0.1.7.3` adds the first SFTP connection proof of concept: saved session → known-host preflight → host-key verification before auth → SFTP init → remote `.` listing in a text tab.
@@ -46,7 +47,7 @@ Recent checkpoints:
 - `dev 0.1.7.1` hardens native xterm.js paste handling: toolbar Paste, right-click paste, Ctrl+Shift+V, and macOS Command+V now route through the same DD-SSH safe paste path and should not leak bracketed paste markers such as `^[[200~` into the remote shell.
 - `dev 0.1.7.0` hardens terminal transport: SSH output is carried as bytes to the WebEngine terminal, decoded with a streaming UTF-8 decoder, and input writes are partial-write aware so large paste/input is not silently truncated.
 
-In `dev 0.1.7.5`, DD-SSH keeps the file manager intentionally read-only and adds the missing local-side browser panel needed before upload/download work. It does not add transfer actions, encryption, cloud sync, or installer redesigns. The focus is proving the two-panel UI shape while preserving the tested terminal baseline.
+In `dev 0.1.7.6`, DD-SSH adds the first deliberately narrow transfer action: remote file download into the current local folder. Upload, folder transfer, queue, sync, and SFTP traffic integration remain intentionally deferred. The focus is proving one safe transfer direction while preserving the tested terminal baseline.
 
 The future file-transfer design is documented in `docs/FILE_TRANSFER_ARCHITECTURE.md`. File transfer will use libssh SFTP APIs, not shell command parsing hacks. Terminal tabs and future File Manager tabs are intentionally separated so the working terminal foundation remains stable.
 
@@ -80,7 +81,7 @@ This prevents broken or unverified sessions from being saved as normal connectio
 
 ### Exit safety
 
-If one or more SSH terminal tabs are still connected, closing the app with the window close button or `File → Exit` asks for confirmation before disconnecting them.
+If one or more SSH terminal tabs or SFTP file manager tabs are open, closing the app with the window close button or `File → Exit` asks for confirmation before closing them.
 
 ---
 

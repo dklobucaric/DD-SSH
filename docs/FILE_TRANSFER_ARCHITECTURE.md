@@ -1,8 +1,8 @@
 # DD-SSH File Transfer Architecture
 
-**Checkpoint:** dev 0.1.7.5 — Andromeda  
-**Status:** Local + remote read-only file manager foundation  
-**Runtime behavior:** saved-session SFTP browser can list and navigate remote directories
+**Checkpoint:** dev 0.1.7.6 — Andromeda  
+**Status:** Single-file SFTP download foundation  
+**Runtime behavior:** saved-session File Manager can browse local/remote directories and download one selected remote file into the current local folder
 
 ---
 
@@ -26,50 +26,53 @@ The future File Manager should eventually provide:
 - diagnostic logging that never records file contents or secrets
 - Session Traffic integration for SFTP bytes where practical
 
-`dev 0.1.7.4` implements only the first graphical read-only remote browser. It can open SFTP, list remote directories, refresh, go up, and navigate into directories, but it does **not** implement upload, download, delete, rename, local browsing, queue, or transfer progress/cancel yet.
+`dev 0.1.7.6` implements the first deliberately narrow transfer path: single remote file download into the currently open local folder. It preserves the existing saved-session, known-host, host-key verification, auth, and libssh SFTP flow. It does **not** implement upload, folder transfer, queue, sync, delete, rename, chmod/mkdir, or SFTP traffic monitor integration yet.
 
 ---
 
-## dev 0.1.7.5 two-panel boundary
+## dev 0.1.7.6 single-file download boundary
 
-`dev 0.1.7.5` adds the first two-panel read-only File Manager foundation. The left panel browses local files using Qt filesystem APIs, and the right panel keeps the existing libssh SFTP remote browser path. It does **not** add SFTP traffic counters, upload/download, delete/rename, queue, progress/cancel, or sync behavior.
+`dev 0.1.7.6` adds `Download selected` to the remote panel. The user selects one remote file, confirms overwrite if needed, sees a basic progress dialog, and the local panel refreshes after success. The local panel is the destination selector. The right panel remains the remote SFTP browser.
 
-## Non-goals for dev 0.1.7.4
+`dev 0.1.7.5` previously added the first two-panel read-only File Manager foundation.
+
+## Non-goals for dev 0.1.7.6
 
 This checkpoint intentionally does not add:
 
 - local/remote two-panel browser
 - upload
-- download
 - delete
 - rename
 - chmod/chown
 - recursive folder transfer
 - transfer queue
-- progress dialog
-- cancel button
 - config schema migration
 - terminal transport changes
 - known-host behavior changes
 - encryption/master-password changes
 
-This is a read-only remote browsing checkpoint, not a transfer checkpoint.
+This is a first-download checkpoint, not a full file-transfer implementation.
 
 ---
 
-## dev 0.1.7.5 runtime two-panel browser
+## dev 0.1.7.6 runtime two-panel browser with download
 
-`dev 0.1.7.5` extends the read-only remote browser into the first two-panel File Manager shape:
+`dev 0.1.7.6` extends the two-panel File Manager with one remote-to-local download action:
 
 ```text
 Saved session context menu
-   -> Open File Manager (read-only two-panel)
-   -> left: local filesystem browser, read-only
-   -> right: remote SFTP browser, read-only
-   -> no upload/download/delete/rename yet
+   -> Open File Manager (download enabled)
+   -> left: local filesystem browser / download target
+   -> right: remote SFTP browser
+   -> select one remote file
+   -> Download selected
+   -> overwrite warning if needed
+   -> basic progress dialog
+   -> local panel refresh after success
 ```
 
-The local panel uses Qt filesystem browsing and does not touch the SSH/SFTP stack. The remote panel continues to use the proven saved-session → known-host preflight → approved host-key verification → auth → libssh SFTP listing path. Transfer controls are deliberately absent until the single-file download/upload checkpoints.
+The local panel uses Qt filesystem browsing and does not touch the SSH/SFTP stack except as the destination path. The remote panel continues to use the proven saved-session → known-host preflight → approved host-key verification → auth → libssh SFTP path. Upload, folder transfer, queue, sync, and SFTP traffic integration remain deferred.
 
 ## dev 0.1.7.4 runtime browser
 
@@ -308,7 +311,7 @@ permissions display string if practical
 
 ### dev 0.1.7.4.1 — read-only SFTP browser bugfix polish [passed]
 
-### dev 0.1.7.5 — local + remote read-only file manager foundation [current]
+### dev 0.1.7.5 — local + remote read-only file manager foundation [passed]
 
 - app-exit safety includes open SFTP browser tabs
 - alternating row colors disabled for SFTP table readability
@@ -331,12 +334,13 @@ permissions display string if practical
 - right remote browser
 - read-only browsing
 
-### dev 0.1.7.6 — single-file download
+### dev 0.1.7.6 — single-file download [current]
 
 - select remote file
-- download to local path
+- download to current local folder
 - overwrite warning
-- progress
+- basic progress dialog
+- refresh local panel after success
 
 ### dev 0.1.7.7 — single-file upload
 
