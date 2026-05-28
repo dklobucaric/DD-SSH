@@ -58,6 +58,9 @@ private:
     void setTransferQueueBusy(bool busy);
     void setQueueItemStatus(int index, const QString &status, const QString &message = QString());
     QString transferQueueSummaryText() const;
+    bool confirmFolderQueue(const QString &title, const QString &sourcePath, const QString &targetPath) const;
+    bool addRemoteFolderDownloadToQueue(const QString &remoteFolderPath, const QString &localTargetFolder, int *filesAdded, int *dirsAdded, int *skipped, int depth = 0);
+    bool addLocalFolderUploadToQueue(const QString &localFolderPath, const QString &remoteTargetFolder, int *filesAdded, int *dirsAdded, int *skipped);
     void populateRemoteTable(const QList<SftpRemoteEntry> &entries);
     void setRemoteBusy(bool busy);
     QString normalizedRemotePath(const QString &path) const;

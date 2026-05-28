@@ -1,6 +1,6 @@
 # DD-SSH File Transfer Architecture
 
-**Checkpoint:** dev 0.1.8.0.4.1 — Andromeda  
+**Checkpoint:** dev 0.1.8.1.1 — Andromeda  
 **Status:** Transfer queue foundation  
 **Runtime behavior:** saved-session File Manager can browse local/remote directories, perform immediate one-file download/upload, queue multiple individual file downloads/uploads, and run queued items sequentially
 
@@ -30,7 +30,7 @@ The future File Manager should eventually provide:
 - diagnostic logging that never records file contents or secrets
 - Session Traffic integration for SFTP bytes where practical
 
-`dev 0.1.8.0.4.1` stabilizes the conservative transfer queue foundation before folder-transfer work: exit safety now reports running/pending queue work, queue/navigation controls are locked during a queue run, and no-pending-items feedback is clearer. `dev 0.1.8.0.3` polishes the first conservative transfer queue foundation with `Retry selected` for finished queue items. `dev 0.1.8.0.2` added Overwrite all / Skip all decisions for repeated overwrite conflicts. `dev 0.1.8.0` adds the queue foundation on top of the existing single-file upload/download paths. Users can queue multiple individual remote files for download and multiple individual local files for upload, then run the queue sequentially one item at a time. Existing immediate single-file actions remain available. The File Manager still does **not** implement folder transfer, recursive transfer, parallel execution, resume, sync, delete, rename, chmod/mkdir, or SFTP traffic monitor integration yet.
+`dev 0.1.8.1.1` consolidates File Manager queue controls into two clearer panel actions while keeping the same folder-transfer engine: local `Queue upload` and remote `Queue download` accept selected files and folders. `dev 0.1.8.1` adds the first folder-transfer experiment by recursively scanning folders and expanding them into existing sequential queue items. Destination directories are represented as create-directory queue items; symlinks are skipped. `dev 0.1.8.0.4.1` stabilized the conservative transfer queue foundation before folder-transfer work: exit safety now reports running/pending queue work, queue/navigation controls are locked during a queue run, and no-pending-items feedback is clearer. `dev 0.1.8.0.3` polishes the first conservative transfer queue foundation with `Retry selected` for finished queue items. `dev 0.1.8.0.2` added Overwrite all / Skip all decisions for repeated overwrite conflicts. `dev 0.1.8.0` adds the queue foundation on top of the existing single-file upload/download paths. Users can queue multiple individual remote files for download and multiple individual local files for upload, then run the queue sequentially one item at a time. Existing immediate single-file actions remain available. The File Manager now includes an experimental recursive folder queue path, but it still does **not** implement parallel execution, resume, sync, delete, rename, chmod, permission/timestamp preservation, symlink following, or SFTP traffic monitor integration yet.
 
 ---
 
@@ -38,8 +38,8 @@ The future File Manager should eventually provide:
 
 `dev 0.1.8.0` adds a queue wrapper around the existing single-file transfer operations:
 
-- `Queue download(s)` adds multiple selected remote files to the queue
-- `Queue upload(s)` adds multiple selected local files to the queue
+- Remote `Queue download` adds selected remote files directly and asks for confirmation before recursively expanding selected remote folders into queue items
+- Local `Queue upload` adds selected local files directly and asks for confirmation before recursively expanding selected local folders into queue items
 - the queue table shows Status / Direction / Name / Size / Source / Target
 - `Start queue` processes pending items sequentially, one file at a time
 - queue item statuses are Pending / Running / Done / Failed / Cancelled / Skipped
@@ -370,7 +370,35 @@ permissions display string if practical
 ### dev 0.1.7.8 — transfer progress/cancel polish [passed]
 
 
-### dev 0.1.8.0.4.1 — transfer queue stabilization polish [current]
+### dev 0.1.8.1.1 — queue selected UI consolidation [current]
+
+The File Manager now exposes two queue actions instead of four:
+
+1. Local panel: `Queue upload`
+2. Remote panel: `Queue download`
+
+Selected regular files are queued directly. Selected folders still require recursive confirmation and are then expanded into the same queue item model introduced in `dev 0.1.8.1`. This keeps the UI simpler without changing the transfer engine.
+
+### dev 0.1.8.1 — folder transfer experiment [passed/pending smoke]
+
+Folder transfer deliberately reuses the queue model instead of adding a second transfer engine:
+
+1. User selects one local or remote folder.
+2. DD-SSH asks for explicit recursive-folder confirmation.
+3. The folder is scanned.
+4. Required destination directories are added as queue items.
+5. Regular files are added as normal Upload/Download queue items.
+6. Queue execution remains sequential and reuses overwrite, retry, cancel, and status handling.
+
+Safety boundaries for this checkpoint:
+
+- Symlinks and special files are skipped.
+- Permission/timestamp preservation is not attempted.
+- No sync/mirror/delete behavior exists.
+- No parallel transfers or resume support.
+- Folder scan has a conservative item limit to avoid accidentally queuing a whole filesystem.
+
+### dev 0.1.8.0.4.1 — transfer queue stabilization polish [done]
 
 `dev 0.1.8.0.4.1` deliberately avoids new transfer capabilities and tightens the existing queue foundation before recursive folder work. File Manager tabs now expose whether their queue has running or pending work so the main window can include that state in exit safety confirmation. During a queue run, queue controls, local/remote navigation controls, file panels, and the queue table are locked to avoid mid-transfer path changes or queue mutation.
 

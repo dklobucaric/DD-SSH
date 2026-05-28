@@ -1722,7 +1722,7 @@ void MainWindow::openSftpBrowserForSavedSession(const QString &sessionId)
     preflightText += QStringLiteral("- browse local directories and remote SFTP directories side by side with Refresh, Up, editable paths, and double-click folder navigation\n");
     preflightText += QStringLiteral("- download one selected remote file into the current local folder\n");
     preflightText += QStringLiteral("- show overwrite warning and basic download progress\n");
-    preflightText += QStringLiteral("- no delete, rename, folder transfer, transfer queue, or sync yet\n\n");
+    preflightText += QStringLiteral("- no delete, rename, chmod, sync, resume, or parallel transfer yet\n\n");
 
     QString secretValue;
     QString secretType;

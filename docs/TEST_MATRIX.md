@@ -1,8 +1,27 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.8.0.4.1 — Andromeda  
-**Milestone:** Transfer queue foundation  
-**Phase:** Transfer queue stabilization polish
+**Checkpoint:** dev 0.1.8.1.1 — Andromeda  
+**Milestone:** File transfer / file manager  
+**Phase:** Queue selected UI consolidation
+
+## dev 0.1.8.1.1 — queue selected UI consolidation smoke test
+
+[ ] About shows dev 0.1.8.1.1  
+[ ] File Manager opens with local and remote panels  
+[ ] Local panel shows a single `Queue upload` button for queueing selected local files/folders  
+[ ] Remote panel shows a single `Queue download` button for queueing selected remote files/folders  
+[ ] Separate `Queue folder upload` / `Queue folder download` buttons are not visible  
+[ ] Mixed local file + folder selection queues file(s) directly and asks for recursive folder confirmation  
+[ ] Mixed remote file + folder selection queues file(s) directly and asks for recursive folder confirmation  
+[ ] Local folder upload through `Queue upload` creates the remote folder and uploads nested files  
+[ ] Remote folder download through `Queue download` creates the local folder and downloads nested files  
+[ ] Empty destination folders are created as queue directory items  
+[ ] Symlinks/special entries are skipped, not followed  
+[ ] Queue still runs sequentially, one item at a time  
+[ ] Retry selected still works on Done/Failed/Cancelled/Skipped items  
+[ ] Overwrite all / Skip all still works when folder transfer hits existing files  
+[ ] Cancel behavior remains clear for upload/download items  
+[ ] Terminal, paste/Ctrl+C, and existing SFTP single-file transfer behavior still work  
 
 ## dev 0.1.8.0.4.1 — transfer queue stabilization polish smoke test
 

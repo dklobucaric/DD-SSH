@@ -1,3 +1,24 @@
+## dev 0.1.8.1.1 — Andromeda
+
+- Consolidated File Manager queue controls into two clearer panel actions: local `Queue upload` and remote `Queue download`.
+- The consolidated queue buttons accept selected files and folders; files are queued directly, while folders still show the recursive-scan confirmation before being expanded into queue items.
+- Removed the need for separate `Queue folder upload` / `Queue folder download` UI buttons without changing the underlying folder-transfer engine.
+- Preserved sequential queue processing, Retry selected, Overwrite all / Skip all, queue exit safety, single-file immediate actions, and existing SFTP trust/auth behavior.
+- No transfer core, terminal core, known-host, Windows KEX, sync, resume, parallel transfer, or SFTP traffic monitor changes.
+
+## dev 0.1.8.1 — Andromeda
+
+Folder transfer experiment.
+
+- Added experimental recursive folder upload/download through the existing transfer queue.
+- Added `Queue folder upload` for selected local folders.
+- Added `Queue folder download` for selected remote folders.
+- Folder scans expand into normal queue items rather than a separate transfer engine.
+- Added queue item types for creating destination folders: `Create local dir` and `Create remote dir`.
+- Symlinks and unsupported/special entries are skipped.
+- Folder transfer remains conservative: no parallel transfers, resume, sync/mirror mode, permission/timestamp preservation, chmod, delete, rename, or SFTP traffic monitor integration.
+- Existing single-file download/upload, queue, overwrite-all/skip-all, retry selected, and queue stabilization behavior remain in place.
+
 ## dev 0.1.8.0.4.1 — Andromeda
 
 Compile hotfix for the transfer queue stabilization checkpoint.

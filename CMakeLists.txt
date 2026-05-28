@@ -6,9 +6,9 @@ project(DD_SSH
     LANGUAGES CXX
 )
 
-set(DD_SSH_VERSION_STRING "dev 0.1.8.0.4.1")
+set(DD_SSH_VERSION_STRING "dev 0.1.8.1.1")
 set(DD_SSH_CODENAME_STRING "Andromeda")
-set(DD_SSH_MILESTONE_STRING "Transfer queue foundation")
+set(DD_SSH_MILESTONE_STRING "Queue selected UI consolidation")
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

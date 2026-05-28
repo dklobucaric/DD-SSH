@@ -6,6 +6,7 @@
 #include <QAbstractItemView>
 #include <QApplication>
 #include <QDir>
+#include <QDirIterator>
 #include <QElapsedTimer>
 #include <QFileInfo>
 #include <QFileSystemModel>
@@ -306,7 +307,7 @@ void SftpBrowserTab::setupUi()
             .arg(m_username, m_host, QString::number(m_port)),
         this
     );
-    headerLabel->setToolTip(QStringLiteral("This checkpoint supports single-file download and upload with progress, speed, elapsed-time, completion, and cancel feedback. Delete, rename, queue, sync, and folder transfer actions are intentionally not implemented yet."));
+    headerLabel->setToolTip(QStringLiteral("This checkpoint supports single-file download/upload, queue retries, and experimental recursive folder queueing. Delete, rename, sync, resume, and parallel transfer actions are intentionally not implemented yet."));
     mainLayout->addWidget(headerLabel);
 
     auto *splitter = new QSplitter(Qt::Horizontal, this);
@@ -341,8 +342,8 @@ void SftpBrowserTab::setupUi()
     m_localUploadButton->setToolTip(QStringLiteral("Upload the first selected local file into the currently open remote folder immediately."));
     localPathLayout->addWidget(m_localUploadButton);
 
-    m_localQueueUploadButton = new QPushButton(QStringLiteral("Queue upload(s)"), localPanel);
-    m_localQueueUploadButton->setToolTip(QStringLiteral("Add selected local files to the transfer queue. Folder upload is intentionally not implemented yet."));
+    m_localQueueUploadButton = new QPushButton(QStringLiteral("Queue upload"), localPanel);
+    m_localQueueUploadButton->setToolTip(QStringLiteral("Add selected local file(s) and folder(s) to the transfer queue. Folders are scanned recursively after confirmation; symlinks are skipped."));
     localPathLayout->addWidget(m_localQueueUploadButton);
 
     localLayout->addLayout(localPathLayout);
@@ -395,8 +396,8 @@ void SftpBrowserTab::setupUi()
     m_remoteDownloadButton->setToolTip(QStringLiteral("Download the first selected remote file into the currently open local folder immediately."));
     remotePathLayout->addWidget(m_remoteDownloadButton);
 
-    m_remoteQueueDownloadButton = new QPushButton(QStringLiteral("Queue download(s)"), remotePanel);
-    m_remoteQueueDownloadButton->setToolTip(QStringLiteral("Add selected remote files to the transfer queue. Folder download is intentionally not implemented yet."));
+    m_remoteQueueDownloadButton = new QPushButton(QStringLiteral("Queue download"), remotePanel);
+    m_remoteQueueDownloadButton->setToolTip(QStringLiteral("Add selected remote file(s) and folder(s) to the transfer queue. Folders are scanned recursively after confirmation; symlinks are skipped."));
     remotePathLayout->addWidget(m_remoteQueueDownloadButton);
 
     remoteLayout->addLayout(remotePathLayout);
@@ -433,8 +434,8 @@ void SftpBrowserTab::setupUi()
     splitter->setStretchFactor(1, 1);
     mainLayout->addWidget(splitter, 1);
 
-    auto *queueTitle = new QLabel(QStringLiteral("Transfer queue (foundation — one file at a time)"), this);
-    queueTitle->setToolTip(QStringLiteral("This checkpoint can queue multiple individual files and run them sequentially. Folder transfer, parallel transfer, resume, and sync are intentionally not implemented yet."));
+    auto *queueTitle = new QLabel(QStringLiteral("Transfer queue (folder experiment — one item at a time)"), this);
+    queueTitle->setToolTip(QStringLiteral("This checkpoint can queue files and experimental recursive folder scans. Folder contents are expanded into normal queue items and run sequentially."));
     mainLayout->addWidget(queueTitle);
 
     m_queueTable = new QTableWidget(this);
@@ -477,7 +478,7 @@ void SftpBrowserTab::setupUi()
     mainLayout->addLayout(queueControlsLayout);
 
     auto *transferNotice = new QLabel(
-        QStringLiteral("Single-file download/upload still works. Queue foundation adds multiple individual files, runs them one by one, and can retry selected finished items. Folder transfer, parallel transfer, resume, delete, rename, and sync are intentionally disabled."),
+        QStringLiteral("Single-file download/upload still works. Folder transfer is experimental: selected folders are scanned recursively and expanded into queue items. Symlinks, resume, parallel transfer, delete, rename, chmod, timestamps, and sync are intentionally disabled."),
         this
     );
     transferNotice->setWordWrap(true);
@@ -942,8 +943,8 @@ void SftpBrowserTab::downloadSelectedRemoteFile()
     if (isDirectoryType(type)) {
         QMessageBox::information(
             this,
-            QStringLiteral("Folder download not implemented — DD-SSH"),
-            QStringLiteral("This checkpoint downloads one selected remote file only. Folder transfer is planned for a later checkpoint.")
+            QStringLiteral("Use Queue download — DD-SSH"),
+            QStringLiteral("Immediate Download selected now handles one regular file. To download folders recursively, select them and use Queue download.")
         );
         return;
     }
@@ -1165,8 +1166,8 @@ void SftpBrowserTab::uploadSelectedLocalFile()
     if (localInfo.isDir()) {
         QMessageBox::information(
             this,
-            QStringLiteral("Folder upload not implemented — DD-SSH"),
-            QStringLiteral("This checkpoint uploads one selected local file only. Folder transfer is planned for a later checkpoint.")
+            QStringLiteral("Use Queue upload — DD-SSH"),
+            QStringLiteral("Immediate Upload selected now handles one regular file. To upload folders recursively, select them and use Queue upload.")
         );
         return;
     }
@@ -1400,8 +1401,8 @@ void SftpBrowserTab::queueSelectedRemoteDownloads()
     if (selectedRows.isEmpty()) {
         QMessageBox::information(
             this,
-            QStringLiteral("No remote files selected — DD-SSH"),
-            QStringLiteral("Select one or more remote files first, then click Queue download(s).")
+            QStringLiteral("No remote items selected — DD-SSH"),
+            QStringLiteral("Select one or more remote files or folders first, then click Queue download.")
         );
         return;
     }
@@ -1417,7 +1418,9 @@ void SftpBrowserTab::queueSelectedRemoteDownloads()
         return;
     }
 
-    int added = 0;
+    int fileItemsAdded = 0;
+    int folderFileItemsAdded = 0;
+    int folderDirItemsAdded = 0;
     int skipped = 0;
 
     for (const QModelIndex &index : selectedRows) {
@@ -1434,8 +1437,30 @@ void SftpBrowserTab::queueSelectedRemoteDownloads()
         const QString name = nameItem->data(Qt::UserRole).toString();
         const QString type = typeItem->data(Qt::UserRole).toString();
 
-        if (name.trimmed().isEmpty() || name == QStringLiteral(".") || name == QStringLiteral("..") || isDirectoryType(type)) {
+        if (name.trimmed().isEmpty() || name == QStringLiteral(".") || name == QStringLiteral("..")) {
             ++skipped;
+            continue;
+        }
+
+        if (isDirectoryType(type)) {
+            const QString remoteFolderPath = joinedRemotePath(m_currentRemotePath, name);
+            const QString localTargetFolder = QDir(m_currentLocalPath).filePath(name);
+
+            const bool confirmed = confirmFolderQueue(
+                QStringLiteral("Queue remote folder download? — DD-SSH"),
+                remoteFolderPath,
+                QDir::cleanPath(localTargetFolder)
+            );
+
+            if (!confirmed) {
+                ++skipped;
+                continue;
+            }
+
+            QApplication::setOverrideCursor(Qt::WaitCursor);
+            addRemoteFolderDownloadToQueue(remoteFolderPath, localTargetFolder, &folderFileItemsAdded, &folderDirItemsAdded, &skipped);
+            QApplication::restoreOverrideCursor();
+            QApplication::processEvents();
             continue;
         }
 
@@ -1454,14 +1479,16 @@ void SftpBrowserTab::queueSelectedRemoteDownloads()
         item.status = QStringLiteral("Pending");
         item.message = QStringLiteral("Queued for download");
         m_transferQueue.append(item);
-        ++added;
+        ++fileItemsAdded;
     }
 
     refreshTransferQueueTable();
 
     if (m_queueStatusLabel != nullptr) {
-        m_queueStatusLabel->setText(QStringLiteral("Queue: added %1 download item(s), skipped %2 folder/unsupported item(s). %3")
-            .arg(added)
+        m_queueStatusLabel->setText(QStringLiteral("Queue: added %1 direct download file item(s), %2 folder file item(s), %3 folder item(s), skipped %4 unsupported/cancelled item(s). %5")
+            .arg(fileItemsAdded)
+            .arg(folderFileItemsAdded)
+            .arg(folderDirItemsAdded)
             .arg(skipped)
             .arg(transferQueueSummaryText()));
     }
@@ -1478,13 +1505,15 @@ void SftpBrowserTab::queueSelectedLocalUploads()
     if (selectedRows.isEmpty()) {
         QMessageBox::information(
             this,
-            QStringLiteral("No local files selected — DD-SSH"),
-            QStringLiteral("Select one or more local files first, then click Queue upload(s).")
+            QStringLiteral("No local items selected — DD-SSH"),
+            QStringLiteral("Select one or more local files or folders first, then click Queue upload.")
         );
         return;
     }
 
-    int added = 0;
+    int fileItemsAdded = 0;
+    int folderFileItemsAdded = 0;
+    int folderDirItemsAdded = 0;
     int skipped = 0;
 
     for (const QModelIndex &index : selectedRows) {
@@ -1493,10 +1522,36 @@ void SftpBrowserTab::queueSelectedLocalUploads()
             continue;
         }
 
-        const QString localFilePath = m_localModel->filePath(index);
-        const QFileInfo localInfo(localFilePath);
+        const QString localPath = m_localModel->filePath(index);
+        const QFileInfo localInfo(localPath);
 
-        if (!localInfo.exists() || localInfo.isDir() || !localInfo.isFile()) {
+        if (!localInfo.exists() || localInfo.isSymLink()) {
+            ++skipped;
+            continue;
+        }
+
+        if (localInfo.isDir()) {
+            const QString remoteTargetFolder = joinedRemotePath(m_currentRemotePath, localInfo.fileName());
+
+            const bool confirmed = confirmFolderQueue(
+                QStringLiteral("Queue local folder upload? — DD-SSH"),
+                localInfo.absoluteFilePath(),
+                remoteTargetFolder
+            );
+
+            if (!confirmed) {
+                ++skipped;
+                continue;
+            }
+
+            QApplication::setOverrideCursor(Qt::WaitCursor);
+            addLocalFolderUploadToQueue(localInfo.absoluteFilePath(), remoteTargetFolder, &folderFileItemsAdded, &folderDirItemsAdded, &skipped);
+            QApplication::restoreOverrideCursor();
+            QApplication::processEvents();
+            continue;
+        }
+
+        if (!localInfo.isFile()) {
             ++skipped;
             continue;
         }
@@ -1510,17 +1565,219 @@ void SftpBrowserTab::queueSelectedLocalUploads()
         item.status = QStringLiteral("Pending");
         item.message = QStringLiteral("Queued for upload");
         m_transferQueue.append(item);
-        ++added;
+        ++fileItemsAdded;
     }
 
     refreshTransferQueueTable();
 
     if (m_queueStatusLabel != nullptr) {
-        m_queueStatusLabel->setText(QStringLiteral("Queue: added %1 upload item(s), skipped %2 folder/unsupported item(s). %3")
-            .arg(added)
+        m_queueStatusLabel->setText(QStringLiteral("Queue: added %1 direct upload file item(s), %2 folder file item(s), %3 folder item(s), skipped %4 unsupported/cancelled item(s). %5")
+            .arg(fileItemsAdded)
+            .arg(folderFileItemsAdded)
+            .arg(folderDirItemsAdded)
             .arg(skipped)
             .arg(transferQueueSummaryText()));
     }
+}
+
+bool SftpBrowserTab::confirmFolderQueue(const QString &title, const QString &sourcePath, const QString &targetPath) const
+{
+    const QMessageBox::StandardButton decision = QMessageBox::question(
+        const_cast<SftpBrowserTab *>(this),
+        title,
+        QStringLiteral("Queue folder recursively?\n\nSource:\n%1\n\nTarget:\n%2\n\nThis may add many files to the transfer queue. Symlinks are skipped. Folder permissions, timestamps, resume, and sync are not preserved in this experimental checkpoint.")
+            .arg(sourcePath, targetPath),
+        QMessageBox::Yes | QMessageBox::No,
+        QMessageBox::No
+    );
+
+    return decision == QMessageBox::Yes;
+}
+
+bool SftpBrowserTab::addRemoteFolderDownloadToQueue(
+    const QString &remoteFolderPath,
+    const QString &localTargetFolder,
+    int *filesAdded,
+    int *dirsAdded,
+    int *skipped,
+    int depth
+)
+{
+    constexpr int kMaxFolderScanDepth = 64;
+    constexpr int kMaxQueuedFolderItems = 5000;
+
+    if (filesAdded == nullptr || dirsAdded == nullptr || skipped == nullptr) {
+        return false;
+    }
+
+    if (depth > kMaxFolderScanDepth) {
+        ++(*skipped);
+        return false;
+    }
+
+    if ((*filesAdded + *dirsAdded) >= kMaxQueuedFolderItems) {
+        ++(*skipped);
+        return false;
+    }
+
+    TransferQueueItem directoryItem;
+    directoryItem.direction = QStringLiteral("Create local dir");
+    directoryItem.displayName = QFileInfo(localTargetFolder).fileName().isEmpty() ? localTargetFolder : QFileInfo(localTargetFolder).fileName();
+    directoryItem.sourcePath = remoteFolderPath;
+    directoryItem.targetPath = QDir::cleanPath(localTargetFolder);
+    directoryItem.status = QStringLiteral("Pending");
+    directoryItem.message = QStringLiteral("Queued to create local folder");
+    m_transferQueue.append(directoryItem);
+    ++(*dirsAdded);
+
+    const SftpProbeResult listing = SftpProbe::listRemoteDirectory(
+        m_host,
+        m_port,
+        m_username,
+        m_authMethod,
+        m_secretValue,
+        m_hostKeyExpectation,
+        remoteFolderPath
+    );
+
+    if (!listing.success) {
+        TransferQueueItem failedMarker;
+        failedMarker.direction = QStringLiteral("Create local dir");
+        failedMarker.displayName = QStringLiteral("Scan failed: ") + QFileInfo(localTargetFolder).fileName();
+        failedMarker.sourcePath = remoteFolderPath;
+        failedMarker.targetPath = QDir::cleanPath(localTargetFolder);
+        failedMarker.status = QStringLiteral("Failed");
+        failedMarker.message = listing.message + QStringLiteral(" — ") + listing.error;
+        m_transferQueue.append(failedMarker);
+        ++(*skipped);
+        return false;
+    }
+
+    for (const SftpRemoteEntry &entry : listing.entries) {
+        if ((*filesAdded + *dirsAdded) >= kMaxQueuedFolderItems) {
+            ++(*skipped);
+            return false;
+        }
+
+        if (entry.name.trimmed().isEmpty() || entry.name == QStringLiteral(".") || entry.name == QStringLiteral("..")) {
+            continue;
+        }
+
+        const QString childRemotePath = joinedRemotePath(remoteFolderPath, entry.name);
+        const QString childLocalPath = QDir(localTargetFolder).filePath(entry.name);
+
+        if (isDirectoryType(entry.type)) {
+            addRemoteFolderDownloadToQueue(childRemotePath, childLocalPath, filesAdded, dirsAdded, skipped, depth + 1);
+            continue;
+        }
+
+        if (entry.type.compare(QStringLiteral("file"), Qt::CaseInsensitive) != 0) {
+            ++(*skipped);
+            continue;
+        }
+
+        TransferQueueItem fileItem;
+        fileItem.direction = QStringLiteral("Download");
+        fileItem.displayName = entry.name;
+        fileItem.sourcePath = childRemotePath;
+        fileItem.targetPath = QDir::cleanPath(childLocalPath);
+        fileItem.sizeBytes = entry.sizeBytes;
+        fileItem.status = QStringLiteral("Pending");
+        fileItem.message = QStringLiteral("Queued by folder download scan");
+        m_transferQueue.append(fileItem);
+        ++(*filesAdded);
+    }
+
+    return true;
+}
+
+bool SftpBrowserTab::addLocalFolderUploadToQueue(
+    const QString &localFolderPath,
+    const QString &remoteTargetFolder,
+    int *filesAdded,
+    int *dirsAdded,
+    int *skipped
+)
+{
+    constexpr int kMaxQueuedFolderItems = 5000;
+
+    if (filesAdded == nullptr || dirsAdded == nullptr || skipped == nullptr) {
+        return false;
+    }
+
+    const QFileInfo rootInfo(localFolderPath);
+    if (!rootInfo.exists() || !rootInfo.isDir() || rootInfo.isSymLink()) {
+        ++(*skipped);
+        return false;
+    }
+
+    TransferQueueItem rootDirItem;
+    rootDirItem.direction = QStringLiteral("Create remote dir");
+    rootDirItem.displayName = rootInfo.fileName();
+    rootDirItem.sourcePath = rootInfo.absoluteFilePath();
+    rootDirItem.targetPath = remoteTargetFolder;
+    rootDirItem.status = QStringLiteral("Pending");
+    rootDirItem.message = QStringLiteral("Queued to create remote folder");
+    m_transferQueue.append(rootDirItem);
+    ++(*dirsAdded);
+
+    const QDir rootDir(rootInfo.absoluteFilePath());
+    QDirIterator iterator(
+        rootInfo.absoluteFilePath(),
+        QDir::AllEntries | QDir::Hidden | QDir::NoDotAndDotDot,
+        QDirIterator::Subdirectories
+    );
+
+    while (iterator.hasNext()) {
+        iterator.next();
+
+        if ((*filesAdded + *dirsAdded) >= kMaxQueuedFolderItems) {
+            ++(*skipped);
+            return false;
+        }
+
+        const QFileInfo info = iterator.fileInfo();
+
+        if (info.isSymLink()) {
+            ++(*skipped);
+            continue;
+        }
+
+        QString relativePath = rootDir.relativeFilePath(info.absoluteFilePath());
+        relativePath.replace(QDir::separator(), QLatin1Char('/'));
+        const QString remotePath = joinedRemotePath(remoteTargetFolder, relativePath);
+
+        if (info.isDir()) {
+            TransferQueueItem dirItem;
+            dirItem.direction = QStringLiteral("Create remote dir");
+            dirItem.displayName = info.fileName();
+            dirItem.sourcePath = info.absoluteFilePath();
+            dirItem.targetPath = remotePath;
+            dirItem.status = QStringLiteral("Pending");
+            dirItem.message = QStringLiteral("Queued to create remote folder");
+            m_transferQueue.append(dirItem);
+            ++(*dirsAdded);
+            continue;
+        }
+
+        if (!info.isFile()) {
+            ++(*skipped);
+            continue;
+        }
+
+        TransferQueueItem fileItem;
+        fileItem.direction = QStringLiteral("Upload");
+        fileItem.displayName = relativePath;
+        fileItem.sourcePath = info.absoluteFilePath();
+        fileItem.targetPath = remotePath;
+        fileItem.sizeBytes = static_cast<quint64>(info.size());
+        fileItem.status = QStringLiteral("Pending");
+        fileItem.message = QStringLiteral("Queued by folder upload scan");
+        m_transferQueue.append(fileItem);
+        ++(*filesAdded);
+    }
+
+    return true;
 }
 
 void SftpBrowserTab::startTransferQueue()
@@ -1574,6 +1831,48 @@ void SftpBrowserTab::startTransferQueue()
         }
 
         setQueueItemStatus(i, QStringLiteral("Running"), QStringLiteral("Checking target"));
+
+        if (item.direction == QStringLiteral("Create local dir")) {
+            const QFileInfo existing(item.targetPath);
+
+            if (existing.exists() && !existing.isDir()) {
+                setQueueItemStatus(i, QStringLiteral("Failed"), QStringLiteral("Local target exists and is not a folder"));
+                ++failedCount;
+                continue;
+            }
+
+            if (QDir().mkpath(item.targetPath)) {
+                setQueueItemStatus(i, QStringLiteral("Done"), existing.exists() ? QStringLiteral("Local folder already exists") : QStringLiteral("Local folder ready"));
+                ++doneCount;
+            } else {
+                setQueueItemStatus(i, QStringLiteral("Failed"), QStringLiteral("Could not create local folder"));
+                ++failedCount;
+            }
+
+            continue;
+        }
+
+        if (item.direction == QStringLiteral("Create remote dir")) {
+            const SftpMkdirResult mkdirResult = SftpProbe::createRemoteDirectory(
+                m_host,
+                m_port,
+                m_username,
+                m_authMethod,
+                m_secretValue,
+                m_hostKeyExpectation,
+                item.targetPath
+            );
+
+            if (mkdirResult.success) {
+                setQueueItemStatus(i, QStringLiteral("Done"), mkdirResult.alreadyExists ? QStringLiteral("Remote folder already exists") : QStringLiteral("Remote folder created"));
+                ++doneCount;
+            } else {
+                setQueueItemStatus(i, QStringLiteral("Failed"), mkdirResult.message + QStringLiteral(" — ") + mkdirResult.error);
+                ++failedCount;
+            }
+
+            continue;
+        }
 
         if (item.direction == QStringLiteral("Download")) {
             const QFileInfo targetInfo(item.targetPath);
