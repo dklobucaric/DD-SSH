@@ -17,14 +17,14 @@ DD-SSH is designed for practical sysadmin use: saved sessions, one portable JSON
 
 ## Current status
 
-**Development checkpoint:** `dev 0.1.7.2`
+**Development checkpoint:** `dev 0.1.7.3`
 **Codename:** Andromeda
-**Milestone:** File Transfer architecture foundation
-**Current phase:** File transport architecture/design foundation
+**Milestone:** SFTP connection proof of concept
+**Current phase:** First libssh SFTP probe from saved sessions
 
 DD-SSH is now moving from the closed terminal-foundation baseline into the File Transfer / File Manager development track. It is not a stable 1.0 release yet, but the core terminal workflow is functional and has been validated on Linux, Windows 10/11, and Intel macOS. Native Windows builds, a standalone Windows deployment folder, a Debian package, and a macOS Intel `.app` / `.dmg` tester flow have been tested.
 
-The current checkpoint is intentionally small: it adds file-transfer architecture documentation and a safe File Manager placeholder while keeping the SSH trust-chain, terminal transport, known-host model, human-readable JSON config, diagnostic logging, Session Traffic monitor, and packaging flows intact.
+The current checkpoint is intentionally small: it adds the first libssh SFTP proof-of-concept path from the saved-session context menu. It performs SSH preflight, uses the existing known-host decision flow, verifies the approved host key again before authentication, authenticates, opens the SFTP subsystem, and lists the remote `.` directory in a text result tab. It does not implement a real file browser, upload, download, delete, rename, queue, or progress UI yet.
 
 Recent checkpoints:
 
@@ -38,11 +38,12 @@ Recent checkpoints:
 - `dev 0.1.6.7` adds a compact Session Traffic indicator in the status bar for the active terminal tab, showing live received/sent rates and totals.
 - `dev 0.1.6.8` adds config import/export safety previews while keeping the human-readable JSON format unchanged.
 - `dev 0.1.6.9` is a small bugfix stabilization checkpoint for toolbar and config-dialog button labels.
+- `dev 0.1.7.3` adds the first SFTP connection proof of concept: saved session → known-host preflight → host-key verification before auth → SFTP init → remote `.` listing in a text tab.
 - `dev 0.1.7.2` starts the File Transfer / File Manager track with architecture docs and a safe File Manager placeholder; it does not open SFTP yet.
 - `dev 0.1.7.1` hardens native xterm.js paste handling: toolbar Paste, right-click paste, Ctrl+Shift+V, and macOS Command+V now route through the same DD-SSH safe paste path and should not leak bracketed paste markers such as `^[[200~` into the remote shell.
 - `dev 0.1.7.0` hardens terminal transport: SSH output is carried as bytes to the WebEngine terminal, decoded with a streaming UTF-8 decoder, and input writes are partial-write aware so large paste/input is not silently truncated.
 
-In `dev 0.1.7.2`, DD-SSH does not add real SFTP, upload/download, encryption, cloud sync, or installer redesigns. The focus is architecture groundwork for file transfer while preserving the tested terminal baseline.
+In `dev 0.1.7.3`, DD-SSH adds a deliberately small SFTP probe only. It does not add a graphical file browser, upload/download, encryption, cloud sync, or installer redesigns. The focus is proving the file transport connection path while preserving the tested terminal baseline.
 
 The future file-transfer design is documented in `docs/FILE_TRANSFER_ARCHITECTURE.md`. File transfer will use libssh SFTP APIs, not shell command parsing hacks. Terminal tabs and future File Manager tabs are intentionally separated so the working terminal foundation remains stable.
 

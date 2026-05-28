@@ -1,6 +1,6 @@
 # DD-SSH Known Limitations
 
-**Checkpoint:** dev 0.1.7.2 — Andromeda
+**Checkpoint:** dev 0.1.7.3 — Andromeda
 
 This document lists limitations that should be visible to testers. Nothing here is hidden or sugar-coated.
 
@@ -29,11 +29,11 @@ This document lists limitations that should be visible to testers. Nothing here 
 
 ## Feature limitations
 
-`dev 0.1.7.2` starts the file-transfer track with architecture documentation and a harmless UI placeholder only. The placeholder does not open an SFTP subsystem and does not change configuration.
+`dev 0.1.7.3` adds only the first SFTP proof-of-concept path. It can open the SFTP subsystem and list the remote `.` directory into a text tab, but it is not a graphical file manager yet.
 
 Not implemented yet:
 
-- Real SFTP connection, remote file listing, upload, and download
+- Graphical remote file browser, upload, and download
 - Split panes
 - Multi-Exec
 - Keep-alive settings

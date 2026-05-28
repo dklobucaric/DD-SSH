@@ -8,6 +8,7 @@
 #include "core/KnownHostsManager.h"
 #include "core/SessionProfile.h"
 #include "ssh/SshSession.h"
+#include "sftp/SftpProbe.h"
 
 #include <QAbstractButton>
 #include <QAction>
@@ -1280,7 +1281,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: File Transfer architecture foundation.\n\n")
+            + QStringLiteral("Current phase: SFTP connection proof of concept.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n")
@@ -1504,7 +1505,7 @@ void MainWindow::addWelcomeTab()
         "A clean cross-platform SSH client and session manager.\n\n"
         "Double-click a saved session on the left to open the xterm.js terminal.\n\n"
         "Current milestone:\n"
-        "File Transfer architecture foundation — terminal baseline preserved, SFTP track begins\n\n"
+        "SFTP connection proof of concept — terminal baseline preserved, first libssh SFTP probe\n\n"
         "Working now:\n"
         "- saved sessions loaded from dd-ssh.json\n"
         "- portable plaintext secrets in dd-ssh.json\n"
@@ -1522,7 +1523,7 @@ void MainWindow::addWelcomeTab()
         "- cross-platform app icon resources for Qt, Windows, Linux, and macOS prep\n"
         "- Windows standalone deployment helper validated on real Windows 10/11 machines\n"
         "- app exit protection when active SSH terminals are still connected\n"
-        "- File Manager placeholder action for the 0.1.7.x SFTP development track\n\n"
+        "- File Manager / SFTP probe action for the 0.1.7.x SFTP development track\n\n"
         "Main menus:\n"
         "- File: Open Config Folder, Export Config, Import Config, Restore Latest Backup, Exit\n"
         "- Session: New Session, Connect / Auth test, Edit selected session\n"
@@ -1559,32 +1560,282 @@ void MainWindow::addWelcomeTab()
 }
 
 
-void MainWindow::showFileManagerPlaceholder(const QString &sessionId)
+void MainWindow::runSftpProbeForSavedSession(const QString &sessionId)
 {
     ConfigManager config;
-    QString loadError;
     SessionProfile session;
+    QString loadError;
 
-    QString sessionName = QStringLiteral("selected session");
-    if (config.loadSessionById(sessionId, &session, &loadError)) {
-        sessionName = session.name.trimmed().isEmpty() ? session.id : session.name;
+    if (!config.loadSessionById(sessionId, &session, &loadError)) {
+        QMessageBox::warning(
+            this,
+            QStringLiteral("Could not load saved session"),
+            loadError
+        );
+        statusBar()->showMessage(QStringLiteral("Could not load saved session for SFTP probe: ") + sessionId);
+        return;
     }
 
-    AppLogger::info(QStringLiteral("File Manager placeholder opened for session: ") + sessionName);
+    AppLogger::info(QStringLiteral("SFTP probe requested: session=\"") + session.name
+        + QStringLiteral("\", host=") + session.host
+        + QStringLiteral(", port=") + QString::number(session.port)
+        + QStringLiteral(", user=") + session.username);
 
-    QMessageBox::information(
-        this,
-        QStringLiteral("File Manager planned"),
-        QStringLiteral(
-            "File Manager / SFTP transfer is planned for the 0.1.7.x development track.\n\n"
-            "Session: %1\n\n"
-            "This dev 0.1.7.2 checkpoint contains architecture and UX groundwork only.\n"
-            "No SFTP connection is opened yet, no files are listed, and no config is changed.\n\n"
-            "Next planned checkpoint: dev 0.1.7.3 — SFTP connection proof of concept."
-        ).arg(sessionName)
+    const QString tabTitle =
+        session.username
+        + QStringLiteral("@")
+        + session.host
+        + QStringLiteral(":")
+        + QString::number(session.port);
+
+    const QString authLabel =
+        session.authType == SessionProfile::AuthType::Password
+            ? QStringLiteral("Password")
+            : QStringLiteral("Private key");
+
+    const QString secretRef =
+        session.authType == SessionProfile::AuthType::Password
+            ? session.secretRef
+            : session.keyRef;
+
+    QString output;
+    output += QStringLiteral("DD-SSH SFTP connection proof of concept\n\n");
+    output += QStringLiteral("Checkpoint: dev 0.1.7.3 — SFTP connection proof of concept\n\n");
+    output += QStringLiteral("Session: ") + session.name + QStringLiteral("\n");
+    output += QStringLiteral("Session id: ") + session.id + QStringLiteral("\n");
+    output += QStringLiteral("Group: ") + (session.group.trimmed().isEmpty() ? QStringLiteral("(none)") : session.group) + QStringLiteral("\n\n");
+    output += QStringLiteral("Host: ") + session.host + QStringLiteral("\n");
+    output += QStringLiteral("Port: ") + QString::number(session.port) + QStringLiteral("\n");
+    output += QStringLiteral("Username: ") + session.username + QStringLiteral("\n");
+    output += QStringLiteral("Auth type: ") + authLabel + QStringLiteral("\n");
+    output += QStringLiteral("Secret ref: ") + secretRef + QStringLiteral("\n");
+    output += QStringLiteral("Secret value: loaded from dd-ssh.json, hidden from display\n\n");
+    output += QStringLiteral("Scope:\n");
+    output += QStringLiteral("- open SSH connection using saved session data\n");
+    output += QStringLiteral("- use existing known-host prompt and trust-chain preflight\n");
+    output += QStringLiteral("- verify approved host key again before authentication\n");
+    output += QStringLiteral("- authenticate and initialize libssh SFTP subsystem\n");
+    output += QStringLiteral("- list remote '.' directory as a proof of concept\n");
+    output += QStringLiteral("- no upload, download, delete, rename, queue, or file browser UI yet\n\n");
+
+    QString secretValue;
+    QString secretType;
+    QString secretError;
+
+    if (!config.loadPlainSecret(secretRef, &secretValue, &secretType, &secretError)) {
+        output += QStringLiteral("Secret load result:\n");
+        output += QStringLiteral("Status: FAILED\n");
+        output += QStringLiteral("Message: ") + secretError + QStringLiteral("\n\n");
+        output += QStringLiteral("SFTP probe was NOT attempted.\n");
+
+        auto *probeTab = new QTextEdit(this);
+        probeTab->setReadOnly(true);
+        probeTab->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+        probeTab->setPlainText(output);
+
+        const int tabIndex = m_tabs->addTab(probeTab, session.name + QStringLiteral(" sftp"));
+        m_tabs->setCurrentIndex(tabIndex);
+        statusBar()->showMessage(QStringLiteral("SFTP probe secret load failed for ") + tabTitle);
+        return;
+    }
+
+    const QString expectedSecretType =
+        session.authType == SessionProfile::AuthType::Password
+            ? QStringLiteral("password")
+            : QStringLiteral("private_key");
+
+    if (secretType != expectedSecretType) {
+        output += QStringLiteral("Secret load result:\n");
+        output += QStringLiteral("Status: FAILED\n");
+        output += QStringLiteral("Message: Secret type mismatch. Expected ")
+            + expectedSecretType
+            + QStringLiteral(", got ")
+            + secretType
+            + QStringLiteral(".\n\n");
+        output += QStringLiteral("SFTP probe was NOT attempted.\n");
+
+        auto *probeTab = new QTextEdit(this);
+        probeTab->setReadOnly(true);
+        probeTab->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+        probeTab->setPlainText(output);
+
+        const int tabIndex = m_tabs->addTab(probeTab, session.name + QStringLiteral(" sftp"));
+        m_tabs->setCurrentIndex(tabIndex);
+        statusBar()->showMessage(QStringLiteral("SFTP probe secret type mismatch for ") + tabTitle);
+        return;
+    }
+
+    output += QStringLiteral("Secret load result:\n");
+    output += QStringLiteral("Status: SUCCESS\n");
+    output += QStringLiteral("Message: Plaintext secret loaded from dd-ssh.json. Value is hidden.\n\n");
+
+    statusBar()->showMessage(QStringLiteral("Running SSH preflight before SFTP probe for ") + tabTitle + QStringLiteral("..."));
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    QApplication::processEvents();
+
+    const SshHandshakeResult handshake = SshSession::testHandshake(
+        session.host,
+        session.port,
+        session.username
     );
 
-    statusBar()->showMessage(QStringLiteral("File Manager is planned for a later 0.1.7.x checkpoint"), 6000);
+    QApplication::restoreOverrideCursor();
+
+    output += QStringLiteral("SSH preflight result:\n");
+
+    bool knownHostAllowed = false;
+    QString knownHostDecision = QStringLiteral("Not checked");
+    QString knownHostExtra;
+    KnownHostsManager knownHosts;
+
+    if (handshake.success) {
+        output += QStringLiteral("Status: SUCCESS\n");
+        output += QStringLiteral("Message: ") + handshake.message + QStringLiteral("\n");
+        output += QStringLiteral("Server banner: ") + handshake.serverBanner + QStringLiteral("\n");
+        output += QStringLiteral("Host key type: ") + handshake.hostKeyType + QStringLiteral("\n");
+        output += QStringLiteral("Host key fingerprint: ") + handshake.hostKeyFingerprint + QStringLiteral("\n\n");
+
+        const KnownHostsManager::CheckResult check = knownHosts.checkHost(
+            session.host,
+            session.port,
+            handshake.hostKeyType,
+            handshake.hostKeyFingerprint
+        );
+
+        const KnownHostDecisionResult knownHostResult = promptKnownHostDecision(
+            this,
+            knownHosts,
+            check,
+            session.host,
+            session.port,
+            handshake.hostKeyType,
+            handshake.hostKeyFingerprint,
+            false
+        );
+
+        knownHostAllowed = knownHostResult.allowed;
+        knownHostDecision = knownHostResult.decision;
+        knownHostExtra = knownHostResult.extra;
+
+        output += QStringLiteral("Known-host result:\n");
+        output += QStringLiteral("Decision: ") + knownHostDecision + QStringLiteral("\n");
+        output += QStringLiteral("Config file: ") + knownHosts.configFilePath() + QStringLiteral("\n");
+
+        if (!knownHostExtra.isEmpty()) {
+            output += QStringLiteral("Extra: ") + knownHostExtra + QStringLiteral("\n");
+        }
+
+        output += QStringLiteral("\n");
+    } else {
+        output += QStringLiteral("Status: FAILED\n");
+        output += QStringLiteral("Message: ") + handshake.message + QStringLiteral("\n");
+        output += QStringLiteral("libssh error code: ") + QString::number(handshake.sshErrorCode) + QStringLiteral("\n");
+        output += QStringLiteral("Error: ") + handshake.error + QStringLiteral("\n\n");
+        output += QStringLiteral("Known-host result:\n");
+        output += QStringLiteral("Decision: Not checked because handshake failed\n\n");
+        output += QStringLiteral("SFTP probe was NOT attempted.\n");
+    }
+
+    bool probeAttempted = false;
+    SftpProbeResult probeResult;
+
+    if (handshake.success && knownHostAllowed) {
+        output += QStringLiteral("Known-host decision allows SFTP probe.\n\n");
+
+        const SshHostKeyExpectation hostKeyExpectation = makeHostKeyExpectation(
+            session.host,
+            session.port,
+            handshake.hostKeyType,
+            handshake.hostKeyFingerprint,
+            knownHostDecision
+        );
+
+        const SshAuthMethod authMethod =
+            session.authType == SessionProfile::AuthType::Password
+                ? SshAuthMethod::Password
+                : SshAuthMethod::PrivateKey;
+
+        statusBar()->showMessage(QStringLiteral("Opening SFTP subsystem for ") + tabTitle + QStringLiteral("..."));
+        QApplication::setOverrideCursor(Qt::WaitCursor);
+        QApplication::processEvents();
+
+        probeResult = SftpProbe::listRemoteDirectory(
+            session.host,
+            session.port,
+            session.username,
+            authMethod,
+            secretValue,
+            hostKeyExpectation,
+            QStringLiteral(".")
+        );
+
+        QApplication::restoreOverrideCursor();
+        probeAttempted = true;
+
+        output += QStringLiteral("SFTP probe result:\n");
+
+        if (probeResult.hostKeyVerificationAttempted) {
+            output += QStringLiteral("Host-key verification before auth: ")
+                + (probeResult.hostKeyVerified ? QStringLiteral("VERIFIED") : QStringLiteral("FAILED"))
+                + QStringLiteral("\n");
+            output += QStringLiteral("SFTP connection key type: ") + probeResult.hostKeyType + QStringLiteral("\n");
+            output += QStringLiteral("SFTP connection fingerprint: ") + probeResult.hostKeyFingerprint + QStringLiteral("\n");
+        }
+
+        if (probeResult.success) {
+            output += QStringLiteral("Status: SUCCESS\n");
+            output += QStringLiteral("Message: ") + probeResult.message + QStringLiteral("\n");
+            output += QStringLiteral("Remote path: ") + probeResult.remotePath + QStringLiteral("\n");
+            output += QStringLiteral("Entries: ") + QString::number(probeResult.entries.size()) + QStringLiteral("\n\n");
+            output += QStringLiteral("Remote listing:\n");
+            output += QStringLiteral("TYPE        SIZE          MODIFIED               PERMISSIONS  NAME\n");
+            output += QStringLiteral("--------------------------------------------------------------------------\n");
+
+            for (const SftpRemoteEntry &entry : probeResult.entries) {
+                output += QStringLiteral("%1  %2  %3  %4  %5\n")
+                    .arg(entry.type.left(10), -10)
+                    .arg(QString::number(entry.sizeBytes), 12)
+                    .arg(entry.modifiedTime.left(20), -20)
+                    .arg(entry.permissions.left(11), -11)
+                    .arg(entry.name);
+            }
+
+            output += QStringLiteral("\nNext planned checkpoint:\n");
+            output += QStringLiteral("dev 0.1.7.4 — read-only remote file browser.\n");
+        } else {
+            output += QStringLiteral("Status: FAILED\n");
+            output += QStringLiteral("Message: ") + probeResult.message + QStringLiteral("\n");
+            output += QStringLiteral("Auth return code: ") + QString::number(probeResult.authReturnCode) + QStringLiteral("\n");
+            output += QStringLiteral("libssh error code: ") + QString::number(probeResult.sshErrorCode) + QStringLiteral("\n");
+            output += QStringLiteral("SFTP error code: ") + QString::number(probeResult.sftpErrorCode) + QStringLiteral("\n");
+            output += QStringLiteral("Error: ") + probeResult.error + QStringLiteral("\n\n");
+            output += QStringLiteral("Check:\n");
+            output += QStringLiteral("- SSH auth still works for this saved session\n");
+            output += QStringLiteral("- server allows the SFTP subsystem\n");
+            output += QStringLiteral("- remote user has permission to list the default directory\n");
+        }
+    } else if (handshake.success) {
+        output += QStringLiteral("Connection flow stopped at known-host decision.\n");
+        output += QStringLiteral("SFTP probe was NOT attempted.\n");
+    }
+
+    auto *probeTab = new QTextEdit(this);
+    probeTab->setReadOnly(true);
+    probeTab->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+    probeTab->setPlainText(output);
+
+    const int tabIndex = m_tabs->addTab(probeTab, session.name + QStringLiteral(" sftp"));
+    m_tabs->setCurrentIndex(tabIndex);
+
+    if (probeAttempted && probeResult.success) {
+        statusBar()->showMessage(QStringLiteral("SFTP probe successful for ") + tabTitle);
+    } else if (probeAttempted) {
+        statusBar()->showMessage(QStringLiteral("SFTP probe failed for ") + tabTitle);
+    } else if (handshake.success && !knownHostAllowed) {
+        statusBar()->showMessage(QStringLiteral("SFTP probe cancelled by known-host decision for ") + tabTitle);
+    } else {
+        statusBar()->showMessage(QStringLiteral("SFTP probe preflight failed for ") + tabTitle);
+    }
 }
 
 
@@ -1608,7 +1859,7 @@ void MainWindow::showSessionContextMenu(const QPoint &position)
 
     QMenu menu(this);
     QAction *openWebTerminalAction = menu.addAction("Open xterm.js terminal");
-    QAction *fileManagerAction = menu.addAction("Open File Manager (planned)");
+    QAction *fileManagerAction = menu.addAction("Open File Manager (SFTP probe)");
     QAction *connectAction = menu.addAction("Run auth test");
     QAction *openShellAction = menu.addAction("Open basic shell (fallback)");
     menu.addSeparator();
@@ -1622,7 +1873,7 @@ void MainWindow::showSessionContextMenu(const QPoint &position)
     } else if (selectedAction == openWebTerminalAction) {
         openSavedSessionWebTerminal(sessionId);
     } else if (selectedAction == fileManagerAction) {
-        showFileManagerPlaceholder(sessionId);
+        runSftpProbeForSavedSession(sessionId);
     } else if (selectedAction == openShellAction) {
         openSavedSessionShell(sessionId);
     } else if (selectedAction == editAction) {

@@ -1,8 +1,8 @@
 # DD-SSH File Transfer Architecture
 
-**Checkpoint:** dev 0.1.7.2 — Andromeda  
-**Status:** architecture/design foundation only  
-**Runtime behavior:** no real SFTP connection yet
+**Checkpoint:** dev 0.1.7.3 — Andromeda  
+**Status:** SFTP connection proof of concept  
+**Runtime behavior:** saved-session SFTP probe can initialize SFTP and list remote `.`
 
 ---
 
@@ -26,16 +26,14 @@ The future File Manager should eventually provide:
 - diagnostic logging that never records file contents or secrets
 - Session Traffic integration for SFTP bytes where practical
 
-`dev 0.1.7.2` does **not** implement those runtime features yet. It only documents the architecture and adds a safe UI placeholder.
+`dev 0.1.7.3` implements only the first connection proof of concept. It can open SFTP and list a directory into a text result tab, but it does **not** implement the graphical file browser or transfers yet.
 
 ---
 
-## Non-goals for dev 0.1.7.2
+## Non-goals for dev 0.1.7.3
 
 This checkpoint intentionally does not add:
 
-- SFTP subsystem startup
-- remote file listing
 - local/remote two-panel browser
 - upload
 - download
@@ -51,7 +49,29 @@ This checkpoint intentionally does not add:
 - known-host behavior changes
 - encryption/master-password changes
 
-This is a foundation checkpoint, not a transfer checkpoint.
+This is a transport proof checkpoint, not a file-manager checkpoint.
+
+---
+
+## dev 0.1.7.3 runtime proof
+
+`dev 0.1.7.3` adds a deliberately small saved-session SFTP probe:
+
+```text
+Saved session context menu
+   -> Open File Manager (SFTP probe)
+   -> load saved SessionProfile and referenced plain-v1 secret
+   -> run SSH preflight handshake
+   -> use existing known-host prompt/decision flow
+   -> verify the approved host key again on the real SFTP connection before authentication
+   -> authenticate using password or embedded private key
+   -> initialize libssh SFTP subsystem
+   -> list remote `.` directory into a read-only text tab
+```
+
+This proves the transport path while keeping the terminal baseline isolated. The probe is intentionally blocking/simple for this checkpoint and should evolve into a proper worker-backed File Manager tab in later checkpoints.
+
+It does not modify `dd-ssh.json` except when the existing known-host flow intentionally saves a newly trusted host key or additional host-key algorithm.
 
 ---
 
@@ -399,17 +419,20 @@ Specific cases to test later:
 
 ---
 
-## Current placeholder behavior
+## Current SFTP probe behavior
 
-`dev 0.1.7.2` adds `Open File Manager (planned)` to the saved-session context menu.
+`dev 0.1.7.3` changes the saved-session context-menu action to `Open File Manager (SFTP probe)`.
 
-The placeholder:
+The probe:
 
-- shows an informational dialog
-- mentions the next SFTP proof-of-concept checkpoint
-- does not open SFTP
-- does not create files
-- does not modify `dd-ssh.json`
+- opens a real SSH/SFTP connection path using the saved session
+- uses the existing known-host prompt and trust-chain flow
+- verifies the approved host key again before authentication
+- initializes the libssh SFTP subsystem
+- lists remote `.` into a read-only text tab
+- does not upload, download, delete, rename, or transfer files
+- does not implement the final File Manager UI yet
+- does not modify `dd-ssh.json` except when the existing known-host flow intentionally saves trusted host-key data
 - does not touch terminal tabs
 
-This confirms UX direction without risking the tested terminal baseline.
+This proves the transport path without risking the tested terminal baseline.

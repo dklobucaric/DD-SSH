@@ -19,7 +19,7 @@
 - Duplicate target warning for same `username + host + port`
 - Sidebar context menu
 - Double-click opens xterm.js terminal
-- File Manager placeholder action for the future SFTP development track
+- File Manager / SFTP probe action for the future SFTP development track
 
 ### SSH/auth
 
@@ -47,8 +47,9 @@
 ### File transfer / File Manager
 
 - Architecture documentation exists in `docs/FILE_TRANSFER_ARCHITECTURE.md`
-- Saved-session context menu includes `Open File Manager (planned)`
-- No SFTP connection, file listing, upload, or download is implemented yet
+- Saved-session context menu includes `Open File Manager (SFTP probe)`
+- The SFTP probe uses saved session data, existing known-host preflight, approved host-key verification before auth, libssh SFTP initialization, and a remote `.` directory listing
+- No graphical file browser, upload, download, delete, rename, queue, or progress UI is implemented yet
 
 ### Config
 
@@ -102,7 +103,7 @@
 
 - Multi-Exec
 - Keep-alive settings
-- Real SFTP connection and file transfer
+- Graphical file browser and real upload/download file transfer
 - Split panes
 - Portable mode next to binary
 - Custom config path picker

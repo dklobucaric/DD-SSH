@@ -39,6 +39,8 @@ This directory contains the working documentation for DD-SSH.
 - [Release Artifacts](RELEASE_ARTIFACTS.md)
 - [Release Notes Template](RELEASE_NOTES_TEMPLATE.md) — future release checklist
 - [Release Checklist](RELEASE_CHECKLIST.md) — focused checkpoint smoke-test checklist
+- [Build/Test 0.1.7.3](BUILD_AND_TEST_0.1.7.3.md) — SFTP proof-of-concept build/test notes
+- [Testcase 0.1.7.3](TESTCASE_0.1.7.3.md) — SFTP proof-of-concept validation checklist
 - [Build/Test 0.1.6.5](BUILD_AND_TEST_0.1.6.5.md) — macOS DMG/dependency polish build notes
 - [Testcase 0.1.6.5](TESTCASE_0.1.6.5.md) — macOS DMG/dependency validation checklist
 - [Stabilization Checkpoint 0.1.5.9](STABILIZATION_CHECKPOINT_0.1.5.9.md) — validated stabilization summary
@@ -46,10 +48,10 @@ This directory contains the working documentation for DD-SSH.
 ## Current checkpoint
 
 ```text
-Version: dev 0.1.7.2
+Version: dev 0.1.7.3
 Codename: Andromeda
-Milestone: File Transfer architecture foundation
-Phase: File transport architecture/design foundation
+Milestone: SFTP connection proof of concept
+Phase: First libssh SFTP probe from saved sessions
 ```
 
 
@@ -80,4 +82,4 @@ GitHub issue templates live under `.github/ISSUE_TEMPLATE/`.
 
 - docs/TERMINAL_TRANSPORT.md explains the byte-stream terminal transport hardening added in dev 0.1.7.0.
 
-- docs/FILE_TRANSFER_ARCHITECTURE.md explains the planned libssh SFTP/File Manager design added in dev 0.1.7.2.
+- docs/FILE_TRANSFER_ARCHITECTURE.md explains the planned libssh SFTP/File Manager design and the dev 0.1.7.3 SFTP probe checkpoint.

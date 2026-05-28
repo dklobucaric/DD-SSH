@@ -51,7 +51,7 @@ private:
     void openSavedSessionShell(const QString &sessionId);
     void openSavedSessionWebTerminal(const QString &sessionId);
     void openSavedSessionShellInternal(const QString &sessionId, bool useWebTerminal);
-    void showFileManagerPlaceholder(const QString &sessionId);
+    void runSftpProbeForSavedSession(const QString &sessionId);
     void showSessionContextMenu(const QPoint &position);
     void editSelectedSession();
     void editSavedSession(const QString &sessionId);

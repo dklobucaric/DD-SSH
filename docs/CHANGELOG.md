@@ -1,3 +1,23 @@
+## dev 0.1.7.3 — Andromeda
+
+SFTP connection proof-of-concept checkpoint.
+
+### Added
+
+- Added `src/sftp/SftpProbe.h` and `src/sftp/SftpProbe.cpp` as the first libssh SFTP transport proof.
+- Saved-session context menu now offers `Open File Manager (SFTP probe)`.
+- The probe loads the saved session and referenced plain-v1 secret, runs SSH preflight, uses the existing known-host prompt flow, verifies the approved host key again before authentication, authenticates, initializes the SFTP subsystem, and lists the remote `.` directory into a read-only text tab.
+- The result tab shows safe diagnostic information and a simple remote listing table with type, size, modified time, permissions, and name.
+- Added `docs/BUILD_AND_TEST_0.1.7.3.md` and `docs/TESTCASE_0.1.7.3.md`.
+
+### Not changed
+
+- No graphical file browser is implemented yet.
+- No upload, download, delete, rename, recursive transfer, transfer queue, progress dialog, or cancel workflow is implemented yet.
+- No JSON schema migration was added.
+- No terminal transport, xterm.js paste path, known-host data model, Windows KEX workaround, Session Traffic runtime, packaging scripts, or config import/export behavior was intentionally changed.
+- Secrets and file contents are not written to diagnostic logs.
+
 ## dev 0.1.7.2 — Andromeda
 
 File Transport architecture/design foundation checkpoint.

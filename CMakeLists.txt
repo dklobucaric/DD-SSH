@@ -6,9 +6,9 @@ project(DD_SSH
     LANGUAGES CXX
 )
 
-set(DD_SSH_VERSION_STRING "dev 0.1.7.2")
+set(DD_SSH_VERSION_STRING "dev 0.1.7.3")
 set(DD_SSH_CODENAME_STRING "Andromeda")
-set(DD_SSH_MILESTONE_STRING "File Transfer architecture foundation")
+set(DD_SSH_MILESTONE_STRING "SFTP connection proof of concept")
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -50,6 +50,9 @@ qt_add_executable(dd-ssh
     src/ssh/SshSession.cpp
     src/ssh/SshShellWorker.h
     src/ssh/SshShellWorker.cpp
+
+    src/sftp/SftpProbe.h
+    src/sftp/SftpProbe.cpp
 )
 
 qt_add_resources(dd-ssh "xterm_assets"

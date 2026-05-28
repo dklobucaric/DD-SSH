@@ -1,11 +1,29 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.7.2 — Andromeda
-**Milestone:** File Transfer architecture foundation
-**Phase:** File transport architecture/design foundation
+**Checkpoint:** dev 0.1.7.3 — Andromeda
+**Milestone:** SFTP connection proof of concept
+**Phase:** First libssh SFTP probe from saved sessions
 
 This matrix tracks what has been confirmed manually, what is implemented but should be re-tested before a public alpha tag, and what is still planned.
 
+
+## dev 0.1.7.3 — SFTP connection proof-of-concept smoke test
+
+[ ] About shows dev 0.1.7.3
+[ ] Welcome tab mentions the SFTP connection proof of concept
+[ ] Saved-session context menu shows `Open File Manager (SFTP probe)`
+[ ] SFTP probe uses the existing known-host prompt for unknown/additional/changed hosts
+[ ] SFTP probe verifies the approved host key before authentication
+[ ] Password-auth saved session can initialize SFTP and list remote `.`
+[ ] Private-key saved session can initialize SFTP and list remote `.`
+[ ] Probe result opens in a read-only text tab and shows type/size/modified/permissions/name
+[ ] No upload, download, delete, rename, queue, or file browser UI is available yet
+[ ] Existing saved xterm.js terminal still opens normally after the SFTP probe
+[ ] Toolbar Paste, right-click paste, Ctrl+Shift+V / Command+V, and Ctrl+C interrupt still work
+[ ] Session Traffic terminal behavior is unchanged
+[ ] Diagnostic logs do not contain passwords, private-key content, terminal I/O, clipboard content, file contents, or full dd-ssh.json
+[ ] Windows KEX regression host still connects
+[ ] Known-host multi-key portability regression still passes
 
 ## dev 0.1.7.2 — File transport architecture foundation smoke test
 
