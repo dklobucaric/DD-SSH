@@ -149,3 +149,18 @@ It must include:
 - Safe default action
 - No hidden execution
 - Local log without secrets
+
+
+## Diagnostic logging secret-safety
+
+`dev 0.1.6.6` adds optional diagnostic logging. Logging is OFF by default and is intended for on-demand troubleshooting only.
+
+Logs must never include passwords, private-key contents, plaintext secret values, terminal input, terminal output, clipboard contents, or the full `dd-ssh.json` file. Logs may include troubleshooting metadata such as host, port, username, authentication method, host-key type, and host-key fingerprint.
+
+Standard log folders:
+
+```text
+Linux: ~/.local/state/DD-SSH/logs
+Windows: %LOCALAPPDATA%\DD-SSH\logs
+macOS: ~/Library/Logs/DD-SSH
+```

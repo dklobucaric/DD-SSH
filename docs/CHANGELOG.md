@@ -1,3 +1,29 @@
+## dev 0.1.6.6 — Andromeda
+
+### Added
+
+- Added optional diagnostic logging controlled by Settings → Enable diagnostic logging.
+- Added a cross-platform `AppLogger` foundation with INFO/WARN/ERROR lines in the format `2026-05-28 01:44:22.123 - INFO - App started`.
+- Added standard per-user log folders:
+  - Linux: `~/.local/state/DD-SSH/logs`
+  - Windows: `%LOCALAPPDATA%\DD-SSH\logs`
+  - macOS: `~/Library/Logs/DD-SSH`
+- Added Help → Open Log Folder.
+- Added a status-bar indicator when diagnostic logging is enabled.
+- Added logging for app startup/shutdown, config/session loading, manual/saved connection requests, SSH handshake/authentication events, host-key verification before auth, shell lifecycle, disconnects, and key/auth errors.
+- Added `docs/LOGGING.md`, `docs/BUILD_AND_TEST_0.1.6.6.md`, and `docs/TESTCASE_0.1.6.6.md`.
+
+### Security / privacy
+
+- Diagnostic logging is OFF by default.
+- Logs intentionally do not include passwords, private-key contents, terminal input, terminal output, clipboard contents, or full `dd-ssh.json` data.
+
+### Unchanged
+
+- SSH runtime/trust-chain logic remains unchanged from `dev 0.1.6.3`.
+- Human-readable `dd-ssh.json` and `plain-v1` secrets remain unchanged.
+- Packaging scripts remain functionally unchanged except version defaults/comments.
+
 # DD-SSH Changelog
 
 ## dev 0.1.6.5 — Andromeda

@@ -1,7 +1,7 @@
 # DD-SSH Release Checklist
 
 **Current target line:** Andromeda / MF 0.2 candidate  
-**Current checkpoint:** dev 0.1.6.5
+**Current checkpoint:** dev 0.1.6.6
 
 This checklist is shorter than the full public-alpha checklist. Use it before tagging any internal development checkpoint or before preparing `v0.2.0-alpha`.
 
@@ -30,7 +30,7 @@ grep "DD_SSH_VERSION_STRING" CMakeLists.txt
 Expected for this checkpoint:
 
 ```text
-set(DD_SSH_VERSION_STRING "dev 0.1.6.5")
+set(DD_SSH_VERSION_STRING "dev 0.1.6.6")
 ```
 
 Also verify in the app:
@@ -42,7 +42,7 @@ Help → About DD-SSH
 Expected:
 
 ```text
-Version: dev 0.1.6.5
+Version: dev 0.1.6.6
 Codename: Andromeda
 Milestone: MF 0.2 candidate
 ```
@@ -217,3 +217,14 @@ git push origin dev-0.1.6.4
 ```
 
 Use public release tags only when the full public-alpha checklist passes.
+
+## dev 0.1.6.6 diagnostic logging checks
+
+```text
+[ ] Settings includes Enable diagnostic logging
+[ ] logging is OFF by default
+[ ] Help → Open Log Folder works
+[ ] status bar shows Logging enabled while enabled
+[ ] logs contain INFO/WARN/ERROR lifecycle events
+[ ] logs do not contain secrets or terminal content
+```

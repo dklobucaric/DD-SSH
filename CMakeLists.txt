@@ -6,7 +6,7 @@ project(DD_SSH
     LANGUAGES CXX
 )
 
-set(DD_SSH_VERSION_STRING "dev 0.1.6.5")
+set(DD_SSH_VERSION_STRING "dev 0.1.6.6")
 set(DD_SSH_CODENAME_STRING "Andromeda")
 set(DD_SSH_MILESTONE_STRING "MF 0.2 candidate")
 
@@ -41,6 +41,8 @@ qt_add_executable(dd-ssh
     src/core/ConfigManager.cpp
     src/core/KnownHostsManager.h
     src/core/KnownHostsManager.cpp
+    src/core/AppLogger.h
+    src/core/AppLogger.cpp
 
     src/ssh/SshCompatibility.h
     src/ssh/SshCompatibility.cpp

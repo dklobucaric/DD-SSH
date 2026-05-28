@@ -1,5 +1,6 @@
 #include "SshShellWorker.h"
 #include "SshCompatibility.h"
+#include "core/AppLogger.h"
 
 #include <libssh/libssh.h>
 
@@ -233,11 +234,16 @@ bool SshShellWorker::takePendingResize(int &columns, int &rows)
 
 void SshShellWorker::start()
 {
+    AppLogger::info(QStringLiteral("SSH shell worker started: host=") + m_host
+        + QStringLiteral(", port=") + QString::number(m_port)
+        + QStringLiteral(", user=") + m_username
+        + QStringLiteral(", method=") + (m_authMethod == SshAuthMethod::Password ? QStringLiteral("password") : QStringLiteral("private-key")));
     emit stateChanged(QStringLiteral("Starting SSH shell worker..."));
 
     ssh_session session = ssh_new();
 
     if (session == nullptr) {
+        AppLogger::error(QStringLiteral("SSH shell worker failed before connect: ssh_new failed"));
         emit errorOccurred(QStringLiteral("ssh_new() failed: could not allocate SSH session."));
         emit finished();
         return;
@@ -257,33 +263,51 @@ void SshShellWorker::start()
     SshCompatibility::applySessionCompatibility(session);
 
     emit stateChanged(QStringLiteral("Connecting to SSH server..."));
+    AppLogger::info(QStringLiteral("SSH shell connect started: host=") + m_host
+        + QStringLiteral(", port=") + QString::number(m_port));
 
     const int connectRc = ssh_connect(session);
 
     if (connectRc != SSH_OK) {
+        const QString connectError = QString::fromUtf8(ssh_get_error(session));
+        AppLogger::error(QStringLiteral("SSH shell connect failed: host=") + m_host
+            + QStringLiteral(", port=") + QString::number(m_port)
+            + QStringLiteral(", error=") + connectError);
         emit errorOccurred(
             QStringLiteral("SSH connect failed: ")
-            + QString::fromUtf8(ssh_get_error(session))
+            + connectError
         );
         ssh_free(session);
         emit finished();
         return;
     }
 
+    AppLogger::info(QStringLiteral("SSH shell connect OK: host=") + m_host
+        + QStringLiteral(", port=") + QString::number(m_port));
+
     if (m_hostKeyExpectation.enabled) {
         emit stateChanged(QStringLiteral("Verifying SSH host key before authentication..."));
 
         QString verificationError;
         if (!verifyConnectedServerHostKey(session, m_hostKeyExpectation, &verificationError)) {
+            AppLogger::error(QStringLiteral("SSH shell host-key verification failed before auth: host=") + m_host
+                + QStringLiteral(", port=") + QString::number(m_port)
+                + QStringLiteral(", error=") + verificationError);
             emit errorOccurred(verificationError);
             ssh_disconnect(session);
             ssh_free(session);
             emit finished();
             return;
         }
+
+        AppLogger::info(QStringLiteral("SSH shell host-key verification OK: host=") + m_host
+            + QStringLiteral(", port=") + QString::number(m_port));
     }
 
     emit stateChanged(QStringLiteral("Authenticating..."));
+    AppLogger::info(QStringLiteral("SSH shell authentication started: host=") + m_host
+        + QStringLiteral(", port=") + QString::number(m_port)
+        + QStringLiteral(", method=") + (m_authMethod == SshAuthMethod::Password ? QStringLiteral("password") : QStringLiteral("private-key")));
 
     int authRc = SSH_AUTH_DENIED;
     QTemporaryFile tempKeyFile;
@@ -301,6 +325,7 @@ void SshShellWorker::start()
         tempKeyFile.setAutoRemove(true);
 
         if (!tempKeyFile.open()) {
+            AppLogger::error(QStringLiteral("SSH shell private-key temporary file create failed: ") + tempKeyFile.errorString());
             emit errorOccurred(QStringLiteral("Could not create temporary private key file: ") + tempKeyFile.errorString());
             ssh_disconnect(session);
             ssh_free(session);
@@ -326,9 +351,13 @@ void SshShellWorker::start()
         );
 
         if (importRc != SSH_OK || privateKey == nullptr) {
+            const QString keyError = QString::fromUtf8(ssh_get_error(session));
+            AppLogger::error(QStringLiteral("SSH shell private-key load failed: host=") + m_host
+                + QStringLiteral(", port=") + QString::number(m_port)
+                + QStringLiteral(", error=") + keyError);
             emit errorOccurred(
                 QStringLiteral("Could not load private key from temporary file: ")
-                + QString::fromUtf8(ssh_get_error(session))
+                + keyError
             );
             ssh_disconnect(session);
             ssh_free(session);
@@ -346,11 +375,17 @@ void SshShellWorker::start()
     }
 
     if (authRc != SSH_AUTH_SUCCESS) {
+        const QString authError = QString::fromUtf8(ssh_get_error(session));
+        AppLogger::warn(QStringLiteral("SSH shell authentication failed: host=") + m_host
+            + QStringLiteral(", port=") + QString::number(m_port)
+            + QStringLiteral(", method=") + (m_authMethod == SshAuthMethod::Password ? QStringLiteral("password") : QStringLiteral("private-key"))
+            + QStringLiteral(", rc=") + QString::number(authRc)
+            + QStringLiteral(", error=") + authError);
         emit errorOccurred(
             QStringLiteral("SSH authentication failed. libssh auth return code: ")
             + QString::number(authRc)
             + QStringLiteral(". Error: ")
-            + QString::fromUtf8(ssh_get_error(session))
+            + authError
         );
         ssh_disconnect(session);
         ssh_free(session);
@@ -358,11 +393,14 @@ void SshShellWorker::start()
         return;
     }
 
+    AppLogger::info(QStringLiteral("SSH shell authentication successful: host=") + m_host
+        + QStringLiteral(", port=") + QString::number(m_port));
     emit stateChanged(QStringLiteral("Authentication successful. Opening shell channel..."));
 
     ssh_channel channel = ssh_channel_new(session);
 
     if (channel == nullptr) {
+        AppLogger::error(QStringLiteral("SSH shell channel allocation failed"));
         emit errorOccurred(QStringLiteral("ssh_channel_new() failed: could not allocate SSH channel."));
         ssh_disconnect(session);
         ssh_free(session);
@@ -373,9 +411,11 @@ void SshShellWorker::start()
     const int openRc = ssh_channel_open_session(channel);
 
     if (openRc != SSH_OK) {
+        const QString channelError = QString::fromUtf8(ssh_get_error(session));
+        AppLogger::error(QStringLiteral("SSH shell channel open failed: ") + channelError);
         emit errorOccurred(
             QStringLiteral("Could not open SSH channel: ")
-            + QString::fromUtf8(ssh_get_error(session))
+            + channelError
         );
         ssh_channel_free(channel);
         ssh_disconnect(session);
@@ -425,6 +465,8 @@ void SshShellWorker::start()
 
     ssh_set_blocking(session, 0);
 
+    AppLogger::info(QStringLiteral("SSH shell channel open: host=") + m_host
+        + QStringLiteral(", port=") + QString::number(m_port));
     emit stateChanged(QStringLiteral("Connected. SSH shell channel is open."));
     emit outputReceived(QStringLiteral("\n[DD-SSH] SSH shell channel is open.\n\n"));
 
@@ -435,6 +477,8 @@ void SshShellWorker::start()
     while (!m_stopRequested.load()) {
         if (ssh_is_connected(session) == 0) {
             connectionLost = true;
+            AppLogger::warn(QStringLiteral("SSH shell transport disconnected: host=") + m_host
+                + QStringLiteral(", port=") + QString::number(m_port));
             emit errorOccurred(QStringLiteral("SSH transport disconnected. The remote host may have closed the connection or rebooted."));
             break;
         }
@@ -447,9 +491,11 @@ void SshShellWorker::start()
 
             if (writeRc == SSH_ERROR) {
                 connectionLost = true;
+                const QString writeError = QString::fromUtf8(ssh_get_error(session));
+                AppLogger::error(QStringLiteral("SSH shell write failed: ") + writeError);
                 emit errorOccurred(
                     QStringLiteral("Could not write to SSH channel. Connection may be closed: ")
-                    + QString::fromUtf8(ssh_get_error(session))
+                    + writeError
                 );
                 break;
             }
@@ -535,6 +581,8 @@ void SshShellWorker::start()
 
         if (ssh_channel_is_closed(channel) || ssh_channel_is_eof(channel)) {
             remoteClosed = true;
+            AppLogger::info(QStringLiteral("Remote shell channel closed: host=") + m_host
+                + QStringLiteral(", port=") + QString::number(m_port));
             emit stateChanged(QStringLiteral("Remote shell channel closed."));
             break;
         }
@@ -561,6 +609,8 @@ void SshShellWorker::start()
     ssh_disconnect(session);
     ssh_free(session);
 
+    AppLogger::info(QStringLiteral("SSH shell disconnected: host=") + m_host
+        + QStringLiteral(", port=") + QString::number(m_port));
     emit stateChanged(QStringLiteral("Disconnected."));
     emit finished();
 }

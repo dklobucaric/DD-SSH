@@ -843,6 +843,14 @@ void ConfigManager::ensureBaseObjects(QJsonObject *root) const
 
     settings.insert(QStringLiteral("config_safety"), configSafetySettings);
 
+    QJsonObject diagnosticsSettings = settings.value(QStringLiteral("diagnostics")).toObject();
+
+    if (!diagnosticsSettings.contains(QStringLiteral("logging_enabled"))) {
+        diagnosticsSettings.insert(QStringLiteral("logging_enabled"), false);
+    }
+
+    settings.insert(QStringLiteral("diagnostics"), diagnosticsSettings);
+
     QJsonObject behaviorSettings = settings.value(QStringLiteral("behavior")).toObject();
 
     if (!behaviorSettings.contains(QStringLiteral("double_click_action"))) {
@@ -1030,6 +1038,7 @@ AppSettings ConfigManager::loadSettings(QString *errorMessage) const
     const QJsonObject appearance = settingsObject.value(QStringLiteral("appearance")).toObject();
     const QJsonObject terminal = settingsObject.value(QStringLiteral("terminal")).toObject();
     const QJsonObject configSafety = settingsObject.value(QStringLiteral("config_safety")).toObject();
+    const QJsonObject diagnostics = settingsObject.value(QStringLiteral("diagnostics")).toObject();
     const QJsonObject behavior = settingsObject.value(QStringLiteral("behavior")).toObject();
 
     const QString rawAppTheme = appearance.value(QStringLiteral("app_theme")).toString(QStringLiteral("system")).trimmed().toLower();
@@ -1044,6 +1053,7 @@ AppSettings ConfigManager::loadSettings(QString *errorMessage) const
     settings.terminalFontSize = clampInt(terminal.value(QStringLiteral("font_size")).toInt(14), 8, 36);
     settings.configBackupsEnabled = configSafety.value(QStringLiteral("backups_enabled")).toBool(true);
     settings.maxConfigBackups = clampInt(configSafety.value(QStringLiteral("max_backups")).toInt(10), 1, 50);
+    settings.diagnosticLoggingEnabled = diagnostics.value(QStringLiteral("logging_enabled")).toBool(false);
 
     const QString doubleClickAction = behavior.value(QStringLiteral("double_click_action")).toString(QStringLiteral("open_terminal")).trimmed();
     settings.doubleClickAction = doubleClickAction.isEmpty()
@@ -1088,6 +1098,10 @@ bool ConfigManager::saveSettings(const AppSettings &settings, QString *errorMess
     configSafety.insert(QStringLiteral("backups_enabled"), settings.configBackupsEnabled);
     configSafety.insert(QStringLiteral("max_backups"), clampInt(settings.maxConfigBackups, 1, 50));
     settingsObject.insert(QStringLiteral("config_safety"), configSafety);
+
+    QJsonObject diagnostics = settingsObject.value(QStringLiteral("diagnostics")).toObject();
+    diagnostics.insert(QStringLiteral("logging_enabled"), settings.diagnosticLoggingEnabled);
+    settingsObject.insert(QStringLiteral("diagnostics"), diagnostics);
 
     QJsonObject behavior = settingsObject.value(QStringLiteral("behavior")).toObject();
     behavior.insert(

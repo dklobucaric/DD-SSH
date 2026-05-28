@@ -17,7 +17,7 @@ DD-SSH is designed for practical sysadmin use: saved sessions, one portable JSON
 
 ## Current status
 
-**Development checkpoint:** `dev 0.1.6.5`
+**Development checkpoint:** `dev 0.1.6.6`
 **Codename:** Andromeda
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
 **Current phase:** macOS DMG/dependency polish
@@ -33,9 +33,9 @@ The current macOS polish checkpoint keeps the 0.1.6.3 SSH trust-chain hardening 
 - `dev 0.1.6.2` added the first macOS Intel app/DMG build and deployment documentation, including a DMG layout with an Applications shortcut.
 - `dev 0.1.6.3` verifies the approved SSH host key again in the real authentication/shell connection before any password or private key is sent.
 - `dev 0.1.6.4` adds `.gitignore` protection, release-artifact documentation, and checksum helpers for Linux, macOS, and Windows.
-- `dev 0.1.6.5` improves the macOS DMG/dependency flow with an `otool` audit report, optional strict dependency audit, and a small `README_FIRST.txt` inside the DMG for unsigned-app/Gatekeeper tester guidance.
+- `dev 0.1.6.6` adds optional diagnostic logging for tester/debug workflows: logging is OFF by default, can be enabled from Settings, writes to a standard per-user log folder, and Help → Open Log Folder opens the logs.
 
-In `dev 0.1.6.5`, runtime/SSH behavior is intentionally unchanged from `dev 0.1.6.3`. The focus is macOS packaging polish: generated `.app` / `.dmg` output should carry bundled Qt/Homebrew dependencies, produce an audit report, and remain suitable for early Intel macOS tester distribution.
+In `dev 0.1.6.6`, runtime/SSH behavior is intentionally unchanged from `dev 0.1.6.3`. The focus is an optional diagnostic logging foundation for real tester debugging without storing secrets, terminal input, or terminal output in logs.
 
 The portable known-host model now supports multi-key storage per `host:port`:
 

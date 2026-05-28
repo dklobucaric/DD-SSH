@@ -3,6 +3,7 @@
 #include "BasicTerminalTab.h"
 #include "WebTerminalTab.h"
 #include "SettingsDialog.h"
+#include "core/AppLogger.h"
 #include "core/ConfigManager.h"
 #include "core/KnownHostsManager.h"
 #include "core/SessionProfile.h"
@@ -18,6 +19,7 @@
 #include <QFileDevice>
 #include <QFileDialog>
 #include <QFontDatabase>
+#include <QLabel>
 #include <QListWidget>
 #include <QListWidgetItem>
 #include <QMenuBar>
@@ -27,6 +29,7 @@
 #include <QPushButton>
 #include <QSplitter>
 #include <QStatusBar>
+#include <QSysInfo>
 #include <QTabWidget>
 #include <QStringList>
 #include <QTemporaryFile>
@@ -416,6 +419,14 @@ MainWindow::MainWindow(QWidget *parent)
     const AppSettings startupSettings = config.loadSettings(&settingsError);
 
     if (settingsError.isEmpty()) {
+        AppLogger::setEnabled(startupSettings.diagnosticLoggingEnabled);
+        AppLogger::info(QStringLiteral("App started"));
+        AppLogger::info(QStringLiteral("Version: ") + QCoreApplication::applicationVersion());
+        AppLogger::info(QStringLiteral("OS: ") + QSysInfo::prettyProductName());
+        AppLogger::info(QStringLiteral("Qt: ") + QString::fromLatin1(qVersion()));
+        AppLogger::info(QStringLiteral("libssh: ") + SshSession::libsshVersion());
+        AppLogger::info(QStringLiteral("Config file: ") + config.configFilePath());
+        AppLogger::info(QStringLiteral("Log folder: ") + AppLogger::logDirectoryPath());
         applyAppTheme(startupSettings.appTheme);
     }
 
@@ -423,6 +434,7 @@ MainWindow::MainWindow(QWidget *parent)
     setupToolbar();
     applyQuickToolbarVisibility(startupSettings.showQuickToolbar);
     setupCentralLayout();
+    updateLoggingStatusIndicator();
 
     statusBar()->showMessage("DD-SSH Andromeda ready — exit safety enabled");
 
@@ -465,7 +477,39 @@ void MainWindow::openConfigFolder()
         directory.mkpath(QStringLiteral("."));
     }
 
+    AppLogger::info(QStringLiteral("Opening config folder: ") + directory.absolutePath());
     QDesktopServices::openUrl(QUrl::fromLocalFile(directory.absolutePath()));
+}
+
+void MainWindow::openLogFolder()
+{
+    QString errorMessage;
+
+    if (!AppLogger::ensureLogDirectory(&errorMessage)) {
+        QMessageBox::warning(
+            this,
+            QStringLiteral("Could not open log folder"),
+            errorMessage
+        );
+        statusBar()->showMessage(QStringLiteral("Could not open log folder"));
+        return;
+    }
+
+    AppLogger::info(QStringLiteral("Opening log folder: ") + AppLogger::logDirectoryPath());
+    QDesktopServices::openUrl(QUrl::fromLocalFile(AppLogger::logDirectoryPath()));
+    statusBar()->showMessage(QStringLiteral("Opened DD-SSH log folder"));
+}
+
+void MainWindow::updateLoggingStatusIndicator()
+{
+    if (m_loggingStatusLabel == nullptr) {
+        m_loggingStatusLabel = new QLabel(this);
+        m_loggingStatusLabel->setText(QStringLiteral("Logging enabled"));
+        m_loggingStatusLabel->setToolTip(QStringLiteral("Diagnostic logging is enabled. Use Help → Open Log Folder to view log files."));
+        statusBar()->addPermanentWidget(m_loggingStatusLabel);
+    }
+
+    m_loggingStatusLabel->setVisible(AppLogger::isEnabled());
 }
 
 
@@ -482,12 +526,16 @@ void MainWindow::exportConfig()
     );
 
     if (targetPath.trimmed().isEmpty()) {
+        AppLogger::info(QStringLiteral("Config export cancelled"));
         return;
     }
 
     QString errorMessage;
 
+    AppLogger::info(QStringLiteral("Config export requested: target=") + targetPath);
+
     if (!config.exportConfigToFile(targetPath, &errorMessage)) {
+        AppLogger::error(QStringLiteral("Config export failed: ") + errorMessage);
         QMessageBox::critical(
             this,
             QStringLiteral("Export config failed — DD-SSH"),
@@ -496,6 +544,8 @@ void MainWindow::exportConfig()
         statusBar()->showMessage(QStringLiteral("Config export failed"));
         return;
     }
+
+    AppLogger::info(QStringLiteral("Config export successful: target=") + targetPath);
 
     QMessageBox::information(
         this,
@@ -518,6 +568,7 @@ void MainWindow::importConfig()
     );
 
     if (sourcePath.trimmed().isEmpty()) {
+        AppLogger::info(QStringLiteral("Config import cancelled before selecting file"));
         return;
     }
 
@@ -536,6 +587,7 @@ void MainWindow::importConfig()
     );
 
     if (decision != QMessageBox::Yes) {
+        AppLogger::info(QStringLiteral("Config import cancelled: source=") + sourcePath);
         statusBar()->showMessage(QStringLiteral("Config import cancelled"));
         return;
     }
@@ -543,7 +595,10 @@ void MainWindow::importConfig()
     QString errorMessage;
     QString backupPath;
 
+    AppLogger::info(QStringLiteral("Config import requested: source=") + sourcePath);
+
     if (!config.importConfigFromFile(sourcePath, &errorMessage, &backupPath)) {
+        AppLogger::error(QStringLiteral("Config import failed: ") + errorMessage);
         QMessageBox::critical(
             this,
             QStringLiteral("Import config failed — DD-SSH"),
@@ -559,6 +614,8 @@ void MainWindow::importConfig()
         info += QStringLiteral("\n\nPrevious config backup created at:\n%1").arg(backupPath);
     }
 
+    AppLogger::info(QStringLiteral("Config import successful: source=") + sourcePath);
+
     QMessageBox::information(
         this,
         QStringLiteral("Config imported — DD-SSH"),
@@ -571,6 +628,9 @@ void MainWindow::importConfig()
     if (settingsError.isEmpty()) {
         applyAppTheme(settings.appTheme);
         applyQuickToolbarVisibility(settings.showQuickToolbar);
+        AppLogger::setEnabled(settings.diagnosticLoggingEnabled);
+        updateLoggingStatusIndicator();
+        AppLogger::info(QStringLiteral("Settings reloaded after config import"));
     }
 
     loadSavedSessionsToSidebar();
@@ -631,6 +691,9 @@ void MainWindow::restoreLatestConfigBackup()
     if (settingsError.isEmpty()) {
         applyAppTheme(settings.appTheme);
         applyQuickToolbarVisibility(settings.showQuickToolbar);
+        AppLogger::setEnabled(settings.diagnosticLoggingEnabled);
+        updateLoggingStatusIndicator();
+        AppLogger::info(QStringLiteral("Settings reloaded after config backup restore"));
     }
 
     loadSavedSessionsToSidebar();
@@ -729,13 +792,17 @@ void MainWindow::requestDisconnectForActiveSshTerminals()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
+    AppLogger::info(QStringLiteral("App close requested"));
+
     if (!confirmExitWithActiveSshTerminals()) {
+        AppLogger::warn(QStringLiteral("App close cancelled because SSH sessions are still active"));
         statusBar()->showMessage(QStringLiteral("Exit cancelled because SSH sessions are still active"));
         event->ignore();
         return;
     }
 
     requestDisconnectForActiveSshTerminals();
+    AppLogger::info(QStringLiteral("App closing"));
     event->accept();
 }
 
@@ -963,7 +1030,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: macOS Intel app/DMG foundation.\n\n")
+            + QStringLiteral("Current phase: optional diagnostic logging foundation.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n")
@@ -976,13 +1043,20 @@ void MainWindow::setupMenus()
             + QStringLiteral("libssh version: ")
             + SshSession::libsshVersion()
             + QStringLiteral("\n\nConfig file:\n")
-            + knownHosts.configFilePath();
+            + knownHosts.configFilePath()
+            + QStringLiteral("\n\nLog folder:\n")
+            + AppLogger::logDirectoryPath();
 
         QMessageBox::about(
             this,
             "About DD-SSH",
             aboutText
         );
+    });
+
+    auto *openLogFolderAction = helpMenu->addAction("Open Log Folder");
+    connect(openLogFolderAction, &QAction::triggered, this, [this]() {
+        openLogFolder();
     });
 }
 
@@ -1123,6 +1197,7 @@ void MainWindow::loadSavedSessionsToSidebar()
     const QList<SessionProfile> sessions = config.loadSessions(&loadError);
 
     if (!loadError.isEmpty()) {
+        AppLogger::error(QStringLiteral("Saved sessions could not be loaded: ") + loadError);
         auto *item = new QListWidgetItem("Config problem — sessions not loaded");
         item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
         item->setToolTip(loadError);
@@ -1132,11 +1207,14 @@ void MainWindow::loadSavedSessionsToSidebar()
     }
 
     if (sessions.isEmpty()) {
+        AppLogger::info(QStringLiteral("Saved sessions loaded: count=0"));
         auto *item = new QListWidgetItem("No saved sessions yet");
         item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
         m_sessionList->addItem(item);
         return;
     }
+
+    AppLogger::info(QStringLiteral("Saved sessions loaded: count=") + QString::number(sessions.size()));
 
     for (const SessionProfile &session : sessions) {
         const QString label = session.group.trimmed().isEmpty()
@@ -1501,6 +1579,9 @@ void MainWindow::openSavedSessionWebTerminal(const QString &sessionId)
 
 void MainWindow::openSavedSessionShellInternal(const QString &sessionId, bool useWebTerminal)
 {
+    AppLogger::info(QStringLiteral("Open saved session terminal requested: sessionId=") + sessionId
+        + QStringLiteral(", terminal=") + (useWebTerminal ? QStringLiteral("xterm.js") : QStringLiteral("basic")));
+
     ConfigManager config;
     SessionProfile session;
     QString loadError;
@@ -1514,6 +1595,11 @@ void MainWindow::openSavedSessionShellInternal(const QString &sessionId, bool us
         statusBar()->showMessage("Could not load saved session for shell: " + sessionId);
         return;
     }
+
+    AppLogger::info(QStringLiteral("Opening terminal for saved session: session=\"") + session.name
+        + QStringLiteral("\", host=") + session.host
+        + QStringLiteral(", port=") + QString::number(session.port)
+        + QStringLiteral(", user=") + session.username);
 
     const QString tabTitle =
         session.username
@@ -1677,6 +1763,11 @@ void MainWindow::testSavedSession(const QString &sessionId)
         statusBar()->showMessage("Could not load saved session: " + sessionId);
         return;
     }
+
+    AppLogger::info(QStringLiteral("Saved session auth test requested: session=\"") + session.name
+        + QStringLiteral("\", host=") + session.host
+        + QStringLiteral(", port=") + QString::number(session.port)
+        + QStringLiteral(", user=") + session.username);
 
     const QString tabTitle =
         session.username
@@ -2027,7 +2118,12 @@ void MainWindow::showSettingsDialog()
 
     applyAppTheme(newSettings.appTheme);
     applyQuickToolbarVisibility(newSettings.showQuickToolbar);
-    statusBar()->showMessage(QStringLiteral("Settings saved to dd-ssh.json. App theme and quick toolbar visibility applied. New terminal font settings apply to newly opened terminals."));
+    AppLogger::setEnabled(newSettings.diagnosticLoggingEnabled);
+    updateLoggingStatusIndicator();
+    AppLogger::info(QStringLiteral("Settings saved"));
+    statusBar()->showMessage(newSettings.diagnosticLoggingEnabled
+        ? QStringLiteral("Settings saved. Diagnostic logging enabled.")
+        : QStringLiteral("Settings saved. Diagnostic logging disabled."));
 }
 
 void MainWindow::showNewSessionDialog()
@@ -2048,6 +2144,9 @@ void MainWindow::showConnectDialog(bool newSavedSessionMode)
         : ConnectDialog::DialogMode::ManualConnect);
 
     if (dialog.exec() != QDialog::Accepted) {
+        AppLogger::info(newSavedSessionMode
+            ? QStringLiteral("New session dialog cancelled")
+            : QStringLiteral("Manual connect dialog cancelled"));
         statusBar()->showMessage(newSavedSessionMode ? "New session dialog cancelled" : "Manual connect dialog cancelled");
         return;
     }
@@ -2058,6 +2157,12 @@ void MainWindow::showConnectDialog(bool newSavedSessionMode)
         + dialog.host()
         + QStringLiteral(":")
         + QString::number(dialog.port());
+
+    AppLogger::info((newSavedSessionMode ? QStringLiteral("New saved session test requested: ") : QStringLiteral("Manual connection test requested: "))
+        + QStringLiteral("host=") + dialog.host()
+        + QStringLiteral(", port=") + QString::number(dialog.port())
+        + QStringLiteral(", user=") + dialog.username()
+        + QStringLiteral(", auth=") + (dialog.authType() == ConnectDialog::AuthType::Password ? QStringLiteral("password") : QStringLiteral("private-key")));
 
     statusBar()->showMessage("Testing SSH handshake with " + tabTitle + "...");
     QApplication::setOverrideCursor(Qt::WaitCursor);

@@ -78,7 +78,7 @@ Linux remains the primary development platform. Windows native Debug/Release bui
 The About dialog reads version strings from `CMakeLists.txt`:
 
 ```cmake
-set(DD_SSH_VERSION_STRING "dev 0.1.6.5")
+set(DD_SSH_VERSION_STRING "dev 0.1.6.6")
 set(DD_SSH_CODENAME_STRING "Andromeda")
 set(DD_SSH_MILESTONE_STRING "MF 0.2 candidate")
 ```

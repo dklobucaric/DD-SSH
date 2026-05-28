@@ -1,6 +1,6 @@
 # DD-SSH Linux Packaging
 
-**Checkpoint:** dev 0.1.6.5 — Andromeda  
+**Checkpoint:** dev 0.1.6.6 — Andromeda  
 **Phase:** README screenshots and Debian packaging tutorial polish
 
 This document describes the first Linux packaging path for DD-SSH. For the copy/paste packaging workflow, see [Debian Package Tutorial](DEBIAN_PACKAGE_TUTORIAL.md).
@@ -128,7 +128,7 @@ After installing the `.deb`, verify:
 [ ] dd-ssh starts from terminal
 [ ] desktop launcher appears
 [ ] app icon appears
-[ ] About shows dev 0.1.6.5
+[ ] About shows dev 0.1.6.6
 [ ] settings dialog opens
 [ ] existing user config is preserved
 [ ] password SSH login works

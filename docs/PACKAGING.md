@@ -1,6 +1,6 @@
 # Packaging DD-SSH
 
-**Checkpoint:** dev 0.1.6.5 — Andromeda  
+**Checkpoint:** dev 0.1.6.6 — Andromeda  
 **Phase:** macOS DMG/dependency polish
 
 DD-SSH has moved from source-build validation into the first packaging phase. `dev 0.1.6.4` added repository hygiene and checksum helpers so generated packages stay out of Git. `dev 0.1.6.5` keeps that release-artifact policy and improves the macOS tester package path with dependency-audit reporting.

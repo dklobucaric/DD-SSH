@@ -131,7 +131,7 @@ Expected before Apollo:
 
 ## Current release-prep step
 
-`dev 0.1.6.5` improves the macOS DMG/dependency flow with an `otool` audit report, optional strict dependency audit, and a small tester README inside the DMG while keeping SSH runtime behavior unchanged from `dev 0.1.6.3`. `dev 0.1.6.4` added repo hygiene, release-artifact rules, and checksum helpers. `dev 0.1.6.3` hardened the SSH trust chain so the real authentication/shell connection verifies the approved host key before sending secrets. `dev 0.1.6.2` added the first macOS Intel `.app` / `.dmg` deployment foundation. `dev 0.1.6.1.1` added README screenshots and a practical Debian packaging/install tutorial after the first `.deb` validation pass. `dev 0.1.6.1` began the packaging phase with the first Debian package experiment. `dev 0.1.5.9` is the stabilization docs and release polish checkpoint. It consolidates the 0.1.5.6 Windows standalone deployment pass, the 0.1.5.7 known-host multi-key portability fix, and the 0.1.5.8 Windows libssh KEX compatibility fix. The 0.1.5.x line prepares the repository for `v0.2.0-alpha — Andromeda` with public alpha docs, Windows Debug/Release/deploy-folder validation, release notes, known limitations, issue templates, cross-platform icon resources, WebEngine startup polish, and exit safety.
+`dev 0.1.6.6` adds optional diagnostic logging for tester/debug workflows while keeping SSH runtime behavior unchanged from `dev 0.1.6.3`. Logging is off by default, enabled from Settings, writes INFO/WARN/ERROR lines to standard user-writable log folders, and can be opened from Help → Open Log Folder. `dev 0.1.6.5` improved the macOS DMG/dependency flow with an `otool` audit report, optional strict dependency audit, and a small tester README inside the DMG. `dev 0.1.6.4` added repo hygiene, release-artifact rules, and checksum helpers. `dev 0.1.6.3` hardened the SSH trust chain so the real authentication/shell connection verifies the approved host key before sending secrets. `dev 0.1.6.2` added the first macOS Intel `.app` / `.dmg` deployment foundation. `dev 0.1.6.1.1` added README screenshots and a practical Debian packaging/install tutorial after the first `.deb` validation pass. `dev 0.1.6.1` began the packaging phase with the first Debian package experiment. `dev 0.1.5.9` is the stabilization docs and release polish checkpoint. It consolidates the 0.1.5.6 Windows standalone deployment pass, the 0.1.5.7 known-host multi-key portability fix, and the 0.1.5.8 Windows libssh KEX compatibility fix. The 0.1.5.x line prepares the repository for `v0.2.0-alpha — Andromeda` with public alpha docs, Windows Debug/Release/deploy-folder validation, release notes, known limitations, issue templates, cross-platform icon resources, WebEngine startup polish, and exit safety.
 
 ---
 
@@ -153,6 +153,15 @@ dev 0.1.6.1.1 — README screenshots and Debian packaging tutorial polish
 dev 0.1.6.2 — macOS Intel app/DMG foundation
 dev 0.1.6.3 — SSH trust-chain hardening
 dev 0.1.6.4 — Repo hygiene and release artifact workflow
+dev 0.1.6.6 — optional diagnostic logging foundation
+
+- Settings checkbox: Enable diagnostic logging.
+- Default OFF.
+- Help → Open Log Folder.
+- Status bar indicator while enabled.
+- Standard log folders on Linux/Windows/macOS.
+- No secrets, terminal input, or terminal output in logs.
+
 dev 0.1.6.5 — macOS DMG/dependency polish
 ```
 

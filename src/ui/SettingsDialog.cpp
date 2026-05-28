@@ -27,8 +27,8 @@ SettingsDialog::SettingsDialog(
     setWindowTitle(QStringLiteral("DD-SSH Settings"));
     setModal(true);
     setSizeGripEnabled(true);
-    setMinimumSize(900, 760);
-    resize(940, 800);
+    setMinimumSize(900, 820);
+    resize(940, 860);
 
     auto *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(14, 14, 14, 14);
@@ -83,6 +83,25 @@ SettingsDialog::SettingsDialog(
 
     generalGroup->setMinimumHeight(145);
     mainLayout->addWidget(generalGroup);
+
+    auto *diagnosticsGroup = new QGroupBox(QStringLiteral("Diagnostics"), this);
+    auto *diagnosticsLayout = new QFormLayout(diagnosticsGroup);
+    diagnosticsLayout->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
+
+    m_diagnosticLoggingCheck = new QCheckBox(QStringLiteral("Enable diagnostic logging"), diagnosticsGroup);
+    m_diagnosticLoggingCheck->setChecked(settings.diagnosticLoggingEnabled);
+    m_diagnosticLoggingCheck->setToolTip(QStringLiteral("Write detailed DD-SSH diagnostic events to a standard per-user log folder. Secrets, terminal input, and terminal output are never logged."));
+    diagnosticsLayout->addRow(QStringLiteral("Logging:"), m_diagnosticLoggingCheck);
+
+    auto *diagnosticsNote = new QLabel(
+        QStringLiteral("Logging is off by default and intended for on-demand debugging. Use Help → Open Log Folder to view or send logs when troubleshooting."),
+        diagnosticsGroup
+    );
+    diagnosticsNote->setWordWrap(true);
+    diagnosticsLayout->addRow(QString(), diagnosticsNote);
+
+    diagnosticsGroup->setMinimumHeight(120);
+    mainLayout->addWidget(diagnosticsGroup);
 
     auto *appearanceGroup = new QGroupBox(QStringLiteral("Appearance"), this);
     auto *appearanceLayout = new QFormLayout(appearanceGroup);
@@ -221,6 +240,7 @@ AppSettings SettingsDialog::settings() const
         : m_terminalFontFamilyEdit->text().trimmed();
     result.terminalFontSize = m_terminalFontSizeSpin->value();
     result.showQuickToolbar = (m_showQuickToolbarCheck != nullptr) && m_showQuickToolbarCheck->isChecked();
+    result.diagnosticLoggingEnabled = (m_diagnosticLoggingCheck != nullptr) && m_diagnosticLoggingCheck->isChecked();
     result.configBackupsEnabled = m_configBackupsCheck->isChecked();
     result.maxConfigBackups = m_maxBackupsSpin->value();
     result.doubleClickAction = QStringLiteral("open_terminal");

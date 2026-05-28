@@ -15,6 +15,9 @@
       "backups_enabled": true,
       "max_backups": 10
     },
+    "diagnostics": {
+      "logging_enabled": false
+    },
     "behavior": {
       "double_click_action": "open_terminal",
       "show_quick_toolbar": false

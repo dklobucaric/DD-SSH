@@ -6,6 +6,7 @@
 #include <QStringList>
 
 class QCloseEvent;
+class QLabel;
 class QListWidget;
 class QTabWidget;
 class QToolBar;
@@ -30,6 +31,8 @@ private:
     void showConfigRecoveryWarningIfNeeded();
     bool showConfigRecoveryDialog(const ConfigInspection &inspection);
     void openConfigFolder();
+    void openLogFolder();
+    void updateLoggingStatusIndicator();
     void exportConfig();
     void importConfig();
     void restoreLatestConfigBackup();
@@ -52,4 +55,5 @@ private:
     QListWidget *m_sessionList = nullptr;
     QTabWidget *m_tabs = nullptr;
     QToolBar *m_mainToolBar = nullptr;
+    QLabel *m_loggingStatusLabel = nullptr;
 };

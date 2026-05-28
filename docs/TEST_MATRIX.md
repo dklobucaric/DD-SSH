@@ -1,10 +1,35 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.6.5 — Andromeda
+**Checkpoint:** dev 0.1.6.6 — Andromeda
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
 **Phase:** macOS DMG/dependency polish
 
 This matrix tracks what has been confirmed manually, what is implemented but should be re-tested before a public alpha tag, and what is still planned.
+
+## dev 0.1.6.6 — optional diagnostic logging smoke test
+
+Required checks:
+
+```text
+[ ] About shows dev 0.1.6.6
+[ ] Settings shows Enable diagnostic logging
+[ ] logging is OFF by default
+[ ] enabling logging creates/appends yyyymmdd.log
+[ ] Help → Open Log Folder opens the user-writable log folder
+[ ] status bar shows Logging enabled while enabled
+[ ] disabling logging removes the status bar indicator without restart
+[ ] log contains app/session/SSH lifecycle events
+[ ] log does not contain password values, private-key contents, terminal input, terminal output, clipboard contents, or full dd-ssh.json
+```
+
+Platform log folders:
+
+```text
+Linux: ~/.local/state/DD-SSH/logs
+Windows: %LOCALAPPDATA%\DD-SSH\logs
+macOS: ~/Library/Logs/DD-SSH
+```
+
 
 ## Legend
 

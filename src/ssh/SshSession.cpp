@@ -1,5 +1,6 @@
 #include "SshSession.h"
 #include "SshCompatibility.h"
+#include "core/AppLogger.h"
 
 #include <libssh/libssh.h>
 
@@ -181,11 +182,16 @@ SshHandshakeResult SshSession::testHandshake(
 {
     SshHandshakeResult result;
 
+    AppLogger::info(QStringLiteral("SSH handshake test started: host=") + host
+        + QStringLiteral(", port=") + QString::number(port)
+        + QStringLiteral(", user=") + username);
+
     ssh_session session = ssh_new();
 
     if (session == nullptr) {
         result.success = false;
         result.error = QStringLiteral("ssh_new() failed: could not allocate SSH session.");
+        AppLogger::error(QStringLiteral("SSH handshake test failed before connect: ssh_new failed"));
         return result;
     }
 
@@ -209,6 +215,9 @@ SshHandshakeResult SshSession::testHandshake(
         result.sshErrorCode = ssh_get_error_code(session);
         result.error = QString::fromUtf8(ssh_get_error(session));
         result.message = QStringLiteral("SSH handshake failed.");
+        AppLogger::error(QStringLiteral("SSH handshake test failed: host=") + host
+            + QStringLiteral(", port=") + QString::number(port)
+            + QStringLiteral(", error=") + result.error);
 
         ssh_free(session);
         return result;
@@ -218,6 +227,8 @@ SshHandshakeResult SshSession::testHandshake(
 
     result.success = true;
     result.message = QStringLiteral("SSH handshake successful. Authentication was not attempted yet.");
+    AppLogger::info(QStringLiteral("SSH handshake test successful: host=") + host
+        + QStringLiteral(", port=") + QString::number(port));
 
     if (banner != nullptr) {
         result.serverBanner = QString::fromUtf8(banner);
@@ -230,7 +241,12 @@ SshHandshakeResult SshSession::testHandshake(
         result.hostKeyType = QStringLiteral("(host key unavailable)");
         result.hostKeyFingerprint = QStringLiteral("(fingerprint unavailable)");
         result.error = keyError;
+        AppLogger::warn(QStringLiteral("SSH handshake host key read warning: ") + keyError);
+    } else {
+        AppLogger::info(QStringLiteral("SSH handshake host key: type=") + result.hostKeyType
+            + QStringLiteral(", fingerprint=") + result.hostKeyFingerprint);
     }
+
 
     ssh_disconnect(session);
     ssh_free(session);
@@ -250,11 +266,17 @@ SshAuthResult SshSession::testAuthentication(
 {
     SshAuthResult result;
 
+    AppLogger::info(QStringLiteral("SSH authentication test started: host=") + host
+        + QStringLiteral(", port=") + QString::number(port)
+        + QStringLiteral(", user=") + username
+        + QStringLiteral(", method=") + (authMethod == SshAuthMethod::Password ? QStringLiteral("password") : QStringLiteral("private-key")));
+
     ssh_session session = ssh_new();
 
     if (session == nullptr) {
         result.success = false;
         result.error = QStringLiteral("ssh_new() failed: could not allocate SSH session.");
+        AppLogger::error(QStringLiteral("SSH authentication test failed before connect: ssh_new failed"));
         return result;
     }
 
@@ -278,15 +300,26 @@ SshAuthResult SshSession::testAuthentication(
         result.sshErrorCode = ssh_get_error_code(session);
         result.error = QString::fromUtf8(ssh_get_error(session));
         result.message = QStringLiteral("SSH connect failed during authentication test.");
+        AppLogger::error(QStringLiteral("SSH authentication test connect failed: host=") + host
+            + QStringLiteral(", port=") + QString::number(port)
+            + QStringLiteral(", error=") + result.error);
 
         ssh_free(session);
         return result;
     }
 
     if (!verifyConnectedServerHostKey(session, hostKeyExpectation, &result)) {
+        AppLogger::error(QStringLiteral("SSH authentication test host-key verification failed before auth: host=") + host
+            + QStringLiteral(", port=") + QString::number(port)
+            + QStringLiteral(", error=") + result.error);
         ssh_disconnect(session);
         ssh_free(session);
         return result;
+    }
+
+    if (hostKeyExpectation.enabled) {
+        AppLogger::info(QStringLiteral("SSH authentication test host-key verification OK: host=") + host
+            + QStringLiteral(", port=") + QString::number(port));
     }
 
     int authRc = SSH_AUTH_DENIED;
@@ -324,6 +357,9 @@ SshAuthResult SshSession::testAuthentication(
             result.sshErrorCode = ssh_get_error_code(session);
             result.error = QString::fromUtf8(ssh_get_error(session));
             result.message = QStringLiteral("Could not load private key file.");
+            AppLogger::error(QStringLiteral("SSH authentication test private-key load failed: host=") + host
+                + QStringLiteral(", port=") + QString::number(port)
+                + QStringLiteral(", error=") + result.error);
 
             ssh_disconnect(session);
             ssh_free(session);
@@ -363,6 +399,18 @@ SshAuthResult SshSession::testAuthentication(
         } else {
             result.message = QStringLiteral("Authentication failed.");
         }
+    }
+
+    if (result.success) {
+        AppLogger::info(QStringLiteral("SSH authentication test successful: host=") + host
+            + QStringLiteral(", port=") + QString::number(port)
+            + QStringLiteral(", method=") + (authMethod == SshAuthMethod::Password ? QStringLiteral("password") : QStringLiteral("private-key")));
+    } else {
+        AppLogger::warn(QStringLiteral("SSH authentication test failed: host=") + host
+            + QStringLiteral(", port=") + QString::number(port)
+            + QStringLiteral(", method=") + (authMethod == SshAuthMethod::Password ? QStringLiteral("password") : QStringLiteral("private-key"))
+            + QStringLiteral(", message=") + result.message
+            + QStringLiteral(", error=") + result.error);
     }
 
     ssh_disconnect(session);

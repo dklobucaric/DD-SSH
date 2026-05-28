@@ -12,6 +12,7 @@ struct AppSettings
     int terminalFontSize = 14;
     QString appTheme = QStringLiteral("system");
     bool showQuickToolbar = false;
+    bool diagnosticLoggingEnabled = false;
     bool configBackupsEnabled = true;
     int maxConfigBackups = 10;
     QString doubleClickAction = QStringLiteral("open_terminal");
