@@ -88,6 +88,67 @@ QString formatTrafficRate(qint64 bytesPerSecond)
     return formatTrafficBytes(bytesPerSecond) + QStringLiteral("/s");
 }
 
+
+QString yesNo(bool value)
+{
+    return value ? QStringLiteral("YES") : QStringLiteral("NO");
+}
+
+QString formatConfigPreviewBytes(qint64 bytes)
+{
+    return formatTrafficBytes(bytes);
+}
+
+QString formatConfigPreviewDetails(const ConfigPreview &preview, const QString &pathLabel)
+{
+    QString details;
+    details += QStringLiteral("%1: %2\n").arg(pathLabel, preview.filePath);
+    details += QStringLiteral("File size: %1\n").arg(formatConfigPreviewBytes(preview.fileSizeBytes));
+    details += QStringLiteral("Valid JSON object: %1\n").arg(yesNo(preview.validJson && preview.isObject && !preview.hasProblem));
+
+    if (!preview.configVersion.trimmed().isEmpty()) {
+        details += QStringLiteral("Config version: %1\n").arg(preview.configVersion.trimmed());
+    } else {
+        details += QStringLiteral("Config version: <not declared>\n");
+    }
+
+    details += QStringLiteral("Sessions: %1\n").arg(preview.sessionCount);
+    details += QStringLiteral("Known hosts: %1 host(s), %2 trusted key(s)\n")
+        .arg(preview.knownHostCount)
+        .arg(preview.knownHostKeyCount);
+    details += QStringLiteral("Secrets mode: %1\n").arg(preview.secretsMode.trimmed().isEmpty() ? QStringLiteral("<missing>") : preview.secretsMode.trimmed());
+    details += QStringLiteral("Saved secrets: %1 total (%2 password, %3 private key)\n")
+        .arg(preview.secretCount)
+        .arg(preview.passwordSecretCount)
+        .arg(preview.privateKeySecretCount);
+    details += QStringLiteral("Contains plaintext secret values: %1\n").arg(yesNo(preview.containsPlainSecrets));
+    details += QStringLiteral("Settings section: %1\n").arg(preview.hasSettings ? QStringLiteral("present") : QStringLiteral("missing/invalid"));
+    details += QStringLiteral("Metadata section: %1").arg(preview.hasMetadata ? QStringLiteral("present") : QStringLiteral("missing/invalid"));
+
+    if (!preview.warnings.isEmpty()) {
+        details += QStringLiteral("\n\nWarnings:\n");
+        for (const QString &warning : preview.warnings) {
+            details += QStringLiteral("- ") + warning + QStringLiteral("\n");
+        }
+        details = details.trimmed();
+    }
+
+    return details;
+}
+
+QString formatConfigPreviewLogSummary(const ConfigPreview &preview)
+{
+    return QStringLiteral("sessions=%1, known_hosts=%2, known_host_keys=%3, secrets_mode=%4, secrets=%5, password_secrets=%6, private_key_secrets=%7, plaintext_secrets=%8")
+        .arg(preview.sessionCount)
+        .arg(preview.knownHostCount)
+        .arg(preview.knownHostKeyCount)
+        .arg(preview.secretsMode.trimmed().isEmpty() ? QStringLiteral("<missing>") : preview.secretsMode.trimmed())
+        .arg(preview.secretCount)
+        .arg(preview.passwordSecretCount)
+        .arg(preview.privateKeySecretCount)
+        .arg(yesNo(preview.containsPlainSecrets));
+}
+
 QString lightAppStyleSheet()
 {
     return QStringLiteral(R"DDSSH(
@@ -648,6 +709,42 @@ void MainWindow::exportConfig()
 {
     ConfigManager config;
 
+    const ConfigPreview preview = config.previewConfigFile(config.configFilePath());
+
+    if (preview.hasProblem) {
+        AppLogger::error(QStringLiteral("Config export preview failed: ") + preview.errorMessage);
+        QMessageBox::critical(
+            this,
+            QStringLiteral("Export config failed — DD-SSH"),
+            QStringLiteral("The active dd-ssh.json cannot be previewed/exported safely.\n\n%1").arg(preview.errorMessage)
+        );
+        statusBar()->showMessage(QStringLiteral("Config export failed"));
+        return;
+    }
+
+    AppLogger::info(QStringLiteral("Config export preview: ") + formatConfigPreviewLogSummary(preview));
+
+    const QMessageBox::StandardButton exportDecision = QMessageBox::warning(
+        this,
+        QStringLiteral("Export config preview — DD-SSH"),
+        QStringLiteral(
+            "DD-SSH is about to export the active human-readable dd-ssh.json.\n\n"
+            "%1\n\n"
+            "Security note:\n"
+            "This export may include saved sessions, known hosts, settings, and plain-v1 secrets. "
+            "If plaintext password/private-key values are present, treat the exported JSON file as sensitive.\n\n"
+            "Continue?"
+        ).arg(formatConfigPreviewDetails(preview, QStringLiteral("Active config"))),
+        QMessageBox::Yes | QMessageBox::Cancel,
+        QMessageBox::Cancel
+    );
+
+    if (exportDecision != QMessageBox::Yes) {
+        AppLogger::info(QStringLiteral("Config export cancelled after preview"));
+        statusBar()->showMessage(QStringLiteral("Config export cancelled"));
+        return;
+    }
+
     QString defaultFileName = QDir::home().filePath(QStringLiteral("dd-ssh-export.json"));
     const QString targetPath = QFileDialog::getSaveFileName(
         this,
@@ -657,7 +754,7 @@ void MainWindow::exportConfig()
     );
 
     if (targetPath.trimmed().isEmpty()) {
-        AppLogger::info(QStringLiteral("Config export cancelled"));
+        AppLogger::info(QStringLiteral("Config export cancelled before selecting target"));
         return;
     }
 
@@ -703,22 +800,41 @@ void MainWindow::importConfig()
         return;
     }
 
-    const QMessageBox::StandardButton decision = QMessageBox::warning(
-        this,
-        QStringLiteral("Import config — DD-SSH"),
-        QStringLiteral(
-            "Importing a config will replace the active dd-ssh.json.\n\n"
-            "This includes saved sessions, plaintext secrets, known_hosts, settings, and metadata.\n\n"
-            "DD-SSH will create a pre-import backup of the current config before replacing it.\n\n"
-            "Import file:\n%1\n\n"
-            "Continue?"
-        ).arg(sourcePath),
-        QMessageBox::Yes | QMessageBox::Cancel,
-        QMessageBox::Cancel
-    );
+    const ConfigPreview preview = config.previewConfigFile(sourcePath);
 
-    if (decision != QMessageBox::Yes) {
-        AppLogger::info(QStringLiteral("Config import cancelled: source=") + sourcePath);
+    if (preview.hasProblem) {
+        AppLogger::error(QStringLiteral("Config import preview failed: ") + preview.errorMessage);
+        QMessageBox::critical(
+            this,
+            QStringLiteral("Import config failed — DD-SSH"),
+            QStringLiteral("The selected file cannot be imported because it failed the preview check.\n\n%1").arg(preview.errorMessage)
+        );
+        statusBar()->showMessage(QStringLiteral("Config import failed"));
+        return;
+    }
+
+    AppLogger::info(QStringLiteral("Config import preview: ") + formatConfigPreviewLogSummary(preview));
+
+    QMessageBox importBox(QMessageBox::Warning,
+        QStringLiteral("Import config preview — DD-SSH"),
+        QStringLiteral(
+            "Importing this config will replace the active dd-ssh.json.\n\n"
+            "%1\n\n"
+            "DD-SSH will create a pre-import backup of the current config before replacing it.\n\n"
+            "Security note:\n"
+            "Only import configs from trusted sources. This file may contain plaintext saved passwords or private keys.\n\n"
+            "Continue?"
+        ).arg(formatConfigPreviewDetails(preview, QStringLiteral("Import file"))),
+        QMessageBox::NoButton,
+        this
+    );
+    QPushButton *importButton = importBox.addButton(QStringLiteral("Import"), QMessageBox::AcceptRole);
+    QPushButton *cancelImportButton = importBox.addButton(QMessageBox::Cancel);
+    importBox.setDefaultButton(cancelImportButton);
+    importBox.exec();
+
+    if (importBox.clickedButton() != importButton) {
+        AppLogger::info(QStringLiteral("Config import cancelled after preview: source=") + sourcePath);
         statusBar()->showMessage(QStringLiteral("Config import cancelled"));
         return;
     }
@@ -773,19 +889,22 @@ void MainWindow::restoreLatestConfigBackup()
 {
     ConfigManager config;
 
-    const QMessageBox::StandardButton decision = QMessageBox::warning(
-        this,
+    QMessageBox restoreBox(QMessageBox::Warning,
         QStringLiteral("Restore latest config backup — DD-SSH"),
         QStringLiteral(
             "This will replace the active dd-ssh.json with the newest valid dd-ssh.json.bak-* backup.\n\n"
             "The current config will be moved aside first as dd-ssh.json.pre-restore-<timestamp>.\n\n"
             "Continue?"
         ),
-        QMessageBox::Yes | QMessageBox::Cancel,
-        QMessageBox::Cancel
+        QMessageBox::NoButton,
+        this
     );
+    QPushButton *restoreButton = restoreBox.addButton(QStringLiteral("Restore"), QMessageBox::AcceptRole);
+    QPushButton *cancelRestoreButton = restoreBox.addButton(QMessageBox::Cancel);
+    restoreBox.setDefaultButton(cancelRestoreButton);
+    restoreBox.exec();
 
-    if (decision != QMessageBox::Yes) {
+    if (restoreBox.clickedButton() != restoreButton) {
         statusBar()->showMessage(QStringLiteral("Config backup restore cancelled"));
         return;
     }

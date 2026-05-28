@@ -52,8 +52,8 @@ BasicTerminalTab::BasicTerminalTab(
     m_sendButton = new QPushButton(QStringLiteral("Send"), this);
     inputLayout->addWidget(m_sendButton);
 
-    m_interruptButton = new QPushButton(QStringLiteral("Ctrl+C"), this);
-    m_interruptButton->setToolTip(QStringLiteral("Send Ctrl+C to the remote shell."));
+    m_interruptButton = new QPushButton(QStringLiteral("Interrupt"), this);
+    m_interruptButton->setToolTip(QStringLiteral("Send Ctrl+C / interrupt to the remote shell."));
     inputLayout->addWidget(m_interruptButton);
 
     m_clearButton = new QPushButton(QStringLiteral("Clear"), this);

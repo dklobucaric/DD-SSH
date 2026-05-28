@@ -167,3 +167,9 @@ macOS: ~/Library/Logs/DD-SSH
 
 
 `dev 0.1.6.7` adds a Session Traffic monitor. It shows application SSH shell-channel byte counters and logs only traffic lifecycle summaries when diagnostic logging is enabled. It must not log terminal input, terminal output, passwords, private-key contents, clipboard contents, or full config data.
+
+## Config import/export safety preview
+
+`dev 0.1.6.8` adds preview dialogs before config import/export. The previews warn when `plain-v1` saved secrets may be present and show only counts/flags. They do not log or display secret values beyond the fact that saved secrets exist.
+
+This does not replace encryption. Exported configs may still contain plaintext passwords/private keys and must be treated as sensitive files.

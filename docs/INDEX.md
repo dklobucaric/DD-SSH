@@ -44,7 +44,7 @@ This directory contains the working documentation for DD-SSH.
 ## Current checkpoint
 
 ```text
-Version: dev 0.1.6.7
+Version: dev 0.1.6.9
 Codename: Andromeda
 Milestone: MF 0.2 candidate
 Phase: macOS DMG/dependency polish
@@ -73,3 +73,5 @@ GitHub issue templates live under `.github/ISSUE_TEMPLATE/`.
 - `LOGGING.md` — optional diagnostic logging, log folders, and secret-safety rules.
 
 - docs/SESSION_TRAFFIC.md explains the status-bar Session Traffic monitor added in dev 0.1.6.7.
+
+- docs/CONFIG_IMPORT_EXPORT_SAFETY.md explains the config import/export preview added in dev 0.1.6.8.

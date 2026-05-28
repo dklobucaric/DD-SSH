@@ -1,6 +1,6 @@
 # DD-SSH macOS Deployment Guide
 
-**Checkpoint:** dev 0.1.6.7 — Andromeda  
+**Checkpoint:** dev 0.1.6.9 — Andromeda  
 **Phase:** macOS DMG/dependency polish
 
 This guide documents the first deployable macOS package path for DD-SSH.
@@ -217,7 +217,7 @@ On a clean tester Mac:
 [ ] DMG contains DD-SSH.app, Applications shortcut, and README_FIRST.txt
 [ ] DD-SSH.app can be dragged to Applications
 [ ] App opens via right-click -> Open if Gatekeeper blocks first launch
-[ ] About shows dev 0.1.6.7
+[ ] About shows dev 0.1.6.9
 [ ] Settings opens
 [ ] Config path is created
 [ ] Saved session can be created/imported

@@ -1,6 +1,6 @@
 # DD-SSH Session Traffic Monitor
 
-**Checkpoint:** dev 0.1.6.7 — Andromeda
+**Checkpoint:** dev 0.1.6.9 — Andromeda
 
 DD-SSH includes a compact live traffic indicator in the status bar for the active terminal tab.
 

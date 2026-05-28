@@ -50,7 +50,7 @@ private:
     QString targetLabel() const;
     void startShell();
     void sendToWorker(const QString &input);
-    void sendInterrupt();
+    void copySelection();
     void pasteClipboard();
     void clearTerminal();
     void resetTerminal();

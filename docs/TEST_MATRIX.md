@@ -1,10 +1,39 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.6.7 — Andromeda
+**Checkpoint:** dev 0.1.6.9 — Andromeda
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
 **Phase:** macOS DMG/dependency polish
 
 This matrix tracks what has been confirmed manually, what is implemented but should be re-tested before a public alpha tag, and what is still planned.
+
+## dev 0.1.6.9 — Bugfix stabilization smoke test
+
+[ ] About shows dev 0.1.6.9
+[ ] xterm.js terminal toolbar shows `Copy`, `Paste`, `Clear`, `Reset`, `Focus`, `Reconnect`, `Disconnect`
+[ ] Copy copies selected terminal text to the clipboard
+[ ] Keyboard Ctrl+C inside the terminal can still interrupt remote programs
+[ ] BasicTerminal fallback button shows `Interrupt`, not `Ctrl+C`
+[ ] File → Import Config preview uses `Import` and `Cancel` buttons
+[ ] Import `Cancel` does not replace the active config
+[ ] Import `Import` replaces config and reloads sessions/settings without app restart
+[ ] File → Restore Latest Backup uses `Restore` and `Cancel` buttons
+[ ] Restore `Cancel` does not replace the active config
+[ ] Restore `Restore` restores the newest valid backup and moves current config to `dd-ssh.json.pre-restore-*`
+[ ] SSH connect, diagnostic logging, and Session Traffic still work
+
+## dev 0.1.6.8 — Config import/export safety preview smoke test
+
+[ ] About shows dev 0.1.6.8
+[ ] File → Export Config shows preview before export target write
+[ ] Export preview shows sessions, known hosts, trusted keys, secrets mode, saved secrets, plaintext-secret flag
+[ ] Export warning clearly says exported JSON may contain plaintext secrets
+[ ] File → Import Config shows preview before replacing active config
+[ ] Import preview cancel leaves active config unchanged
+[ ] Invalid JSON import is refused before replace
+[ ] Root-array JSON import is refused before replace
+[ ] Diagnostic logging records only preview counts/flags, not secret values or full JSON
+[ ] SSH connection smoke test still passes
+[ ] Session Traffic status bar smoke test still passes
 
 ## dev 0.1.6.7 — Basic Session Traffic Monitor smoke test
 

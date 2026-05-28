@@ -9,6 +9,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonParseError>
+#include <QJsonValue>
 #include <QRegularExpression>
 #include <QSaveFile>
 #include <QSet>
@@ -27,6 +28,35 @@ int clampInt(int value, int minimum, int maximum)
     }
 
     return value;
+}
+
+QString valueTypeName(const QJsonValue &value)
+{
+    if (value.isObject()) {
+        return QStringLiteral("object");
+    }
+
+    if (value.isArray()) {
+        return QStringLiteral("array");
+    }
+
+    if (value.isString()) {
+        return QStringLiteral("string");
+    }
+
+    if (value.isDouble()) {
+        return QStringLiteral("number");
+    }
+
+    if (value.isBool()) {
+        return QStringLiteral("boolean");
+    }
+
+    if (value.isNull()) {
+        return QStringLiteral("null");
+    }
+
+    return QStringLiteral("undefined");
 }
 }
 
@@ -69,6 +99,171 @@ QStringList ConfigManager::listConfigBackups() const
     }
 
     return backupNames;
+}
+
+
+ConfigPreview ConfigManager::previewConfigFile(const QString &filePath) const
+{
+    ConfigPreview preview;
+    preview.filePath = filePath.trimmed();
+
+    if (preview.filePath.isEmpty()) {
+        preview.hasProblem = true;
+        preview.errorMessage = QStringLiteral("Config preview path is empty.");
+        return preview;
+    }
+
+    const QFileInfo fileInfo(preview.filePath);
+    preview.exists = fileInfo.exists();
+    preview.fileSizeBytes = fileInfo.exists() ? fileInfo.size() : 0;
+
+    if (!fileInfo.exists() || !fileInfo.isFile()) {
+        preview.hasProblem = true;
+        preview.errorMessage = QStringLiteral("Config file does not exist or is not a regular file: ") + preview.filePath;
+        return preview;
+    }
+
+    QFile file(preview.filePath);
+
+    if (!file.open(QIODevice::ReadOnly)) {
+        preview.hasProblem = true;
+        preview.errorMessage = QStringLiteral("Could not read config file: ") + file.errorString();
+        return preview;
+    }
+
+    preview.readable = true;
+
+    QJsonParseError parseError;
+    const QJsonDocument document = QJsonDocument::fromJson(file.readAll(), &parseError);
+    file.close();
+
+    if (parseError.error != QJsonParseError::NoError) {
+        preview.hasProblem = true;
+        preview.errorMessage = QStringLiteral("Config file is not valid JSON: ")
+            + parseError.errorString()
+            + QStringLiteral(" at offset ")
+            + QString::number(parseError.offset)
+            + QStringLiteral(".");
+        return preview;
+    }
+
+    preview.validJson = true;
+
+    if (!document.isObject()) {
+        preview.hasProblem = true;
+        preview.errorMessage = QStringLiteral("Config file root must be a JSON object. Current root is ")
+            + valueTypeName(document.isArray() ? QJsonValue(document.array()) : QJsonValue())
+            + QStringLiteral(".");
+        return preview;
+    }
+
+    preview.isObject = true;
+
+    const QJsonObject root = document.object();
+
+    const QJsonValue appValue = root.value(QStringLiteral("app"));
+    if (appValue.isObject()) {
+        const QJsonObject app = appValue.toObject();
+        if (app.contains(QStringLiteral("config_version"))) {
+            const QJsonValue versionValue = app.value(QStringLiteral("config_version"));
+            if (versionValue.isDouble()) {
+                preview.configVersion = QString::number(versionValue.toInt());
+            } else if (versionValue.isString()) {
+                preview.configVersion = versionValue.toString();
+            }
+        }
+    }
+
+    preview.hasSettings = root.value(QStringLiteral("settings")).isObject();
+    preview.hasMetadata = root.value(QStringLiteral("metadata")).isObject();
+
+    const QJsonValue sessionsValue = root.value(QStringLiteral("sessions"));
+    if (sessionsValue.isArray()) {
+        preview.sessionCount = sessionsValue.toArray().size();
+    } else if (!sessionsValue.isUndefined()) {
+        preview.warnings.append(QStringLiteral("sessions is ") + valueTypeName(sessionsValue) + QStringLiteral(", expected array."));
+    } else {
+        preview.warnings.append(QStringLiteral("sessions section is missing."));
+    }
+
+    const QJsonValue knownHostsValue = root.value(QStringLiteral("known_hosts"));
+    if (knownHostsValue.isObject()) {
+        const QJsonObject knownHosts = knownHostsValue.toObject();
+        preview.knownHostCount = knownHosts.size();
+
+        for (auto it = knownHosts.constBegin(); it != knownHosts.constEnd(); ++it) {
+            if (!it.value().isObject()) {
+                continue;
+            }
+
+            const QJsonObject hostObject = it.value().toObject();
+            const QJsonValue keysValue = hostObject.value(QStringLiteral("keys"));
+
+            if (keysValue.isObject()) {
+                preview.knownHostKeyCount += keysValue.toObject().size();
+            } else if (hostObject.contains(QStringLiteral("fingerprint"))) {
+                preview.knownHostKeyCount += 1;
+            }
+        }
+    } else if (!knownHostsValue.isUndefined()) {
+        preview.warnings.append(QStringLiteral("known_hosts is ") + valueTypeName(knownHostsValue) + QStringLiteral(", expected object."));
+    } else {
+        preview.warnings.append(QStringLiteral("known_hosts section is missing."));
+    }
+
+    const QJsonValue secretsValue = root.value(QStringLiteral("secrets"));
+    if (secretsValue.isObject()) {
+        const QJsonObject secrets = secretsValue.toObject();
+        preview.secretsMode = secrets.value(QStringLiteral("mode")).toString(QStringLiteral("<missing>"));
+
+        const QJsonValue itemsValue = secrets.value(QStringLiteral("items"));
+        if (itemsValue.isObject()) {
+            const QJsonObject items = itemsValue.toObject();
+            preview.secretCount = items.size();
+
+            for (auto it = items.constBegin(); it != items.constEnd(); ++it) {
+                if (!it.value().isObject()) {
+                    continue;
+                }
+
+                const QJsonObject secret = it.value().toObject();
+                const QString secretType = secret.value(QStringLiteral("type")).toString().trimmed().toLower();
+
+                if (secretType == QStringLiteral("password")) {
+                    preview.passwordSecretCount += 1;
+                } else if (secretType == QStringLiteral("private-key") || secretType == QStringLiteral("private_key")) {
+                    preview.privateKeySecretCount += 1;
+                }
+
+                if (secret.contains(QStringLiteral("value")) && secret.value(QStringLiteral("value")).isString()) {
+                    preview.containsPlainSecrets = true;
+                }
+            }
+        } else if (!itemsValue.isUndefined()) {
+            preview.warnings.append(QStringLiteral("secrets.items is ") + valueTypeName(itemsValue) + QStringLiteral(", expected object."));
+        }
+    } else if (!secretsValue.isUndefined()) {
+        preview.secretsMode = QStringLiteral("<invalid>");
+        preview.warnings.append(QStringLiteral("secrets is ") + valueTypeName(secretsValue) + QStringLiteral(", expected object."));
+    } else {
+        preview.secretsMode = QStringLiteral("<missing>");
+        preview.warnings.append(QStringLiteral("secrets section is missing."));
+    }
+
+    if (preview.secretsMode == QStringLiteral("plain-v1") && preview.secretCount > 0) {
+        preview.containsPlainSecrets = true;
+        preview.warnings.append(QStringLiteral("This config uses plain-v1 secrets. Saved passwords/private keys may be stored in plaintext."));
+    }
+
+    if (!preview.hasSettings) {
+        preview.warnings.append(QStringLiteral("settings section is missing or invalid; DD-SSH will recreate defaults on save."));
+    }
+
+    if (!preview.hasMetadata) {
+        preview.warnings.append(QStringLiteral("metadata section is missing; DD-SSH will recreate metadata on import/save."));
+    }
+
+    return preview;
 }
 
 ConfigInspection ConfigManager::inspectConfig() const

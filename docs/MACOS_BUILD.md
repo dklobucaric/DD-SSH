@@ -1,6 +1,6 @@
 # DD-SSH macOS Build Guide
 
-**Checkpoint:** dev 0.1.6.7 — Andromeda  
+**Checkpoint:** dev 0.1.6.9 — Andromeda  
 **Phase:** macOS DMG/dependency polish
 
 This guide documents the first native macOS build path for DD-SSH.
@@ -125,7 +125,7 @@ grep "DD_SSH_VERSION_STRING" CMakeLists.txt
 Expected for this checkpoint:
 
 ```text
-set(DD_SSH_VERSION_STRING "dev 0.1.6.7")
+set(DD_SSH_VERSION_STRING "dev 0.1.6.9")
 ```
 
 ---
@@ -208,7 +208,7 @@ After launching:
 
 ```text
 [ ] Main window opens
-[ ] About shows dev 0.1.6.7
+[ ] About shows dev 0.1.6.9
 [ ] Settings opens
 [ ] Config path is created under the macOS user profile
 [ ] Saved session can be created

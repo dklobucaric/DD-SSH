@@ -5,6 +5,7 @@
 #include <QList>
 #include <QString>
 #include <QStringList>
+#include <QtGlobal>
 
 struct AppSettings
 {
@@ -16,6 +17,31 @@ struct AppSettings
     bool configBackupsEnabled = true;
     int maxConfigBackups = 10;
     QString doubleClickAction = QStringLiteral("open_terminal");
+};
+
+
+struct ConfigPreview
+{
+    bool exists = false;
+    bool readable = false;
+    bool validJson = false;
+    bool isObject = false;
+    bool hasProblem = false;
+    QString errorMessage;
+    QString filePath;
+    qint64 fileSizeBytes = 0;
+    int sessionCount = 0;
+    int knownHostCount = 0;
+    int knownHostKeyCount = 0;
+    QString secretsMode;
+    int secretCount = 0;
+    int passwordSecretCount = 0;
+    int privateKeySecretCount = 0;
+    bool containsPlainSecrets = false;
+    bool hasSettings = false;
+    bool hasMetadata = false;
+    QString configVersion;
+    QStringList warnings;
 };
 
 struct ConfigInspection
@@ -43,6 +69,7 @@ public:
     QString configFilePath() const;
     QStringList listConfigBackups() const;
     ConfigInspection inspectConfig() const;
+    ConfigPreview previewConfigFile(const QString &filePath) const;
     bool createFreshConfigFromCorrupt(QString *errorMessage = nullptr, QString *movedCorruptPath = nullptr) const;
     bool restoreLatestValidBackup(QString *errorMessage = nullptr, QString *restoredBackupName = nullptr, QString *movedCorruptPath = nullptr) const;
     bool exportConfigToFile(const QString &targetPath, QString *errorMessage = nullptr) const;

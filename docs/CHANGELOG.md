@@ -1,3 +1,38 @@
+## dev 0.1.6.9 — Andromeda
+
+Bugfix stabilization checkpoint after the logging, Session Traffic, and config import/export safety work.
+
+### Fixed / polished
+
+- Renamed the xterm.js terminal toolbar button from `Ctrl+C` to `Copy` and made it copy selected terminal text to the clipboard. Keyboard Ctrl+C inside the terminal remains the way to send interrupt to remote programs.
+- Renamed the BasicTerminal interrupt button from `Ctrl+C` to `Interrupt` so fallback/basic UI does not present a misleading copy-style label.
+- Changed the config import preview confirmation action from generic `Yes` to `Import`.
+- Changed the restore latest backup confirmation action from generic `Yes` to `Restore`.
+- Added `docs/BUILD_AND_TEST_0.1.6.9.md` and `docs/TESTCASE_0.1.6.9.md`.
+
+### Unchanged
+
+- SSH trust-chain logic, known-host handling, JSON schema, plain-v1 secrets, diagnostic logging engine, Session Traffic counters, and packaging flow are intentionally unchanged.
+
+## dev 0.1.6.8 — Andromeda
+
+### Added
+- Added config import/export safety previews before replacing or exporting `dd-ssh.json`.
+- Preview shows file size, config version, session count, known-host count, trusted host-key count, secrets mode, saved secret counts, plaintext-secret presence, settings presence, metadata presence, and warnings.
+- Added log summaries for config preview operations when diagnostic logging is enabled.
+- Added `docs/CONFIG_IMPORT_EXPORT_SAFETY.md`, `docs/BUILD_AND_TEST_0.1.6.8.md`, and `docs/TESTCASE_0.1.6.8.md`.
+
+### Security / safety
+- Import now refuses invalid JSON/root-non-object files before the destructive replace confirmation.
+- Export now warns when the active human-readable JSON may contain `plain-v1` plaintext secrets.
+- Human-readable JSON and `plain-v1` compatibility remain unchanged.
+
+### Not changed
+- No SSH/auth/known-host runtime changes.
+- No config schema migration.
+- No encryption/master-password/keychain implementation.
+- No Session Traffic or terminal transport changes.
+
 ## dev 0.1.6.7 — Andromeda
 
 ### Added

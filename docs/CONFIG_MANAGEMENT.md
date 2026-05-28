@@ -149,3 +149,9 @@ List backups:
 ```bash
 ls -la ~/.config/DD-LAB/DD-SSH/dd-ssh.json*
 ```
+
+## Import/export safety preview
+
+Starting with `dev 0.1.6.8`, DD-SSH previews configs before import/export. The preview is informational and does not change the human-readable JSON schema. It shows session count, known-host count, trusted key count, secrets mode, saved secret count, plaintext-secret presence, settings presence, metadata presence, and warnings.
+
+This is intended to make the current `plain-v1` portability model safer without introducing encryption or an opaque config format yet.

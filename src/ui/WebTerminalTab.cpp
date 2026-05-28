@@ -15,6 +15,7 @@
 #include <QThread>
 #include <QVBoxLayout>
 #include <QUrl>
+#include <QVariant>
 #include <QWebChannel>
 #include <QWebEnginePage>
 #include <QWebEngineSettings>
@@ -71,8 +72,8 @@ WebTerminalTab::WebTerminalTab(
 
     auto *buttonLayout = new QHBoxLayout();
 
-    m_interruptButton = new QPushButton(QStringLiteral("Ctrl+C"), this);
-    m_interruptButton->setToolTip(QStringLiteral("Send Ctrl+C to the remote shell."));
+    m_interruptButton = new QPushButton(QStringLiteral("Copy"), this);
+    m_interruptButton->setToolTip(QStringLiteral("Copy selected terminal text to the clipboard. Use keyboard Ctrl+C inside the terminal to interrupt remote programs."));
     buttonLayout->addWidget(m_interruptButton);
 
     m_pasteButton = new QPushButton(QStringLiteral("Paste"), this);
@@ -114,7 +115,7 @@ WebTerminalTab::WebTerminalTab(
         sendToWorker(input);
     });
 
-    connect(m_interruptButton, &QPushButton::clicked, this, &WebTerminalTab::sendInterrupt);
+    connect(m_interruptButton, &QPushButton::clicked, this, &WebTerminalTab::copySelection);
     connect(m_pasteButton, &QPushButton::clicked, this, &WebTerminalTab::pasteClipboard);
     connect(m_bridge, &TerminalBridge::pasteRequested, this, &WebTerminalTab::pasteClipboard);
     connect(m_clearButton, &QPushButton::clicked, this, &WebTerminalTab::clearTerminal);
@@ -398,6 +399,23 @@ QString WebTerminalTab::terminalHtml() const
     let lastReportedCols = 0;
     let lastReportedRows = 0;
     let fitTimer = null;
+
+    window.ddsshGetTerminalSelection = function () {
+        try {
+            if (usingXterm && term && typeof term.hasSelection === 'function' && term.hasSelection()) {
+                return term.getSelection() || '';
+            }
+
+            const selection = window.getSelection ? window.getSelection() : null;
+            if (selection) {
+                return selection.toString() || '';
+            }
+        } catch (error) {
+            return '';
+        }
+
+        return '';
+    };
 
     function updateHeader() {
         const header = document.getElementById('header');
@@ -877,19 +895,37 @@ void WebTerminalTab::sendToWorker(const QString &input)
     m_worker->sendInput(input);
 }
 
-void WebTerminalTab::sendInterrupt()
+void WebTerminalTab::copySelection()
 {
-    if (!m_shellActive || m_worker == nullptr) {
+    if (m_view == nullptr || m_view->page() == nullptr) {
         return;
     }
 
-    sendToWorker(QString(QChar(0x03)));
+    m_view->page()->runJavaScript(
+        QStringLiteral("window.ddsshGetTerminalSelection ? window.ddsshGetTerminalSelection() : ''"),
+        [this](const QVariant &result) {
+            const QString selectedText = result.toString();
 
-    if (m_bridge != nullptr) {
-        m_bridge->emitStatus(QStringLiteral("Sent Ctrl+C to remote shell."));
-    }
+            if (selectedText.isEmpty()) {
+                if (m_bridge != nullptr) {
+                    m_bridge->emitStatus(QStringLiteral("No terminal selection to copy."));
+                }
+                focusTerminal();
+                return;
+            }
 
-    focusTerminal();
+            QClipboard *clipboard = QApplication::clipboard();
+            if (clipboard != nullptr) {
+                clipboard->setText(selectedText);
+            }
+
+            if (m_bridge != nullptr) {
+                m_bridge->emitStatus(QStringLiteral("Copied selected terminal text to clipboard."));
+            }
+
+            focusTerminal();
+        }
+    );
 }
 
 void WebTerminalTab::pasteClipboard()

@@ -1,6 +1,6 @@
 # DD-SSH diagnostic logging
 
-**Checkpoint:** dev 0.1.6.7 — Andromeda  
+**Checkpoint:** dev 0.1.6.9 — Andromeda  
 **Scope:** optional diagnostic logging foundation plus Session Traffic summaries
 
 DD-SSH diagnostic logging is an on-demand debugging tool for testers and developers. It is **off by default** and can be enabled only when needed.
@@ -121,3 +121,7 @@ Traffic monitor stopped: session="doma", received=3.8 MB, sent=220 KB
 ```
 
 The live traffic monitor itself should update in the UI, not spam the log every millisecond.
+
+## Config preview logging
+
+`dev 0.1.6.8` logs config import/export preview summaries when diagnostic logging is enabled. These entries include counts and flags only, such as sessions, known hosts, secrets mode, saved secret count, and plaintext-secret presence. They must not include passwords, private-key contents, terminal data, clipboard content, or full JSON.

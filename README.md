@@ -17,7 +17,7 @@ DD-SSH is designed for practical sysadmin use: saved sessions, one portable JSON
 
 ## Current status
 
-**Development checkpoint:** `dev 0.1.6.7`
+**Development checkpoint:** `dev 0.1.6.9`
 **Codename:** Andromeda
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
 **Current phase:** Basic Session Traffic Monitor
@@ -34,9 +34,11 @@ The current traffic-monitor checkpoint keeps the SSH trust-chain hardening, pack
 - `dev 0.1.6.3` verifies the approved SSH host key again in the real authentication/shell connection before any password or private key is sent.
 - `dev 0.1.6.4` adds `.gitignore` protection, release-artifact documentation, and checksum helpers for Linux, macOS, and Windows.
 - `dev 0.1.6.6` adds optional diagnostic logging for tester/debug workflows: logging is OFF by default, can be enabled from Settings, writes to a standard per-user log folder, and Help → Open Log Folder opens the logs.
+- `dev 0.1.6.9` is a bugfix stabilization checkpoint. It renames the xterm.js toolbar copy button for clarity, adds clearer Import/Restore dialog action buttons, and keeps SSH/config/runtime behavior unchanged.
+- `dev 0.1.6.8` adds config import/export safety previews. Before import/export, DD-SSH now shows counts for sessions, known hosts, trusted keys, secrets mode, saved secret counts, plaintext secret presence, and warnings. The human-readable JSON format remains unchanged.
 - `dev 0.1.6.7` adds a compact Session Traffic indicator in the status bar for the active terminal tab, showing live received/sent rates and totals while logging only traffic lifecycle summaries when diagnostic logging is enabled.
 
-In `dev 0.1.6.7`, SSH authentication, known-host logic, human-readable JSON, and packaging behavior are intentionally unchanged. The focus is a small terminal-channel traffic monitor that prepares the UI direction for later file transport without implementing SFTP yet.
+In `dev 0.1.6.9`, SSH authentication, known-host logic, terminal behavior, Session Traffic, logging, and config schema are intentionally unchanged. The focus is small bugfix/UI stabilization after the 0.1.6.6–0.1.6.8 diagnostics and safety checkpoints.
 
 The portable known-host model now supports multi-key storage per `host:port`:
 
