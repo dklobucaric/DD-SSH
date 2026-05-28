@@ -19,6 +19,7 @@
 - Duplicate target warning for same `username + host + port`
 - Sidebar context menu
 - Double-click opens xterm.js terminal
+- File Manager placeholder action for the future SFTP development track
 
 ### SSH/auth
 
@@ -42,6 +43,12 @@
 - Reconnect after disconnect
 - App exit warning when active SSH terminal sessions are still connected
 - Tested full-screen apps: `htop`, `nano`, `vim`, `top`
+
+### File transfer / File Manager
+
+- Architecture documentation exists in `docs/FILE_TRANSFER_ARCHITECTURE.md`
+- Saved-session context menu includes `Open File Manager (planned)`
+- No SFTP connection, file listing, upload, or download is implemented yet
 
 ### Config
 
@@ -95,7 +102,7 @@
 
 - Multi-Exec
 - Keep-alive settings
-- SFTP
+- Real SFTP connection and file transfer
 - Split panes
 - Portable mode next to binary
 - Custom config path picker

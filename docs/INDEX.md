@@ -15,6 +15,7 @@ This directory contains the working documentation for DD-SSH.
 
 - [Architecture](ARCHITECTURE.md) — UI/core/SSH/terminal/config layers
 - [Terminal Transport](TERMINAL_TRANSPORT.md) — SSH byte-stream terminal output/input path
+- [File Transfer Architecture](FILE_TRANSFER_ARCHITECTURE.md) — planned libssh SFTP/File Manager design
 - [Config Format](CONFIG_FORMAT.md) — `dd-ssh.json` structure
 - [Config Management](CONFIG_MANAGEMENT.md) — backups, import/export, recovery
 - [Security Notes](SECURITY_NOTES.md) — plaintext secrets, known_hosts, future encryption
@@ -45,10 +46,10 @@ This directory contains the working documentation for DD-SSH.
 ## Current checkpoint
 
 ```text
-Version: dev 0.1.7.0
+Version: dev 0.1.7.2
 Codename: Andromeda
-Milestone: MF 0.2 candidate
-Phase: Terminal transport hardening
+Milestone: File Transfer architecture foundation
+Phase: File transport architecture/design foundation
 ```
 
 
@@ -78,3 +79,5 @@ GitHub issue templates live under `.github/ISSUE_TEMPLATE/`.
 - docs/CONFIG_IMPORT_EXPORT_SAFETY.md explains the config import/export preview added in dev 0.1.6.8.
 
 - docs/TERMINAL_TRANSPORT.md explains the byte-stream terminal transport hardening added in dev 0.1.7.0.
+
+- docs/FILE_TRANSFER_ARCHITECTURE.md explains the planned libssh SFTP/File Manager design added in dev 0.1.7.2.

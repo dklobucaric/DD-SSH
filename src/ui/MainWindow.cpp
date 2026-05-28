@@ -1280,7 +1280,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: Basic Session Traffic Monitor.\n\n")
+            + QStringLiteral("Current phase: File Transfer architecture foundation.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n")
@@ -1504,7 +1504,7 @@ void MainWindow::addWelcomeTab()
         "A clean cross-platform SSH client and session manager.\n\n"
         "Double-click a saved session on the left to open the xterm.js terminal.\n\n"
         "Current milestone:\n"
-        "MF 0.2 candidate — Real Terminal Foundation / known-host multi-key portability polish\n\n"
+        "File Transfer architecture foundation — terminal baseline preserved, SFTP track begins\n\n"
         "Working now:\n"
         "- saved sessions loaded from dd-ssh.json\n"
         "- portable plaintext secrets in dd-ssh.json\n"
@@ -1521,7 +1521,8 @@ void MainWindow::addWelcomeTab()
         "- native Windows Debug and Release builds validated with Qt/MSVC/vcpkg/libssh\n"
         "- cross-platform app icon resources for Qt, Windows, Linux, and macOS prep\n"
         "- Windows standalone deployment helper validated on real Windows 10/11 machines\n"
-        "- app exit protection when active SSH terminals are still connected\n\n"
+        "- app exit protection when active SSH terminals are still connected\n"
+        "- File Manager placeholder action for the 0.1.7.x SFTP development track\n\n"
         "Main menus:\n"
         "- File: Open Config Folder, Export Config, Import Config, Restore Latest Backup, Exit\n"
         "- Session: New Session, Connect / Auth test, Edit selected session\n"
@@ -1537,12 +1538,13 @@ void MainWindow::addWelcomeTab()
         "- docs/CONFIG_MANAGEMENT.md explains backups/import/export/recovery\n"
         "- docs/SECURITY_NOTES.md explains plaintext secrets and known_hosts rules\n"
         "- docs/TEST_MATRIX.md tracks current Andromeda validation\n"
-        "- docs/ROADMAP.md tracks future versions\n\n"
-        "Current bugfix focus:\n"
-        "- store multiple legitimate host-key algorithms per host:port\n"
-        "- keep one portable dd-ssh.json working across Linux, Windows 10, Windows 11, and future macOS\n"
-        "- offer Trust additional key for new algorithms instead of forcing Replace stored key\n"
-        "- keep the strong warning for true same-algorithm fingerprint changes\n\n"
+        "- docs/ROADMAP.md tracks future versions\n"
+        "- docs/FILE_TRANSFER_ARCHITECTURE.md explains the planned SFTP/File Manager foundation\n\n"
+        "Current development focus:\n"
+        "- keep dev 0.1.7.1 as the closed terminal foundation baseline\n"
+        "- introduce file transfer architecture without changing SSH terminal runtime behavior\n"
+        "- use libssh SFTP API in future checkpoints, not shell command parsing hacks\n"
+        "- keep terminal tabs and future File Manager tabs separated by design\n\n"
         "Codename roadmap:\n"
         "- 0.0.x — Launchpad / early prototype history\n"
         "- 0.1.x — Andromeda / current MF 0.2 candidate line\n"
@@ -1554,6 +1556,35 @@ void MainWindow::addWelcomeTab()
     );
 
     m_tabs->addTab(welcome, "Welcome");
+}
+
+
+void MainWindow::showFileManagerPlaceholder(const QString &sessionId)
+{
+    ConfigManager config;
+    QString loadError;
+    SessionProfile session;
+
+    QString sessionName = QStringLiteral("selected session");
+    if (config.loadSessionById(sessionId, &session, &loadError)) {
+        sessionName = session.name.trimmed().isEmpty() ? session.id : session.name;
+    }
+
+    AppLogger::info(QStringLiteral("File Manager placeholder opened for session: ") + sessionName);
+
+    QMessageBox::information(
+        this,
+        QStringLiteral("File Manager planned"),
+        QStringLiteral(
+            "File Manager / SFTP transfer is planned for the 0.1.7.x development track.\n\n"
+            "Session: %1\n\n"
+            "This dev 0.1.7.2 checkpoint contains architecture and UX groundwork only.\n"
+            "No SFTP connection is opened yet, no files are listed, and no config is changed.\n\n"
+            "Next planned checkpoint: dev 0.1.7.3 — SFTP connection proof of concept."
+        ).arg(sessionName)
+    );
+
+    statusBar()->showMessage(QStringLiteral("File Manager is planned for a later 0.1.7.x checkpoint"), 6000);
 }
 
 
@@ -1577,6 +1608,7 @@ void MainWindow::showSessionContextMenu(const QPoint &position)
 
     QMenu menu(this);
     QAction *openWebTerminalAction = menu.addAction("Open xterm.js terminal");
+    QAction *fileManagerAction = menu.addAction("Open File Manager (planned)");
     QAction *connectAction = menu.addAction("Run auth test");
     QAction *openShellAction = menu.addAction("Open basic shell (fallback)");
     menu.addSeparator();
@@ -1589,6 +1621,8 @@ void MainWindow::showSessionContextMenu(const QPoint &position)
         testSavedSession(sessionId);
     } else if (selectedAction == openWebTerminalAction) {
         openSavedSessionWebTerminal(sessionId);
+    } else if (selectedAction == fileManagerAction) {
+        showFileManagerPlaceholder(sessionId);
     } else if (selectedAction == openShellAction) {
         openSavedSessionShell(sessionId);
     } else if (selectedAction == editAction) {

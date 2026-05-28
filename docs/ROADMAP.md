@@ -13,14 +13,20 @@
 
 ## Current line: 0.1.x — Andromeda
 
-Goal: Real Terminal Foundation and public-alpha readiness.
+Goal: preserve the validated terminal foundation while building the File Transfer / File Manager track in small, testable checkpoints.
+
+Confirmed baseline:
+
+- `dev 0.1.7.1` is the closed terminal foundation / hardening checkpoint.
+- The terminal baseline has been tested on Linux, Windows, and macOS.
+- Saved sessions, xterm.js terminal, known-host multi-key portability, Windows KEX compatibility, diagnostic logging, Session Traffic, config import/export preview, packaging flows, and paste hardening must not regress.
 
 Already implemented:
 
 - Saved sessions
-- One-file JSON config
-- Plaintext portable secrets
-- known_hosts handling
+- One-file human-readable JSON config
+- Plaintext portable secrets for alpha portability
+- known_hosts handling with multi-key host entries
 - Password/private-key auth
 - Session CRUD
 - xterm.js local terminal
@@ -30,28 +36,42 @@ Already implemented:
 - App light/dark/system theme
 - Config backup/recovery
 - Config import/export/restore
+- Optional diagnostic logging
+- Session Traffic monitor
+- Native paste hardening
+- Linux/Windows/macOS tester packaging flows
 - Documentation/test matrix
 
-Remaining before public alpha tag:
-
-- Final public-alpha checklist pass
-- Confirm latest test matrix on Linux and Windows
-- Optional screenshots
-- Known limitations review
-- Decide whether to tag `dev-0.1.5.9` as an internal stabilization marker
-
-Potential tag:
+Active File Transfer / File Manager track:
 
 ```text
-v0.2.0-alpha — Andromeda
+dev 0.1.7.2 — File transport architecture/design foundation
+dev 0.1.7.3 — SFTP connection proof of concept
+dev 0.1.7.4 — read-only remote file browser
+dev 0.1.7.5 — local + remote two-panel read-only UI
+dev 0.1.7.6 — single-file download
+dev 0.1.7.7 — single-file upload
+dev 0.1.7.8 — transfer progress/cancel polish
+dev 0.1.8.0 — transfer queue foundation
+dev 0.1.8.1 — folder transfer experiment
+dev 0.1.8.2 — file manager safety polish
+dev 0.1.8.3 — file transport logging + Session Traffic integration
+dev 0.1.9.x — cross-platform file transfer stabilization
+```
+
+Target alpha milestone:
+
+```text
+v0.2.0-alpha — Terminal + basic file transfer
 ```
 
 ## 0.2.x — Orion
 
-Focus: usability and session workflow polish.
+Focus: alpha stabilization after terminal + basic file transfer exists.
 
 Possible items:
 
+- File transfer stabilization after first alpha feedback
 - Better session grouping UI
 - Search/filter saved sessions
 - Session detail panel
@@ -131,7 +151,7 @@ Expected before Apollo:
 
 ## Current release-prep step
 
-`dev 0.1.7.1` fixes native paste handling after the 0.1.7.0 terminal transport hardening so right-click paste and Ctrl+Shift+V use the same safe DD-SSH paste path. `dev 0.1.7.0` hardens terminal transport by moving SSH output through a byte-stream/Base64/WebChannel path, using streaming UTF-8 decoding in xterm.js, and making terminal input writes partial-write aware. `dev 0.1.6.9` is a bugfix stabilization checkpoint for terminal toolbar and config dialog labels. `dev 0.1.6.8` adds config import/export safety previews while keeping the human-readable JSON format unchanged. `dev 0.1.6.7` adds a compact status-bar Session Traffic monitor for the active terminal tab, with traffic summary logging when diagnostic logging is enabled. `dev 0.1.6.6` adds optional diagnostic logging for tester/debug workflows while keeping SSH runtime behavior unchanged from `dev 0.1.6.3`. Logging is off by default, enabled from Settings, writes INFO/WARN/ERROR lines to standard user-writable log folders, and can be opened from Help → Open Log Folder. `dev 0.1.6.5` improved the macOS DMG/dependency flow with an `otool` audit report, optional strict dependency audit, and a small tester README inside the DMG. `dev 0.1.6.4` added repo hygiene, release-artifact rules, and checksum helpers. `dev 0.1.6.3` hardened the SSH trust chain so the real authentication/shell connection verifies the approved host key before sending secrets. `dev 0.1.6.2` added the first macOS Intel `.app` / `.dmg` deployment foundation. `dev 0.1.6.1.1` added README screenshots and a practical Debian packaging/install tutorial after the first `.deb` validation pass. `dev 0.1.6.1` began the packaging phase with the first Debian package experiment. `dev 0.1.5.9` is the stabilization docs and release polish checkpoint. It consolidates the 0.1.5.6 Windows standalone deployment pass, the 0.1.5.7 known-host multi-key portability fix, and the 0.1.5.8 Windows libssh KEX compatibility fix. The 0.1.5.x line prepares the repository for `v0.2.0-alpha — Andromeda` with public alpha docs, Windows Debug/Release/deploy-folder validation, release notes, known limitations, issue templates, cross-platform icon resources, WebEngine startup polish, and exit safety.
+`dev 0.1.7.2` starts the File Transfer / File Manager development track with architecture documentation and a harmless UI placeholder. `dev 0.1.7.1` remains the closed terminal foundation baseline after native paste hardening. `dev 0.1.7.0` hardened terminal transport by moving SSH output through a byte-stream/Base64/WebChannel path, using streaming UTF-8 decoding in xterm.js, and making terminal input writes partial-write aware. `dev 0.1.6.x` completed the logging, Session Traffic, config safety, macOS DMG, repo hygiene, packaging, and SSH trust-chain foundations. `dev 0.1.5.x` completed Windows standalone deployment, known-host multi-key portability, and Windows libssh KEX compatibility work.
 
 ---
 
@@ -160,6 +180,7 @@ dev 0.1.6.8 — Config import/export safety preview
 dev 0.1.6.9 — Bugfix stabilization
 dev 0.1.7.0 — Terminal transport hardening
 dev 0.1.7.1 — Native paste event hardening
+dev 0.1.7.2 — File transport architecture/design foundation
 ```
 
 Windows/public-alpha scope:
@@ -209,12 +230,12 @@ scripts/generate-checksums-windows.bat
 - support STRICT_DEP_AUDIT=1 for fail-fast dependency checks on the build Mac
 ```
 
-Next polish candidates after the terminal transport checkpoint:
+Next active feature track after the terminal foundation checkpoint:
 
 ```text
-dev 0.1.7.1 — Session UX polish
-dev 0.1.7.2 — Linux package/uninstall docs polish
-dev 0.1.7.3 — Homebrew/AppImage/signing research depending on tester needs
+dev 0.1.7.2 — File transport architecture/design foundation
+dev 0.1.7.3 — SFTP connection proof of concept
+dev 0.1.7.4 — Read-only remote file browser
 ```
 
 ## 0.1.7.0 terminal transport hardening
@@ -230,9 +251,9 @@ dev 0.1.7.3 — Homebrew/AppImage/signing research depending on tester needs
 - keep diagnostic logging free of terminal input/output content
 ```
 
-## Future file transport direction
+## Active file transport direction
 
-DD-SSH may later add a simple file transport view for saved sessions. The intended model is a two-panel local/remote file manager using SFTP over libssh:
+DD-SSH is now adding a simple file transport view for saved sessions. The intended model is a two-panel local/remote file manager using SFTP over libssh:
 
 ```text
 left: local files
@@ -240,8 +261,30 @@ right: remote files
 terminal tabs may remain open in the background
 ```
 
-This must not be implemented before the terminal, packaging, diagnostics, and SSH trust-chain foundations are stable. Early code should avoid assuming that a saved session can only open a terminal. A saved session should be treated as a connection profile that may later open a terminal, diagnostics view, traffic monitor, or file transport view.
+The terminal, packaging, diagnostics, and SSH trust-chain foundations are now stable enough to begin this work. Early code must avoid assuming that a saved session can only open a terminal. A saved session should be treated as a connection profile that may open a terminal, file manager, diagnostics view, or future traffic/transport view.
 
+
+## 0.1.7.2 file transport architecture/design foundation
+
+`dev 0.1.7.2` starts the File Transfer / File Manager development track without opening an SFTP runtime yet.
+
+Scope:
+
+- update app version to `dev 0.1.7.2`
+- add `docs/FILE_TRANSFER_ARCHITECTURE.md`
+- add a saved-session context menu placeholder: `Open File Manager (planned)`
+- update README, changelog, test matrix, build/test docs, and testcase docs
+- preserve `dev 0.1.7.1` as the terminal regression baseline
+
+Explicit non-goals:
+
+- no SFTP connection
+- no file listing
+- no upload/download
+- no transfer progress UI
+- no terminal transport changes
+- no known-host behavior changes
+- no config schema migration
 
 ## 0.1.7.1 native paste event hardening
 

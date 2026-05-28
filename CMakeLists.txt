@@ -6,9 +6,9 @@ project(DD_SSH
     LANGUAGES CXX
 )
 
-set(DD_SSH_VERSION_STRING "dev 0.1.7.1")
+set(DD_SSH_VERSION_STRING "dev 0.1.7.2")
 set(DD_SSH_CODENAME_STRING "Andromeda")
-set(DD_SSH_MILESTONE_STRING "MF 0.2 candidate")
+set(DD_SSH_MILESTONE_STRING "File Transfer architecture foundation")
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

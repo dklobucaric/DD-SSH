@@ -1,11 +1,28 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.7.1 — Andromeda
-**Milestone:** MF 0.2 candidate — Real Terminal Foundation
-**Phase:** Terminal transport hardening
+**Checkpoint:** dev 0.1.7.2 — Andromeda
+**Milestone:** File Transfer architecture foundation
+**Phase:** File transport architecture/design foundation
 
 This matrix tracks what has been confirmed manually, what is implemented but should be re-tested before a public alpha tag, and what is still planned.
 
+
+## dev 0.1.7.2 — File transport architecture foundation smoke test
+
+[ ] About shows dev 0.1.7.2
+[ ] Welcome tab mentions the File Transfer architecture foundation
+[ ] Saved-session context menu shows `Open File Manager (planned)`
+[ ] Clicking `Open File Manager (planned)` shows an information dialog only
+[ ] Clicking the File Manager placeholder does not open an SSH/SFTP connection
+[ ] Clicking the File Manager placeholder does not change `dd-ssh.json`
+[ ] Existing saved xterm.js terminal still opens normally
+[ ] Toolbar Paste still sends clipboard text cleanly
+[ ] Right-click paste and Ctrl+Shift+V / Command+V still use the safe paste path
+[ ] Keyboard Ctrl+C inside the focused terminal still interrupts a remote program
+[ ] Session Traffic counters still update during terminal activity
+[ ] Diagnostic logging remains OFF by default and still excludes secrets, terminal input/output, and clipboard content
+[ ] Windows KEX regression host still connects
+[ ] Known-host multi-key portability regression still passes
 
 ## dev 0.1.7.1 — Native paste event hardening smoke test
 

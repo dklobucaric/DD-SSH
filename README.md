@@ -17,14 +17,14 @@ DD-SSH is designed for practical sysadmin use: saved sessions, one portable JSON
 
 ## Current status
 
-**Development checkpoint:** `dev 0.1.7.1`
+**Development checkpoint:** `dev 0.1.7.2`
 **Codename:** Andromeda
-**Milestone:** MF 0.2 candidate — Real Terminal Foundation
-**Current phase:** Terminal transport hardening
+**Milestone:** File Transfer architecture foundation
+**Current phase:** File transport architecture/design foundation
 
-DD-SSH is now in its early packaging/stabilization phase. It is not a stable 1.0 release yet, but the core workflow is functional and has been validated on Linux, Windows 10/11, and Intel macOS. Native Windows builds, a standalone Windows deployment folder, a Debian package, and a macOS Intel `.app` / `.dmg` tester flow have been tested.
+DD-SSH is now moving from the closed terminal-foundation baseline into the File Transfer / File Manager development track. It is not a stable 1.0 release yet, but the core terminal workflow is functional and has been validated on Linux, Windows 10/11, and Intel macOS. Native Windows builds, a standalone Windows deployment folder, a Debian package, and a macOS Intel `.app` / `.dmg` tester flow have been tested.
 
-The current checkpoint hardens the terminal data path while keeping the SSH trust-chain, known-host model, human-readable JSON config, diagnostic logging, Session Traffic monitor, and packaging flows intact.
+The current checkpoint is intentionally small: it adds file-transfer architecture documentation and a safe File Manager placeholder while keeping the SSH trust-chain, terminal transport, known-host model, human-readable JSON config, diagnostic logging, Session Traffic monitor, and packaging flows intact.
 
 Recent checkpoints:
 
@@ -38,10 +38,13 @@ Recent checkpoints:
 - `dev 0.1.6.7` adds a compact Session Traffic indicator in the status bar for the active terminal tab, showing live received/sent rates and totals.
 - `dev 0.1.6.8` adds config import/export safety previews while keeping the human-readable JSON format unchanged.
 - `dev 0.1.6.9` is a small bugfix stabilization checkpoint for toolbar and config-dialog button labels.
+- `dev 0.1.7.2` starts the File Transfer / File Manager track with architecture docs and a safe File Manager placeholder; it does not open SFTP yet.
 - `dev 0.1.7.1` hardens native xterm.js paste handling: toolbar Paste, right-click paste, Ctrl+Shift+V, and macOS Command+V now route through the same DD-SSH safe paste path and should not leak bracketed paste markers such as `^[[200~` into the remote shell.
 - `dev 0.1.7.0` hardens terminal transport: SSH output is carried as bytes to the WebEngine terminal, decoded with a streaming UTF-8 decoder, and input writes are partial-write aware so large paste/input is not silently truncated.
 
-In `dev 0.1.7.0`, DD-SSH does not add SFTP, file manager, encryption, cloud sync, or installer redesigns. The focus is terminal reliability and preserving existing behavior.
+In `dev 0.1.7.2`, DD-SSH does not add real SFTP, upload/download, encryption, cloud sync, or installer redesigns. The focus is architecture groundwork for file transfer while preserving the tested terminal baseline.
+
+The future file-transfer design is documented in `docs/FILE_TRANSFER_ARCHITECTURE.md`. File transfer will use libssh SFTP APIs, not shell command parsing hacks. Terminal tabs and future File Manager tabs are intentionally separated so the working terminal foundation remains stable.
 
 The portable known-host model now supports multi-key storage per `host:port`:
 
@@ -269,13 +272,13 @@ DD-SSH is intentionally still limited. Not implemented yet:
 - Encrypted secrets / master password
 - SSH agent support
 - Keyboard-interactive auth polish
-- SFTP
+- Real SFTP file transfer and file browser runtime
 - Split panes
 - Multi-Exec command sending
 - Keep-alive settings
 - Portable mode next to binary
 - Custom config path picker
-- macOS Intel build and first `.dmg` validation pass
+- Apple Developer ID signing/notarization
 - Final signed installers / official repositories
 - Signed releases
 - Full public release process
@@ -437,7 +440,7 @@ Portable when needed.
 Hard to accidentally destroy things.
 ```
 
-DD-SSH should stay focused. Early versions intentionally avoid SFTP, split panes, cloud lock-in, telemetry, and bloated enterprise dashboards.
+DD-SSH should stay focused. Early versions intentionally avoid split panes, cloud lock-in, telemetry, complex sync engines, and bloated enterprise dashboards. File transfer is now being added carefully through libssh SFTP, one small checkpoint at a time.
 
 
 

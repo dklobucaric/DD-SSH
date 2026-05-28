@@ -1,3 +1,22 @@
+## dev 0.1.7.2 — Andromeda
+
+File Transport architecture/design foundation checkpoint.
+
+### Added
+
+- Added `docs/FILE_TRANSFER_ARCHITECTURE.md` to document the planned libssh SFTP/File Manager design.
+- Added a safe saved-session context-menu placeholder: `Open File Manager (planned)`.
+- The placeholder explains the 0.1.7.x SFTP development track and does not open a network connection.
+- Updated README, roadmap, test matrix, and checkpoint build/test docs for the File Transfer track.
+- Added `docs/BUILD_AND_TEST_0.1.7.2.md` and `docs/TESTCASE_0.1.7.2.md`.
+
+### Not changed
+
+- No real SFTP subsystem is opened yet.
+- No upload, download, file listing, delete, rename, queue, progress, or cancel behavior is implemented yet.
+- No SSH trust-chain, known-host, JSON schema, terminal transport, paste handling, diagnostic logging engine, Session Traffic runtime, packaging script, or xterm.js asset behavior was changed.
+- `dev 0.1.7.1` remains the closed terminal foundation baseline for regression testing.
+
 ## dev 0.1.7.1 — Andromeda
 
 ### Fixed
