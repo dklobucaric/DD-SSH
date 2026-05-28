@@ -1,6 +1,6 @@
 # Windows Standalone Deployment Test
 
-**Checkpoint:** dev 0.1.5.9 — Andromeda  
+**Checkpoint:** dev 0.1.5.9 — Andromeda
 **Purpose:** document the validated standalone Windows deployment folder that can run outside the build tree and without manually extending `PATH`.
 
 This is still **not a final installer**. It is a portable release-folder test for the Andromeda public-alpha line. The goal is to prove that a Windows-built DD-SSH can be copied into one folder with the required Qt, Qt WebEngine, libssh, OpenSSL, compiler runtime, and helper DLLs.

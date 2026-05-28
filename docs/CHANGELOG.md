@@ -1,3 +1,31 @@
+## dev 0.1.7.0 — Andromeda
+
+Terminal transport hardening checkpoint.
+
+### Changed / hardened
+
+- Changed SSH terminal output delivery from per-chunk `QString::fromUtf8()` conversion to a byte-stream path for xterm.js.
+- `SshShellWorker` now emits raw output bytes as `QByteArray`.
+- `TerminalBridge` forwards terminal bytes through Qt WebChannel as Base64 text.
+- The WebEngine/xterm.js renderer decodes output with a streaming UTF-8 `TextDecoder`, reducing the risk of corrupt UTF-8 characters when multi-byte sequences are split across SSH reads.
+- Changed terminal input queue storage from `QStringList` to queued UTF-8 bytes.
+- Added partial-write-aware `ssh_channel_write()` handling so large paste/input is not silently truncated when libssh writes fewer bytes than requested.
+- Basic/fallback terminal now decodes SSH output with a streaming Qt UTF-8 decoder before applying simple ANSI cleanup.
+
+### Not changed
+
+- No JSON schema changes.
+- No changes to plain-v1 secrets.
+- No changes to known-host trust rules.
+- No file manager/SFTP implementation.
+- No terminal input/output content is written to diagnostic logs.
+- Session Traffic remains app SSH-channel byte counting, not global OS network monitoring.
+
+### Docs
+
+- Added `docs/TERMINAL_TRANSPORT.md`.
+- Added `docs/BUILD_AND_TEST_0.1.7.0.md` and `docs/TESTCASE_0.1.7.0.md`.
+
 ## dev 0.1.6.9 — Andromeda
 
 Bugfix stabilization checkpoint after the logging, Session Traffic, and config import/export safety work.

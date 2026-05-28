@@ -1,6 +1,6 @@
 # DD-SSH dev 0.1.6.3 — Build and test notes
 
-Checkpoint: `dev 0.1.6.3`  
+Checkpoint: `dev 0.1.6.3`
 Focus: SSH trust-chain hardening before authentication
 
 ## Scope

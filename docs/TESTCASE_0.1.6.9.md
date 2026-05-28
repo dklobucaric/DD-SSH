@@ -1,6 +1,6 @@
 # Testcase — dev 0.1.6.9
 
-**Checkpoint:** dev 0.1.6.9 — Andromeda  
+**Checkpoint:** dev 0.1.6.9 — Andromeda
 **Type:** Bugfix stabilization.
 
 ## Expected unchanged behavior

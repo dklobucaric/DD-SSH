@@ -1,6 +1,6 @@
 # DD-SSH dev 0.1.6.4 — Build and test notes
 
-Checkpoint: `dev 0.1.6.4`  
+Checkpoint: `dev 0.1.6.4`
 Scope: repo hygiene and release artifact workflow
 
 This checkpoint intentionally keeps runtime/SSH behavior unchanged from `dev 0.1.6.3`. It adds `.gitignore` protection, release-artifact documentation, and SHA256 checksum helpers for Linux, macOS, and Windows.

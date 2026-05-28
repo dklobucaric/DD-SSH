@@ -131,7 +131,7 @@ Expected before Apollo:
 
 ## Current release-prep step
 
-`dev 0.1.6.9` is a bugfix stabilization checkpoint for terminal toolbar and config dialog labels. `dev 0.1.6.8` adds config import/export safety previews while keeping the human-readable JSON format unchanged. `dev 0.1.6.7` adds a compact status-bar Session Traffic monitor for the active terminal tab, with traffic summary logging when diagnostic logging is enabled. `dev 0.1.6.6` adds optional diagnostic logging for tester/debug workflows while keeping SSH runtime behavior unchanged from `dev 0.1.6.3`. Logging is off by default, enabled from Settings, writes INFO/WARN/ERROR lines to standard user-writable log folders, and can be opened from Help → Open Log Folder. `dev 0.1.6.5` improved the macOS DMG/dependency flow with an `otool` audit report, optional strict dependency audit, and a small tester README inside the DMG. `dev 0.1.6.4` added repo hygiene, release-artifact rules, and checksum helpers. `dev 0.1.6.3` hardened the SSH trust chain so the real authentication/shell connection verifies the approved host key before sending secrets. `dev 0.1.6.2` added the first macOS Intel `.app` / `.dmg` deployment foundation. `dev 0.1.6.1.1` added README screenshots and a practical Debian packaging/install tutorial after the first `.deb` validation pass. `dev 0.1.6.1` began the packaging phase with the first Debian package experiment. `dev 0.1.5.9` is the stabilization docs and release polish checkpoint. It consolidates the 0.1.5.6 Windows standalone deployment pass, the 0.1.5.7 known-host multi-key portability fix, and the 0.1.5.8 Windows libssh KEX compatibility fix. The 0.1.5.x line prepares the repository for `v0.2.0-alpha — Andromeda` with public alpha docs, Windows Debug/Release/deploy-folder validation, release notes, known limitations, issue templates, cross-platform icon resources, WebEngine startup polish, and exit safety.
+`dev 0.1.7.0` hardens terminal transport by moving SSH output through a byte-stream/Base64/WebChannel path, using streaming UTF-8 decoding in xterm.js, and making terminal input writes partial-write aware. `dev 0.1.6.9` is a bugfix stabilization checkpoint for terminal toolbar and config dialog labels. `dev 0.1.6.8` adds config import/export safety previews while keeping the human-readable JSON format unchanged. `dev 0.1.6.7` adds a compact status-bar Session Traffic monitor for the active terminal tab, with traffic summary logging when diagnostic logging is enabled. `dev 0.1.6.6` adds optional diagnostic logging for tester/debug workflows while keeping SSH runtime behavior unchanged from `dev 0.1.6.3`. Logging is off by default, enabled from Settings, writes INFO/WARN/ERROR lines to standard user-writable log folders, and can be opened from Help → Open Log Folder. `dev 0.1.6.5` improved the macOS DMG/dependency flow with an `otool` audit report, optional strict dependency audit, and a small tester README inside the DMG. `dev 0.1.6.4` added repo hygiene, release-artifact rules, and checksum helpers. `dev 0.1.6.3` hardened the SSH trust chain so the real authentication/shell connection verifies the approved host key before sending secrets. `dev 0.1.6.2` added the first macOS Intel `.app` / `.dmg` deployment foundation. `dev 0.1.6.1.1` added README screenshots and a practical Debian packaging/install tutorial after the first `.deb` validation pass. `dev 0.1.6.1` began the packaging phase with the first Debian package experiment. `dev 0.1.5.9` is the stabilization docs and release polish checkpoint. It consolidates the 0.1.5.6 Windows standalone deployment pass, the 0.1.5.7 known-host multi-key portability fix, and the 0.1.5.8 Windows libssh KEX compatibility fix. The 0.1.5.x line prepares the repository for `v0.2.0-alpha — Andromeda` with public alpha docs, Windows Debug/Release/deploy-folder validation, release notes, known limitations, issue templates, cross-platform icon resources, WebEngine startup polish, and exit safety.
 
 ---
 
@@ -158,6 +158,7 @@ dev 0.1.6.6 — Optional diagnostic logging foundation
 dev 0.1.6.7 — Basic Session Traffic Monitor
 dev 0.1.6.8 — Config import/export safety preview
 dev 0.1.6.9 — Bugfix stabilization
+dev 0.1.7.0 — Terminal transport hardening
 ```
 
 Windows/public-alpha scope:
@@ -207,12 +208,25 @@ scripts/generate-checksums-windows.bat
 - support STRICT_DEP_AUDIT=1 for fail-fast dependency checks on the build Mac
 ```
 
-Next polish candidates after this checkpoint:
+Next polish candidates after the terminal transport checkpoint:
 
 ```text
-dev 0.1.6.9 — Session UX polish
-dev 0.1.7.0 — Terminal transport hardening
-dev 0.1.7.1 — Linux package/uninstall docs polish
+dev 0.1.7.1 — Session UX polish
+dev 0.1.7.2 — Linux package/uninstall docs polish
+dev 0.1.7.3 — Homebrew/AppImage/signing research depending on tester needs
+```
+
+## 0.1.7.0 terminal transport hardening
+
+`dev 0.1.7.0` keeps the UI and SSH trust model stable while improving terminal reliability:
+
+```text
+- carry SSH output as bytes instead of converting every read chunk directly to QString
+- forward terminal bytes to WebEngine as Base64 over Qt WebChannel
+- decode terminal output in JavaScript with TextDecoder(stream=true)
+- queue terminal input as UTF-8 bytes
+- handle partial ssh_channel_write() results so large paste/input is not silently truncated
+- keep diagnostic logging free of terminal input/output content
 ```
 
 ## Future file transport direction

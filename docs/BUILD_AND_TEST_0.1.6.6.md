@@ -1,6 +1,6 @@
 # Build and Test — dev 0.1.6.6
 
-**Checkpoint:** dev 0.1.6.6 — Andromeda  
+**Checkpoint:** dev 0.1.6.6 — Andromeda
 **Goal:** optional diagnostic logging foundation
 
 This checkpoint should be tested as a normal DD-SSH source release. Runtime SSH logic is intentionally unchanged from dev 0.1.6.3; the focus is Settings/Help/logging behavior.

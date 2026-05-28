@@ -1,6 +1,6 @@
 # Build and Test — dev 0.1.6.7
 
-**Checkpoint:** dev 0.1.6.7 — Andromeda  
+**Checkpoint:** dev 0.1.6.7 — Andromeda
 **Scope:** Basic Session Traffic Monitor
 
 This checkpoint adds a compact live traffic indicator in the status bar for the active terminal tab. It is intentionally terminal-channel only for now and does not measure global OS network traffic.

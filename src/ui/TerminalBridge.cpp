@@ -25,9 +25,13 @@ void TerminalBridge::terminalResized(int columns, int rows)
     emit resizeRequested(columns, rows);
 }
 
-void TerminalBridge::emitOutput(const QString &output)
+void TerminalBridge::emitOutput(const QByteArray &output)
 {
-    emit outputReceived(output);
+    if (output.isEmpty()) {
+        return;
+    }
+
+    emit outputBytesReceived(QString::fromLatin1(output.toBase64()));
 }
 
 void TerminalBridge::emitStatus(const QString &status)

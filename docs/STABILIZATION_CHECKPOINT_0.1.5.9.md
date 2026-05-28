@@ -1,7 +1,7 @@
 # DD-SSH dev 0.1.5.9 Stabilization Checkpoint
 
-**Checkpoint:** dev 0.1.5.9 — Andromeda  
-**Focus:** documentation, validation summary, and public-alpha release polish  
+**Checkpoint:** dev 0.1.5.9 — Andromeda
+**Focus:** documentation, validation summary, and public-alpha release polish
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
 
 This checkpoint intentionally does **not** add new SSH/session/terminal runtime features. It records the successful stabilization work completed across the previous three checkpoints and aligns the documentation with the current tested state.

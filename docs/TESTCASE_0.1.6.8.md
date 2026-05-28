@@ -1,6 +1,6 @@
 # Testcase — dev 0.1.6.8
 
-**Checkpoint:** dev 0.1.6.8 — Andromeda  
+**Checkpoint:** dev 0.1.6.8 — Andromeda
 **Feature:** Config import/export safety preview.
 
 ## Expected unchanged behavior

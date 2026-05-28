@@ -1,7 +1,7 @@
 # DD-SSH v0.2.0-alpha — Andromeda
 
-**Codename:** Andromeda  
-**Milestone:** MF 0.2 — Real Terminal Foundation  
+**Codename:** Andromeda
+**Milestone:** MF 0.2 — Real Terminal Foundation
 **Release type:** public alpha candidate notes
 
 These notes are a draft for the first public alpha release. They should be reviewed and adjusted before creating a GitHub release/tag.

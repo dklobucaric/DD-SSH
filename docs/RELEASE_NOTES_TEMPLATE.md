@@ -1,8 +1,8 @@
 # DD-SSH release notes template
 
-Version: `dev 0.1.x` or `v0.2.0-alpha`  
-Codename: Andromeda  
-Date: YYYY-MM-DD  
+Version: `dev 0.1.x` or `v0.2.0-alpha`
+Codename: Andromeda
+Date: YYYY-MM-DD
 Type: internal checkpoint / public alpha / bugfix
 
 ## Highlights

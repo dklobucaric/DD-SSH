@@ -17,28 +17,30 @@ DD-SSH is designed for practical sysadmin use: saved sessions, one portable JSON
 
 ## Current status
 
-**Development checkpoint:** `dev 0.1.6.9`
+**Development checkpoint:** `dev 0.1.7.0`
 **Codename:** Andromeda
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
-**Current phase:** Basic Session Traffic Monitor
+**Current phase:** Terminal transport hardening
 
-DD-SSH is now in its early packaging phase. It is not a stable 1.0 release yet, but the core workflow is functional and has been validated on Linux, Windows 10, Windows 11, and an Intel macOS build machine. Native Windows Debug/Release builds, a copied standalone Windows deployment folder, a first Debian package, and a first macOS Intel `.app` / `.dmg` deployment experiment have been tested.
+DD-SSH is now in its early packaging/stabilization phase. It is not a stable 1.0 release yet, but the core workflow is functional and has been validated on Linux, Windows 10/11, and Intel macOS. Native Windows builds, a standalone Windows deployment folder, a Debian package, and a macOS Intel `.app` / `.dmg` tester flow have been tested.
 
-The current traffic-monitor checkpoint keeps the SSH trust-chain hardening, packaging helpers, macOS DMG flow, and optional diagnostic logging intact, then adds a compact live traffic indicator for the active terminal tab:
+The current checkpoint hardens the terminal data path while keeping the SSH trust-chain, known-host model, human-readable JSON config, diagnostic logging, Session Traffic monitor, and packaging flows intact.
+
+Recent checkpoints:
 
 - `dev 0.1.5.6` proved the Windows standalone deployment folder can run outside the build tree without manually extending `PATH`.
 - `dev 0.1.5.7` fixed portable `known_hosts` behavior so one shared `dd-ssh.json` can carry multiple legitimate host-key algorithms per `host:port`.
 - `dev 0.1.5.8` fixed a Windows/libssh handshake failure against newer OpenSSH servers that advertise ML-KEM/SNTRUP key-exchange algorithms before classic curve25519/ecdh algorithms.
-- `dev 0.1.6.1` and `dev 0.1.6.1.1` added the first Debian package workflow, screenshots, and packaging tutorial.
-- `dev 0.1.6.2` added the first macOS Intel app/DMG build and deployment documentation, including a DMG layout with an Applications shortcut.
 - `dev 0.1.6.3` verifies the approved SSH host key again in the real authentication/shell connection before any password or private key is sent.
 - `dev 0.1.6.4` adds `.gitignore` protection, release-artifact documentation, and checksum helpers for Linux, macOS, and Windows.
-- `dev 0.1.6.6` adds optional diagnostic logging for tester/debug workflows: logging is OFF by default, can be enabled from Settings, writes to a standard per-user log folder, and Help → Open Log Folder opens the logs.
-- `dev 0.1.6.9` is a bugfix stabilization checkpoint. It renames the xterm.js toolbar copy button for clarity, adds clearer Import/Restore dialog action buttons, and keeps SSH/config/runtime behavior unchanged.
-- `dev 0.1.6.8` adds config import/export safety previews. Before import/export, DD-SSH now shows counts for sessions, known hosts, trusted keys, secrets mode, saved secret counts, plaintext secret presence, and warnings. The human-readable JSON format remains unchanged.
-- `dev 0.1.6.7` adds a compact Session Traffic indicator in the status bar for the active terminal tab, showing live received/sent rates and totals while logging only traffic lifecycle summaries when diagnostic logging is enabled.
+- `dev 0.1.6.5` improves the macOS DMG/dependency flow and validates the simple DMG tester install path.
+- `dev 0.1.6.6` adds optional diagnostic logging for tester/debug workflows. Logging is OFF by default and can be enabled from Settings.
+- `dev 0.1.6.7` adds a compact Session Traffic indicator in the status bar for the active terminal tab, showing live received/sent rates and totals.
+- `dev 0.1.6.8` adds config import/export safety previews while keeping the human-readable JSON format unchanged.
+- `dev 0.1.6.9` is a small bugfix stabilization checkpoint for toolbar and config-dialog button labels.
+- `dev 0.1.7.0` hardens terminal transport: SSH output is carried as bytes to the WebEngine terminal, decoded with a streaming UTF-8 decoder, and input writes are partial-write aware so large paste/input is not silently truncated.
 
-In `dev 0.1.6.9`, SSH authentication, known-host logic, terminal behavior, Session Traffic, logging, and config schema are intentionally unchanged. The focus is small bugfix/UI stabilization after the 0.1.6.6–0.1.6.8 diagnostics and safety checkpoints.
+In `dev 0.1.7.0`, DD-SSH does not add SFTP, file manager, encryption, cloud sync, or installer redesigns. The focus is terminal reliability and preserving existing behavior.
 
 The portable known-host model now supports multi-key storage per `host:port`:
 

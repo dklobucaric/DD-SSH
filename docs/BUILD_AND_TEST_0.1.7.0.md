@@ -1,7 +1,7 @@
-# Build and Test — dev 0.1.6.9
+# Build and Test — dev 0.1.7.0
 
-**Checkpoint:** dev 0.1.6.9 — Andromeda
-**Scope:** Bugfix stabilization.
+**Checkpoint:** dev 0.1.7.0 — Andromeda
+**Scope:** Terminal transport hardening.
 
 ## Linux build
 
@@ -13,19 +13,21 @@ cmake --build build
 ./build/dd-ssh
 ```
 
-Expected: Help/About shows `dev 0.1.6.9`.
+Expected: Help/About shows `dev 0.1.7.0`.
 
-## Debian package smoke test
+## Linux package smoke test
 
 ```bash
 rm -rf build-linux-release dist/deb
 ./scripts/linux-build-release.sh
-DD_SSH_DEB_VERSION=0.1.6.9 ./scripts/linux-package-deb.sh
-sudo apt install ./dist/deb/dd-ssh_0.1.6.9_amd64.deb
+DD_SSH_DEB_VERSION=0.1.7.0 ./scripts/linux-package-deb.sh
+sudo apt install ./dist/deb/dd-ssh_0.1.7.0_amd64.deb
 dd-ssh
 ```
 
-## Windows smoke test
+## Windows release smoke test
+
+Use x64 Native Tools Command Prompt for VS 2022:
 
 ```cmd
 cd /d C:\dev\DD-SSH
@@ -41,12 +43,7 @@ cmake --build build-win-release
 scripts\windows-deploy-release.bat
 ```
 
-Run from a normal CMD after deploy:
-
-```cmd
-cd /d C:\dev\DD-SSH\dist\windows-release
-dd-ssh.exe
-```
+Then run `dist\windows-release\dd-ssh.exe` from a normal Command Prompt without manually extending PATH.
 
 ## macOS smoke test
 
@@ -56,9 +53,9 @@ git pull --ff-only origin main
 rm -rf build-macos-release dist/macos
 ./scripts/macos-build-release.sh
 ./scripts/macos-deploy-release.sh
-open dist/macos/DD-SSH-0.1.6.9-macOS-x86_64.dmg
+open dist/macos/DD-SSH-0.1.7.0-macOS-x86_64.dmg
 ```
 
-## Focus test
+## What must be verified
 
-Follow `docs/TESTCASE_0.1.6.9.md`.
+Follow `docs/TESTCASE_0.1.7.0.md`.

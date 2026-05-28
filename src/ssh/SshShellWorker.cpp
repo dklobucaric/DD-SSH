@@ -11,8 +11,15 @@
 #include <QMutexLocker>
 #include <QTemporaryFile>
 #include <QThread>
+#include <QtGlobal>
 
 namespace {
+
+#ifndef SSH_AGAIN
+constexpr int DdSshAgain = -2;
+#else
+constexpr int DdSshAgain = SSH_AGAIN;
+#endif
 
 QString safeLogLabel(QString value)
 {
@@ -243,8 +250,13 @@ void SshShellWorker::sendInput(const QString &input)
         return;
     }
 
+    const QByteArray inputBytes = input.toUtf8();
+    if (inputBytes.isEmpty()) {
+        return;
+    }
+
     QMutexLocker locker(&m_inputMutex);
-    m_pendingInput.append(input);
+    m_pendingInputBytes.append(inputBytes);
 }
 
 void SshShellWorker::resizePty(int columns, int rows)
@@ -261,17 +273,27 @@ void SshShellWorker::resizePty(int columns, int rows)
     m_pendingRows = rows;
 }
 
-QString SshShellWorker::takePendingInput()
+QByteArray SshShellWorker::takePendingInputBytes()
 {
     QMutexLocker locker(&m_inputMutex);
 
-    if (m_pendingInput.isEmpty()) {
-        return QString();
+    if (m_pendingInputBytes.isEmpty()) {
+        return QByteArray();
     }
 
-    const QString input = m_pendingInput.join(QString());
-    m_pendingInput.clear();
-    return input;
+    QByteArray inputBytes = m_pendingInputBytes;
+    m_pendingInputBytes.clear();
+    return inputBytes;
+}
+
+void SshShellWorker::requeuePendingInputBytes(const QByteArray &inputBytes)
+{
+    if (inputBytes.isEmpty()) {
+        return;
+    }
+
+    QMutexLocker locker(&m_inputMutex);
+    m_pendingInputBytes.prepend(inputBytes);
 }
 
 bool SshShellWorker::takePendingResize(int &columns, int &rows)
@@ -525,7 +547,7 @@ void SshShellWorker::start()
     AppLogger::info(QStringLiteral("SSH shell channel open: host=") + m_host
         + QStringLiteral(", port=") + QString::number(m_port));
     emit stateChanged(QStringLiteral("Connected. SSH shell channel is open."));
-    emit outputReceived(QStringLiteral("\n[DD-SSH] SSH shell channel is open.\n\n"));
+    emit outputReceived(QByteArrayLiteral("\n[DD-SSH] SSH shell channel is open.\n\n"));
 
     const QString trafficSessionLabel = safeLogLabel(!m_sessionLabel.trimmed().isEmpty() ? m_sessionLabel : (m_username + QStringLiteral("@") + m_host));
     qint64 receivedBytesTotal = 0;
@@ -548,18 +570,37 @@ void SshShellWorker::start()
             break;
         }
 
-        const QString pendingInput = takePendingInput();
+        const QByteArray pendingInput = takePendingInputBytes();
 
         if (!pendingInput.isEmpty()) {
-            const QByteArray inputUtf8 = pendingInput.toUtf8();
-            const int writeRc = ssh_channel_write(channel, inputUtf8.constData(), inputUtf8.size());
+            qsizetype bytesWrittenTotal = 0;
+            qsizetype bytesWrittenThisLoop = 0;
+            constexpr qsizetype maxWriteBytesPerLoop = 65536;
 
-            if (writeRc > 0) {
-                sentBytesTotal += writeRc;
-                emit trafficUpdated(receivedBytesTotal, sentBytesTotal);
-            }
+            while (bytesWrittenTotal < pendingInput.size()
+                && bytesWrittenThisLoop < maxWriteBytesPerLoop
+                && !m_stopRequested.load()) {
+                const qsizetype remainingBytes = pendingInput.size() - bytesWrittenTotal;
+                const qsizetype remainingLoopBudget = maxWriteBytesPerLoop - bytesWrittenThisLoop;
+                const int chunkSize = static_cast<int>(qMin<qsizetype>(qMin<qsizetype>(remainingBytes, remainingLoopBudget), 32768));
+                const int writeRc = ssh_channel_write(
+                    channel,
+                    pendingInput.constData() + bytesWrittenTotal,
+                    chunkSize
+                );
 
-            if (writeRc == SSH_ERROR) {
+                if (writeRc > 0) {
+                    bytesWrittenTotal += writeRc;
+                    bytesWrittenThisLoop += writeRc;
+                    sentBytesTotal += writeRc;
+                    emit trafficUpdated(receivedBytesTotal, sentBytesTotal);
+                    continue;
+                }
+
+                if (writeRc == DdSshAgain || writeRc == 0) {
+                    break;
+                }
+
                 connectionLost = true;
                 const QString writeError = QString::fromUtf8(ssh_get_error(session));
                 AppLogger::error(QStringLiteral("SSH shell write failed: ") + writeError);
@@ -568,6 +609,14 @@ void SshShellWorker::start()
                     + writeError
                 );
                 break;
+            }
+
+            if (connectionLost) {
+                break;
+            }
+
+            if (bytesWrittenTotal < pendingInput.size()) {
+                requeuePendingInputBytes(pendingInput.mid(bytesWrittenTotal));
             }
         }
 
@@ -602,7 +651,7 @@ void SshShellWorker::start()
             if (bytesRead > 0) {
                 receivedBytesTotal += bytesRead;
                 emit trafficUpdated(receivedBytesTotal, sentBytesTotal);
-                emit outputReceived(QString::fromUtf8(buffer, bytesRead));
+                emit outputReceived(QByteArray(buffer, bytesRead));
                 continue;
             }
 
@@ -633,7 +682,7 @@ void SshShellWorker::start()
             if (bytesRead > 0) {
                 receivedBytesTotal += bytesRead;
                 emit trafficUpdated(receivedBytesTotal, sentBytesTotal);
-                emit outputReceived(QString::fromUtf8(buffer, bytesRead));
+                emit outputReceived(QByteArray(buffer, bytesRead));
                 continue;
             }
 

@@ -98,7 +98,7 @@ BasicTerminalTab::BasicTerminalTab(
     m_worker->moveToThread(m_thread);
 
     connect(m_thread, &QThread::started, m_worker, &SshShellWorker::start);
-    connect(m_worker, &SshShellWorker::outputReceived, this, &BasicTerminalTab::appendOutput);
+    connect(m_worker, &SshShellWorker::outputReceived, this, &BasicTerminalTab::appendOutputBytes);
     connect(m_worker, &SshShellWorker::trafficUpdated, this, [this](qint64 receivedBytes, qint64 sentBytes) {
         m_receivedBytesTotal = receivedBytes;
         m_sentBytesTotal = sentBytes;
@@ -256,6 +256,15 @@ void BasicTerminalTab::appendOutput(const QString &output)
     if (m_output->verticalScrollBar() != nullptr) {
         m_output->verticalScrollBar()->setValue(m_output->verticalScrollBar()->maximum());
     }
+}
+
+void BasicTerminalTab::appendOutputBytes(const QByteArray &output)
+{
+    if (output.isEmpty()) {
+        return;
+    }
+
+    appendOutput(m_outputDecoder(output));
 }
 
 void BasicTerminalTab::updateState(const QString &state)

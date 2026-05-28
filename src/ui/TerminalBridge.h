@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <QByteArray>
 #include <QString>
 
 class TerminalBridge : public QObject
@@ -10,7 +11,7 @@ class TerminalBridge : public QObject
 public:
     explicit TerminalBridge(QObject *parent = nullptr);
 
-    void emitOutput(const QString &output);
+    void emitOutput(const QByteArray &output);
     void emitStatus(const QString &status);
     void emitError(const QString &error);
 
@@ -25,7 +26,7 @@ signals:
     void pasteRequested();
     void ready();
     void resizeRequested(int columns, int rows);
-    void outputReceived(const QString &output);
+    void outputBytesReceived(const QString &base64Output);
     void statusChanged(const QString &status);
     void errorReceived(const QString &error);
 };

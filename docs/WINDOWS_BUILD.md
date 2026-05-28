@@ -1,6 +1,6 @@
 # Windows Build Guide
 
-**Checkpoint:** dev 0.1.5.9 — Andromeda  
+**Checkpoint:** dev 0.1.5.9 — Andromeda
 **Purpose:** document the native Windows build path, confirmed Release build procedure, and handoff to the standalone deployment test.
 
 This guide documents the Windows setup that was validated during the Andromeda line. It is intentionally practical and conservative: first get a native Windows build running, then test runtime behavior, then later experiment with deployment/installer packaging.

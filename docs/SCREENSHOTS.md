@@ -1,6 +1,6 @@
 # DD-SSH Screenshots
 
-**Checkpoint:** dev 0.1.6.4 — Andromeda  
+**Checkpoint:** dev 0.1.6.4 — Andromeda
 **Phase:** README screenshots and Debian packaging tutorial polish
 
 This page contains the screenshot gallery used by the README. The screenshots were captured from the Linux `.deb` packaging validation pass and show the installed application running real saved sessions.

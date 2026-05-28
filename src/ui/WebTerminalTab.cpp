@@ -396,6 +396,7 @@ QString WebTerminalTab::terminalHtml() const
     let terminalInputEnabled = true;
     let rendererStatus = 'loading';
     let connectionState = 'starting';
+    let outputDecoder = (typeof TextDecoder !== 'undefined') ? new TextDecoder('utf-8') : null;
     let lastReportedCols = 0;
     let lastReportedRows = 0;
     let fitTimer = null;
@@ -502,6 +503,37 @@ QString WebTerminalTab::terminalHtml() const
         fallbackTerminal.scrollTop = fallbackTerminal.scrollHeight;
     }
 
+    function decodeBase64Bytes(base64Text) {
+        if (!base64Text) {
+            return new Uint8Array(0);
+        }
+
+        const binary = atob(base64Text);
+        const bytes = new Uint8Array(binary.length);
+
+        for (let i = 0; i < binary.length; i += 1) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+
+        return bytes;
+    }
+
+    function decodeTerminalBytes(bytes) {
+        if (!bytes || bytes.length === 0) {
+            return '';
+        }
+
+        if (outputDecoder) {
+            return outputDecoder.decode(bytes, { stream: true });
+        }
+
+        let text = '';
+        for (let i = 0; i < bytes.length; i += 1) {
+            text += String.fromCharCode(bytes[i]);
+        }
+        return text;
+    }
+
     function writeTerminal(text, cleanFallback = true) {
         if (!text) {
             return;
@@ -513,6 +545,17 @@ QString WebTerminalTab::terminalHtml() const
         }
 
         fallbackAppend(text, cleanFallback);
+    }
+
+    function writeTerminalBytes(base64Text) {
+        const bytes = decodeBase64Bytes(base64Text);
+        const text = decodeTerminalBytes(bytes);
+
+        if (!text) {
+            return;
+        }
+
+        writeTerminal(text, true);
     }
 
     function sendInput(text) {
@@ -736,8 +779,8 @@ QString WebTerminalTab::terminalHtml() const
     new QWebChannel(qt.webChannelTransport, function (channel) {
         bridge = channel.objects.terminalBridge;
 
-        bridge.outputReceived.connect(function (text) {
-            writeTerminal(text, true);
+        bridge.outputBytesReceived.connect(function (base64Text) {
+            writeTerminalBytes(base64Text);
         });
 
         bridge.statusChanged.connect(function (text) {

@@ -1,25 +1,26 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.6.9 — Andromeda
+**Checkpoint:** dev 0.1.7.0 — Andromeda
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
-**Phase:** macOS DMG/dependency polish
+**Phase:** Terminal transport hardening
 
 This matrix tracks what has been confirmed manually, what is implemented but should be re-tested before a public alpha tag, and what is still planned.
 
-## dev 0.1.6.9 — Bugfix stabilization smoke test
+## dev 0.1.7.0 — Terminal transport hardening smoke test
 
-[ ] About shows dev 0.1.6.9
-[ ] xterm.js terminal toolbar shows `Copy`, `Paste`, `Clear`, `Reset`, `Focus`, `Reconnect`, `Disconnect`
-[ ] Copy copies selected terminal text to the clipboard
-[ ] Keyboard Ctrl+C inside the terminal can still interrupt remote programs
-[ ] BasicTerminal fallback button shows `Interrupt`, not `Ctrl+C`
-[ ] File → Import Config preview uses `Import` and `Cancel` buttons
-[ ] Import `Cancel` does not replace the active config
-[ ] Import `Import` replaces config and reloads sessions/settings without app restart
-[ ] File → Restore Latest Backup uses `Restore` and `Cancel` buttons
-[ ] Restore `Cancel` does not replace the active config
-[ ] Restore `Restore` restores the newest valid backup and moves current config to `dd-ssh.json.pre-restore-*`
-[ ] SSH connect, diagnostic logging, and Session Traffic still work
+[ ] About shows dev 0.1.7.0
+[ ] Saved xterm.js terminal opens normally
+[ ] Basic commands work: `whoami`, `pwd`, `clear`, `stty size`
+[ ] Fullscreen apps still work where previously validated: `htop`, `top`, `nano`, `vim`
+[ ] UTF-8 output renders correctly: `čćžšđ ČĆŽŠĐ € 🚀`
+[ ] Output-heavy commands render without crash or UI lockup
+[ ] Large paste / large input is not silently truncated
+[ ] Keyboard Ctrl+C inside terminal still interrupts remote programs
+[ ] Toolbar Copy still copies selected terminal text
+[ ] Session Traffic RX/TX counters still update
+[ ] Diagnostic logging still excludes terminal input/output and secrets
+[ ] Windows KEX regression host still connects
+[ ] Known-host multi-key portability regression still passes
 
 ## dev 0.1.6.8 — Config import/export safety preview smoke test
 

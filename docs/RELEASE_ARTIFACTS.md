@@ -1,6 +1,6 @@
 # DD-SSH release artifacts
 
-**Checkpoint:** dev 0.1.6.9 — Andromeda  
+**Checkpoint:** dev 0.1.7.0 — Andromeda
 **Phase:** repo hygiene and release artifact workflow
 
 This repository should contain source code, documentation, resources, packaging templates, and helper scripts. Generated release artifacts should not be committed to Git.

@@ -1,6 +1,6 @@
 # Build and Test — dev 0.1.6.5
 
-**Checkpoint:** dev 0.1.6.5 — Andromeda  
+**Checkpoint:** dev 0.1.6.5 — Andromeda
 **Phase:** macOS DMG/dependency polish
 
 This checkpoint does **not** change SSH/session/terminal runtime behavior. It improves the macOS tester deployment flow and documentation.

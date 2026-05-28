@@ -3,9 +3,9 @@
 #include "SshSession.h"
 
 #include <QObject>
+#include <QByteArray>
 #include <QMutex>
 #include <QString>
-#include <QStringList>
 #include <atomic>
 
 class SshShellWorker : public QObject
@@ -33,14 +33,15 @@ public slots:
     void resizePty(int columns, int rows);
 
 signals:
-    void outputReceived(const QString &output);
+    void outputReceived(const QByteArray &output);
     void stateChanged(const QString &state);
     void errorOccurred(const QString &error);
     void trafficUpdated(qint64 receivedBytes, qint64 sentBytes);
     void finished();
 
 private:
-    QString takePendingInput();
+    QByteArray takePendingInputBytes();
+    void requeuePendingInputBytes(const QByteArray &inputBytes);
     bool takePendingResize(int &columns, int &rows);
     void requestStop();
 
@@ -53,7 +54,7 @@ private:
     QString m_sessionLabel;
 
     QMutex m_inputMutex;
-    QStringList m_pendingInput;
+    QByteArray m_pendingInputBytes;
 
     QMutex m_resizeMutex;
     int m_pendingColumns = 0;

@@ -1,6 +1,6 @@
 # DD-SSH Windows libssh Handshake Compatibility Test
 
-**Checkpoint:** dev 0.1.5.9 — Andromeda  
+**Checkpoint:** dev 0.1.5.9 — Andromeda
 **Focus:** Windows libssh KEX compatibility with newer OpenSSH servers
 
 ## Real regression case

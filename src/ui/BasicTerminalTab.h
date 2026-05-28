@@ -5,6 +5,8 @@
 
 #include <QString>
 #include <QWidget>
+#include <QByteArray>
+#include <QStringDecoder>
 
 class QLabel;
 class QLineEdit;
@@ -51,6 +53,7 @@ private slots:
 
 private:
     QString cleanTerminalOutput(const QString &output) const;
+    void appendOutputBytes(const QByteArray &output);
 
     SessionProfile m_session;
     QString m_secretValue;
@@ -68,6 +71,7 @@ private:
     SshShellWorker *m_worker = nullptr;
     qint64 m_receivedBytesTotal = 0;
     qint64 m_sentBytesTotal = 0;
+    QStringDecoder m_outputDecoder { QStringDecoder::Utf8 };
     bool m_shellActive = false;
     bool m_disconnectRequested = false;
 };

@@ -45,7 +45,7 @@ Help → About DD-SSH
 Expected checkpoint:
 
 ```text
-Version: dev 0.1.6.9
+Version: dev 0.1.7.0
 Codename: Andromeda
 Milestone: MF 0.2 candidate
 ```

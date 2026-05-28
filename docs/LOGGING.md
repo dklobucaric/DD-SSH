@@ -1,6 +1,6 @@
 # DD-SSH diagnostic logging
 
-**Checkpoint:** dev 0.1.6.9 — Andromeda  
+**Checkpoint:** dev 0.1.7.0 — Andromeda
 **Scope:** optional diagnostic logging foundation plus Session Traffic summaries
 
 DD-SSH diagnostic logging is an on-demand debugging tool for testers and developers. It is **off by default** and can be enabled only when needed.

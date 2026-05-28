@@ -1,6 +1,6 @@
 # Build and Test — dev 0.1.6.8
 
-**Checkpoint:** dev 0.1.6.8 — Andromeda  
+**Checkpoint:** dev 0.1.6.8 — Andromeda
 **Scope:** Config import/export safety preview.
 
 ## Linux build

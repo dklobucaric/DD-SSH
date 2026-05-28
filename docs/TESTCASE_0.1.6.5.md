@@ -1,6 +1,6 @@
 # Testcase — dev 0.1.6.5
 
-**Checkpoint:** dev 0.1.6.5 — Andromeda  
+**Checkpoint:** dev 0.1.6.5 — Andromeda
 **Goal:** validate macOS DMG/dependency polish without changing runtime behavior.
 
 ## Test 1 — Linux regression smoke test

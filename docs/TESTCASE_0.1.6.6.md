@@ -1,6 +1,6 @@
 # Testcase — dev 0.1.6.6
 
-**Checkpoint:** dev 0.1.6.6 — Andromeda  
+**Checkpoint:** dev 0.1.6.6 — Andromeda
 **Feature:** optional diagnostic logging foundation
 
 ## Test 1 — default OFF

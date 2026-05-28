@@ -14,6 +14,7 @@ This directory contains the working documentation for DD-SSH.
 ## Technical docs
 
 - [Architecture](ARCHITECTURE.md) — UI/core/SSH/terminal/config layers
+- [Terminal Transport](TERMINAL_TRANSPORT.md) — SSH byte-stream terminal output/input path
 - [Config Format](CONFIG_FORMAT.md) — `dd-ssh.json` structure
 - [Config Management](CONFIG_MANAGEMENT.md) — backups, import/export, recovery
 - [Security Notes](SECURITY_NOTES.md) — plaintext secrets, known_hosts, future encryption
@@ -44,10 +45,10 @@ This directory contains the working documentation for DD-SSH.
 ## Current checkpoint
 
 ```text
-Version: dev 0.1.6.9
+Version: dev 0.1.7.0
 Codename: Andromeda
 Milestone: MF 0.2 candidate
-Phase: macOS DMG/dependency polish
+Phase: Terminal transport hardening
 ```
 
 
@@ -75,3 +76,5 @@ GitHub issue templates live under `.github/ISSUE_TEMPLATE/`.
 - docs/SESSION_TRAFFIC.md explains the status-bar Session Traffic monitor added in dev 0.1.6.7.
 
 - docs/CONFIG_IMPORT_EXPORT_SAFETY.md explains the config import/export preview added in dev 0.1.6.8.
+
+- docs/TERMINAL_TRANSPORT.md explains the byte-stream terminal transport hardening added in dev 0.1.7.0.

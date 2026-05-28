@@ -1,6 +1,6 @@
 # Testcase — dev 0.1.6.7
 
-**Checkpoint:** dev 0.1.6.7 — Andromeda  
+**Checkpoint:** dev 0.1.6.7 — Andromeda
 **Feature:** Basic Session Traffic Monitor
 
 ## Goal
