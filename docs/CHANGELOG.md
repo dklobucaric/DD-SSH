@@ -1,3 +1,17 @@
+## dev 0.1.7.1 — Andromeda
+
+### Fixed
+- Routed native xterm.js paste events through the same DD-SSH safe paste path used by the toolbar Paste button.
+- Fixed right-click paste and Ctrl+Shift+V paste so bracketed paste wrappers such as `^[[200~` / `^[[201~` should not be sent as literal text to the remote shell.
+- Added a defensive strip of bracketed-paste wrapper markers if they still reach the xterm.js data path.
+- Kept keyboard Ctrl+C behavior unchanged so remote programs can still be interrupted from the focused terminal.
+
+### Not changed
+- No SSH trust-chain, known-host, JSON, logging, traffic monitor, packaging, or file-transfer behavior was changed.
+
+### Docs
+- Added `docs/BUILD_AND_TEST_0.1.7.1.md` and `docs/TESTCASE_0.1.7.1.md`.
+
 ## dev 0.1.7.0 — Andromeda
 
 Terminal transport hardening checkpoint.

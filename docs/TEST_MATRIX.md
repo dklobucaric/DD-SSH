@@ -1,10 +1,22 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.7.0 — Andromeda
+**Checkpoint:** dev 0.1.7.1 — Andromeda
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
 **Phase:** Terminal transport hardening
 
 This matrix tracks what has been confirmed manually, what is implemented but should be re-tested before a public alpha tag, and what is still planned.
+
+
+## dev 0.1.7.1 — Native paste event hardening smoke test
+
+[ ] About shows dev 0.1.7.1
+[ ] Toolbar Paste still sends clipboard text cleanly
+[ ] Right-click paste sends clipboard text cleanly and does not show `^[[200~` or `^[[201~`
+[ ] Ctrl+Shift+V sends clipboard text cleanly and does not show `^[[200~` or `^[[201~`
+[ ] macOS Command+V sends clipboard text cleanly and does not show `^[[200~` or `^[[201~`
+[ ] Keyboard Ctrl+C inside the focused terminal still interrupts a remote program such as `seq 1 500000`
+[ ] Large paste through the toolbar Paste button still works without truncation
+[ ] Session Traffic counters still update during output-heavy commands
 
 ## dev 0.1.7.0 — Terminal transport hardening smoke test
 

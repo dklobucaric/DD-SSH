@@ -30,3 +30,10 @@ Diagnostic logging records lifecycle events and traffic summaries only. It must 
 ## Not changed
 
 This checkpoint does not add SFTP, file manager, encryption, new config schema, or OS-level network monitoring. Session Traffic still measures DD-SSH SSH channel bytes, not global OS traffic.
+
+
+## 0.1.7.1 native paste event hardening
+
+After the 0.1.7.0 byte-stream transport work, native xterm.js paste paths still needed a small hardening pass. Toolbar Paste, right-click paste, Ctrl+Shift+V, and macOS Command+V should now use the same DD-SSH safe paste path. If browser/xterm.js bracketed-paste wrapper markers still reach the data callback, DD-SSH strips only the wrapper markers before sending data to the remote shell.
+
+Keyboard Ctrl+C remains a remote interrupt when the terminal has focus; the toolbar Copy button remains a clipboard copy action for selected terminal text.

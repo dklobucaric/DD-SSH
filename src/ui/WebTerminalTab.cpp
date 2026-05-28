@@ -580,6 +580,94 @@ QString WebTerminalTab::terminalHtml() const
         return String.fromCharCode(code - 64);
     }
 
+
+    function normalizePasteText(text) {
+        if (!text) {
+            return '';
+        }
+
+        let normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+        if (normalized.indexOf('\n') !== -1 && !normalized.endsWith('\n')) {
+            normalized += '\n';
+        }
+
+        return normalized;
+    }
+
+    function isSafePasteShortcut(event) {
+        if (!event || !event.key || event.altKey) {
+            return false;
+        }
+
+        const key = event.key.toLowerCase();
+
+        // Linux/Windows terminal convention: Ctrl+Shift+V means paste.
+        if (event.ctrlKey && event.shiftKey && !event.metaKey && key === 'v') {
+            return true;
+        }
+
+        // macOS convention: Command+V means paste.
+        if (event.metaKey && !event.ctrlKey && key === 'v') {
+            return true;
+        }
+
+        return false;
+    }
+
+    function requestSafePasteFromQt() {
+        if (!bridge || !terminalInputEnabled) {
+            return;
+        }
+
+        bridge.requestPaste();
+    }
+
+    function handleNativePasteEvent(event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (typeof event.stopImmediatePropagation === 'function') {
+                event.stopImmediatePropagation();
+            }
+        }
+
+        requestSafePasteFromQt();
+        return false;
+    }
+
+    function handleSafePasteShortcut(event) {
+        if (!isSafePasteShortcut(event)) {
+            return;
+        }
+
+        handleNativePasteEvent(event);
+    }
+
+    function installSafePasteHandlers(element) {
+        if (!element) {
+            return;
+        }
+
+        element.addEventListener('paste', handleNativePasteEvent, true);
+        element.addEventListener('keydown', handleSafePasteShortcut, true);
+    }
+
+    function stripBracketedPasteMarkers(data) {
+        if (!data) {
+            return '';
+        }
+
+        // Native/browser paste paths in xterm.js may wrap pasted text with
+        // bracketed-paste markers when the remote shell enabled bracketed
+        // paste mode. DD-SSH routes paste through Qt so large paste and
+        // clipboard handling are consistent across platforms; if raw markers
+        // still reach onData, strip only the wrapper markers before sending to
+        // the remote shell.
+        return data.replace(/\x1b\[200~/g, '').replace(/\x1b\[201~/g, '');
+    }
+
     function setupFallbackInput() {
         hideStartupNotice();
         terminalHost.style.display = 'none';
@@ -633,19 +721,15 @@ QString WebTerminalTab::terminalHtml() const
 
         fallbackTerminal.addEventListener('paste', function (event) {
             event.preventDefault();
+            event.stopPropagation();
 
             let text = event.clipboardData ? event.clipboardData.getData('text') : '';
+            text = normalizePasteText(text);
 
             if (text) {
-                text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-
-                if (text.indexOf('\n') !== -1 && !text.endsWith('\n')) {
-                    text += '\n';
-                }
-
                 sendInput(text);
             }
-        });
+        }, true);
 
         fallbackTerminal.addEventListener('mousedown', function () {
             fallbackTerminal.focus();
@@ -689,6 +773,11 @@ QString WebTerminalTab::terminalHtml() const
         }
 
         term.open(terminalHost);
+        installSafePasteHandlers(terminalHost);
+        installSafePasteHandlers(document.body);
+        if (term.textarea) {
+            installSafePasteHandlers(term.textarea);
+        }
         fitAndReport();
         term.focus();
 
@@ -700,7 +789,11 @@ QString WebTerminalTab::terminalHtml() const
         term.writeln('');
 
         term.onData(function (data) {
-            sendInput(data);
+            const sanitizedData = stripBracketedPasteMarkers(data);
+
+            if (sanitizedData) {
+                sendInput(sanitizedData);
+            }
         });
 
         terminalHost.addEventListener('mousedown', function () {

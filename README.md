@@ -17,7 +17,7 @@ DD-SSH is designed for practical sysadmin use: saved sessions, one portable JSON
 
 ## Current status
 
-**Development checkpoint:** `dev 0.1.7.0`
+**Development checkpoint:** `dev 0.1.7.1`
 **Codename:** Andromeda
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
 **Current phase:** Terminal transport hardening
@@ -38,6 +38,7 @@ Recent checkpoints:
 - `dev 0.1.6.7` adds a compact Session Traffic indicator in the status bar for the active terminal tab, showing live received/sent rates and totals.
 - `dev 0.1.6.8` adds config import/export safety previews while keeping the human-readable JSON format unchanged.
 - `dev 0.1.6.9` is a small bugfix stabilization checkpoint for toolbar and config-dialog button labels.
+- `dev 0.1.7.1` hardens native xterm.js paste handling: toolbar Paste, right-click paste, Ctrl+Shift+V, and macOS Command+V now route through the same DD-SSH safe paste path and should not leak bracketed paste markers such as `^[[200~` into the remote shell.
 - `dev 0.1.7.0` hardens terminal transport: SSH output is carried as bytes to the WebEngine terminal, decoded with a streaming UTF-8 decoder, and input writes are partial-write aware so large paste/input is not silently truncated.
 
 In `dev 0.1.7.0`, DD-SSH does not add SFTP, file manager, encryption, cloud sync, or installer redesigns. The focus is terminal reliability and preserving existing behavior.
