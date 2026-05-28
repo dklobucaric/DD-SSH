@@ -1,6 +1,6 @@
 # DD-SSH Known Limitations
 
-**Checkpoint:** dev 0.1.7.4.1 — Andromeda
+**Checkpoint:** dev 0.1.7.5 — Andromeda
 
 This document lists limitations that should be visible to testers. Nothing here is hidden or sugar-coated.
 
@@ -29,7 +29,7 @@ This document lists limitations that should be visible to testers. Nothing here 
 
 ## Feature limitations
 
-`dev 0.1.7.4.1` keeps only the first graphical read-only remote SFTP browser and bugfix polish. `dev 0.1.7.4` added the browser. It can browse remote directories, but it is not a complete two-panel file manager yet.
+`dev 0.1.7.5` adds the first two-panel read-only file manager foundation. It can browse local and remote directories side by side, but it is still read-only and not a transfer tool yet.
 
 Not implemented yet:
 

@@ -192,6 +192,7 @@ QComboBox,
 QListWidget,
 QTableWidget,
 QTableView,
+QTreeView,
 QTextEdit,
 QPlainTextEdit {
     background-color: #ffffff;
@@ -200,7 +201,8 @@ QPlainTextEdit {
     selection-background-color: #cfe3ff;
     selection-color: #111111;
 }
-QTableWidget::item:selected {
+QTableWidget::item:selected,
+QTreeView::item:selected {
     background-color: #cfe3ff;
     color: #111111;
 }
@@ -277,6 +279,7 @@ QComboBox,
 QListWidget,
 QTableWidget,
 QTableView,
+QTreeView,
 QTextEdit,
 QPlainTextEdit {
     background-color: #0f141b;
@@ -286,11 +289,13 @@ QPlainTextEdit {
     selection-color: #ffffff;
 }
 QListWidget::item:selected,
-QTableWidget::item:selected {
+QTableWidget::item:selected,
+QTreeView::item:selected {
     background-color: #2f7d46;
     color: #ffffff;
 }
-QTableWidget::item {
+QTableWidget::item,
+QTreeView::item {
     background-color: #0f141b;
     color: #e6edf3;
 }
@@ -1034,7 +1039,7 @@ bool MainWindow::confirmExitWithOpenConnectionTabs()
     }
 
     if (!openSftpBrowsers.isEmpty()) {
-        message += QStringLiteral("\n\nSFTP browser tab(s):");
+        message += QStringLiteral("\n\nSFTP file manager tab(s):");
         for (int i = 0; i < openSftpBrowsers.size() && i < maxShownItems; ++i) {
             message += QStringLiteral("\n- ") + openSftpBrowsers.at(i);
         }
@@ -1558,7 +1563,7 @@ void MainWindow::addWelcomeTab()
         "A clean cross-platform SSH client and session manager.\n\n"
         "Double-click a saved session on the left to open the xterm.js terminal.\n\n"
         "Current milestone:\n"
-        "Read-only SFTP browser bugfix polish — browser UI safer for cross-platform testing\n\n"
+        "Local and remote read-only file manager foundation — two-panel browser, no transfers yet\n\n"
         "Working now:\n"
         "- saved sessions loaded from dd-ssh.json\n"
         "- portable plaintext secrets in dd-ssh.json\n"
@@ -1576,7 +1581,7 @@ void MainWindow::addWelcomeTab()
         "- cross-platform app icon resources for Qt, Windows, Linux, and macOS prep\n"
         "- Windows standalone deployment helper validated on real Windows 10/11 machines\n"
         "- app exit protection when active SSH terminals are still connected\n"
-        "- read-only File Manager / SFTP browser action for the 0.1.7.x SFTP development track\n\n"
+        "- read-only two-panel File Manager / SFTP file manager action for the 0.1.7.x SFTP development track\n\n"
         "Main menus:\n"
         "- File: Open Config Folder, Export Config, Import Config, Restore Latest Backup, Exit\n"
         "- Session: New Session, Connect / Auth test, Edit selected session\n"
@@ -1593,10 +1598,10 @@ void MainWindow::addWelcomeTab()
         "- docs/SECURITY_NOTES.md explains plaintext secrets and known_hosts rules\n"
         "- docs/TEST_MATRIX.md tracks current Andromeda validation\n"
         "- docs/ROADMAP.md tracks future versions\n"
-        "- docs/FILE_TRANSFER_ARCHITECTURE.md explains the planned SFTP/File Manager foundation\n\n"
+        "- docs/FILE_TRANSFER_ARCHITECTURE.md explains the planned SFTP/File Manager foundation and two-panel browser path\n\n"
         "Current development focus:\n"
         "- keep dev 0.1.7.1 as the closed terminal foundation baseline\n"
-        "- introduce a read-only SFTP browser without changing SSH terminal runtime behavior\n"
+        "- introduce a read-only file manager without changing SSH terminal runtime behavior\n"
         "- use libssh SFTP API for remote directory browsing, not shell command parsing hacks\n"
         "- keep terminal tabs and future File Manager tabs separated by design\n\n"
         "Codename roadmap:\n"
@@ -1626,7 +1631,7 @@ void MainWindow::openSftpBrowserForSavedSession(const QString &sessionId)
         statusTab->setPlainText(text);
 
         const QString tabName = session.name.trimmed().isEmpty()
-            ? QStringLiteral("sftp status")
+            ? QStringLiteral("file manager status")
             : session.name + QStringLiteral(" ") + titleSuffix;
         const int tabIndex = m_tabs->addTab(statusTab, tabName);
         m_tabs->setCurrentIndex(tabIndex);
@@ -1638,11 +1643,11 @@ void MainWindow::openSftpBrowserForSavedSession(const QString &sessionId)
             QStringLiteral("Could not load saved session"),
             loadError
         );
-        statusBar()->showMessage(QStringLiteral("Could not load saved session for SFTP browser: ") + sessionId);
+        statusBar()->showMessage(QStringLiteral("Could not load saved session for SFTP file manager: ") + sessionId);
         return;
     }
 
-    AppLogger::info(QStringLiteral("SFTP browser requested: session=\"") + session.name
+    AppLogger::info(QStringLiteral("SFTP file manager requested: session=\"") + session.name
         + QStringLiteral("\", host=") + session.host
         + QStringLiteral(", port=") + QString::number(session.port)
         + QStringLiteral(", user=") + session.username);
@@ -1665,8 +1670,8 @@ void MainWindow::openSftpBrowserForSavedSession(const QString &sessionId)
             : session.keyRef;
 
     QString preflightText;
-    preflightText += QStringLiteral("DD-SSH read-only SFTP browser preflight\n\n");
-    preflightText += QStringLiteral("Checkpoint: dev 0.1.7.4.1 — read-only SFTP browser bugfix polish\n\n");
+    preflightText += QStringLiteral("DD-SSH read-only file manager preflight\n\n");
+    preflightText += QStringLiteral("Checkpoint: dev 0.1.7.5 — local and remote read-only file manager foundation\n\n");
     preflightText += QStringLiteral("Session: ") + session.name + QStringLiteral("\n");
     preflightText += QStringLiteral("Session id: ") + session.id + QStringLiteral("\n");
     preflightText += QStringLiteral("Group: ") + (session.group.trimmed().isEmpty() ? QStringLiteral("(none)") : session.group) + QStringLiteral("\n\n");
@@ -1677,12 +1682,12 @@ void MainWindow::openSftpBrowserForSavedSession(const QString &sessionId)
     preflightText += QStringLiteral("Secret ref: ") + secretRef + QStringLiteral("\n");
     preflightText += QStringLiteral("Secret value: loaded from dd-ssh.json, hidden from display\n\n");
     preflightText += QStringLiteral("Scope:\n");
-    preflightText += QStringLiteral("- open a graphical read-only remote SFTP browser tab\n");
+    preflightText += QStringLiteral("- open a graphical read-only two-panel file manager tab\n");
     preflightText += QStringLiteral("- use saved session data and plain-v1 secret references\n");
     preflightText += QStringLiteral("- use existing known-host prompt and trust-chain preflight\n");
     preflightText += QStringLiteral("- verify the approved host key again before SFTP authentication\n");
-    preflightText += QStringLiteral("- list remote directories with Refresh, Up, editable path, and double-click folder navigation\n");
-    preflightText += QStringLiteral("- no upload, download, delete, rename, queue, or local file panel yet\n\n");
+    preflightText += QStringLiteral("- browse local directories and remote SFTP directories side by side with Refresh, Up, editable paths, and double-click folder navigation\n");
+    preflightText += QStringLiteral("- no upload, download, delete, rename, queue, or transfer progress yet\n\n");
 
     QString secretValue;
     QString secretType;
@@ -1692,9 +1697,9 @@ void MainWindow::openSftpBrowserForSavedSession(const QString &sessionId)
         preflightText += QStringLiteral("Secret load result:\n");
         preflightText += QStringLiteral("Status: FAILED\n");
         preflightText += QStringLiteral("Message: ") + secretError + QStringLiteral("\n\n");
-        preflightText += QStringLiteral("SFTP browser was NOT opened.\n");
-        addStatusTab(QStringLiteral("sftp error"), preflightText);
-        statusBar()->showMessage(QStringLiteral("SFTP browser secret load failed for ") + tabTitle);
+        preflightText += QStringLiteral("SFTP file manager was NOT opened.\n");
+        addStatusTab(QStringLiteral("file manager error"), preflightText);
+        statusBar()->showMessage(QStringLiteral("SFTP file manager secret load failed for ") + tabTitle);
         return;
     }
 
@@ -1711,9 +1716,9 @@ void MainWindow::openSftpBrowserForSavedSession(const QString &sessionId)
             + QStringLiteral(", got ")
             + secretType
             + QStringLiteral(".\n\n");
-        preflightText += QStringLiteral("SFTP browser was NOT opened.\n");
-        addStatusTab(QStringLiteral("sftp error"), preflightText);
-        statusBar()->showMessage(QStringLiteral("SFTP browser secret type mismatch for ") + tabTitle);
+        preflightText += QStringLiteral("SFTP file manager was NOT opened.\n");
+        addStatusTab(QStringLiteral("file manager error"), preflightText);
+        statusBar()->showMessage(QStringLiteral("SFTP file manager secret type mismatch for ") + tabTitle);
         return;
     }
 
@@ -1721,7 +1726,7 @@ void MainWindow::openSftpBrowserForSavedSession(const QString &sessionId)
     preflightText += QStringLiteral("Status: SUCCESS\n");
     preflightText += QStringLiteral("Message: Plaintext secret loaded from dd-ssh.json. Value is hidden.\n\n");
 
-    statusBar()->showMessage(QStringLiteral("Running SSH preflight before SFTP browser for ") + tabTitle + QStringLiteral("..."));
+    statusBar()->showMessage(QStringLiteral("Running SSH preflight before SFTP file manager for ") + tabTitle + QStringLiteral("..."));
     QApplication::setOverrideCursor(Qt::WaitCursor);
     QApplication::processEvents();
 
@@ -1785,22 +1790,22 @@ void MainWindow::openSftpBrowserForSavedSession(const QString &sessionId)
         preflightText += QStringLiteral("Error: ") + handshake.error + QStringLiteral("\n\n");
         preflightText += QStringLiteral("Known-host result:\n");
         preflightText += QStringLiteral("Decision: Not checked because handshake failed\n\n");
-        preflightText += QStringLiteral("SFTP browser was NOT opened.\n");
-        addStatusTab(QStringLiteral("sftp error"), preflightText);
-        statusBar()->showMessage(QStringLiteral("SFTP browser preflight failed for ") + tabTitle);
+        preflightText += QStringLiteral("SFTP file manager was NOT opened.\n");
+        addStatusTab(QStringLiteral("file manager error"), preflightText);
+        statusBar()->showMessage(QStringLiteral("SFTP file manager preflight failed for ") + tabTitle);
         return;
     }
 
     if (!knownHostAllowed) {
         preflightText += QStringLiteral("Connection flow stopped at known-host decision.\n");
-        preflightText += QStringLiteral("SFTP browser was NOT opened.\n");
-        addStatusTab(QStringLiteral("sftp cancelled"), preflightText);
-        statusBar()->showMessage(QStringLiteral("SFTP browser cancelled by known-host decision for ") + tabTitle);
+        preflightText += QStringLiteral("SFTP file manager was NOT opened.\n");
+        addStatusTab(QStringLiteral("file manager cancelled"), preflightText);
+        statusBar()->showMessage(QStringLiteral("SFTP file manager cancelled by known-host decision for ") + tabTitle);
         return;
     }
 
-    preflightText += QStringLiteral("Known-host decision allows SFTP browser.\n\n");
-    preflightText += QStringLiteral("Opening read-only SFTP browser tab.\n");
+    preflightText += QStringLiteral("Known-host decision allows SFTP file manager.\n\n");
+    preflightText += QStringLiteral("Opening read-only two-panel file manager tab.\n");
 
     const SshHostKeyExpectation hostKeyExpectation = makeHostKeyExpectation(
         session.host,
@@ -1829,7 +1834,7 @@ void MainWindow::openSftpBrowserForSavedSession(const QString &sessionId)
     const int tabIndex = m_tabs->addTab(browserTab, session.name + QStringLiteral(" files"));
     m_tabs->setCurrentIndex(tabIndex);
 
-    statusBar()->showMessage(QStringLiteral("Opened read-only SFTP browser for ") + tabTitle);
+    statusBar()->showMessage(QStringLiteral("Opened read-only file manager for ") + tabTitle);
 }
 
 
@@ -1853,7 +1858,7 @@ void MainWindow::showSessionContextMenu(const QPoint &position)
 
     QMenu menu(this);
     QAction *openWebTerminalAction = menu.addAction("Open xterm.js terminal");
-    QAction *fileManagerAction = menu.addAction("Open File Manager (read-only)");
+    QAction *fileManagerAction = menu.addAction("Open File Manager (read-only two-panel)");
     QAction *connectAction = menu.addAction("Run auth test");
     QAction *openShellAction = menu.addAction("Open basic shell (fallback)");
     menu.addSeparator();

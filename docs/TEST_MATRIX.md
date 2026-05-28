@@ -1,8 +1,23 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.7.4.1 — Andromeda  
-**Milestone:** Read-only SFTP browser bugfix polish  
-**Phase:** First graphical read-only SFTP browser tab, cross-platform polish before commit
+**Checkpoint:** dev 0.1.7.5 — Andromeda  
+**Milestone:** Local + remote read-only file manager foundation  
+**Phase:** First two-panel read-only file manager, no transfers yet
+
+## dev 0.1.7.5 — local + remote read-only file manager smoke test
+
+[ ] About shows dev 0.1.7.5  
+[ ] Saved-session context menu shows `Open File Manager (read-only two-panel)`  
+[ ] File Manager opens with a local panel on the left and remote SFTP panel on the right  
+[ ] Local panel starts at the user's home directory or a valid local path  
+[ ] Local `Go`, `↑ Up`, `Refresh`, and double-click folder navigation work  
+[ ] Local file selection does not upload/open/modify anything  
+[ ] Remote panel still lists remote `.` on a known SFTP-enabled server  
+[ ] Remote `Go`, `↑ Up`, `Refresh`, and double-click folder navigation still work  
+[ ] No upload/download/delete/rename buttons are present  
+[ ] Exit safety still lists open File Manager/SFTP tabs  
+[ ] Existing xterm.js terminal, paste paths, Ctrl+C interrupt, known-host checks, and logging still work  
+[ ] Session Traffic still reports terminal traffic only; SFTP transfer counters are not expected yet  
 
 ## dev 0.1.7.4.1 — read-only SFTP browser bugfix smoke test
 

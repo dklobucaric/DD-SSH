@@ -1,7 +1,7 @@
 # DD-SSH File Transfer Architecture
 
-**Checkpoint:** dev 0.1.7.4.1 — Andromeda  
-**Status:** Read-only SFTP browser bugfix polish  
+**Checkpoint:** dev 0.1.7.5 — Andromeda  
+**Status:** Local + remote read-only file manager foundation  
 **Runtime behavior:** saved-session SFTP browser can list and navigate remote directories
 
 ---
@@ -30,9 +30,9 @@ The future File Manager should eventually provide:
 
 ---
 
-## dev 0.1.7.4.1 polish boundary
+## dev 0.1.7.5 two-panel boundary
 
-`dev 0.1.7.4.1` is a small bugfix polish checkpoint for the first read-only SFTP browser. It includes exit safety for SFTP browser tabs, readable dark-theme table rows, and tab-bar scroll hints for crowded tab bars. It does **not** add SFTP traffic counters, upload/download, local browsing, queue, progress/cancel, or path normalization beyond the existing read-only browser behavior.
+`dev 0.1.7.5` adds the first two-panel read-only File Manager foundation. The left panel browses local files using Qt filesystem APIs, and the right panel keeps the existing libssh SFTP remote browser path. It does **not** add SFTP traffic counters, upload/download, delete/rename, queue, progress/cancel, or sync behavior.
 
 ## Non-goals for dev 0.1.7.4
 
@@ -56,6 +56,20 @@ This checkpoint intentionally does not add:
 This is a read-only remote browsing checkpoint, not a transfer checkpoint.
 
 ---
+
+## dev 0.1.7.5 runtime two-panel browser
+
+`dev 0.1.7.5` extends the read-only remote browser into the first two-panel File Manager shape:
+
+```text
+Saved session context menu
+   -> Open File Manager (read-only two-panel)
+   -> left: local filesystem browser, read-only
+   -> right: remote SFTP browser, read-only
+   -> no upload/download/delete/rename yet
+```
+
+The local panel uses Qt filesystem browsing and does not touch the SSH/SFTP stack. The remote panel continues to use the proven saved-session → known-host preflight → approved host-key verification → auth → libssh SFTP listing path. Transfer controls are deliberately absent until the single-file download/upload checkpoints.
 
 ## dev 0.1.7.4 runtime browser
 
@@ -292,7 +306,9 @@ permissions display string if practical
 - list remote home/current directory to a simple debug dialog or log-safe output
 - no two-panel browser yet
 
-### dev 0.1.7.4.1 — read-only SFTP browser bugfix polish [current]
+### dev 0.1.7.4.1 — read-only SFTP browser bugfix polish [passed]
+
+### dev 0.1.7.5 — local + remote read-only file manager foundation [current]
 
 - app-exit safety includes open SFTP browser tabs
 - alternating row colors disabled for SFTP table readability

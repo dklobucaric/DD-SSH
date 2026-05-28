@@ -1,3 +1,30 @@
+## dev 0.1.7.5 — Andromeda
+
+Local + remote read-only file manager foundation checkpoint.
+
+### Added
+
+- Extended the early SFTP browser into a two-panel read-only file manager tab.
+- Left panel now browses the local filesystem read-only using Qt's filesystem model.
+- Right panel keeps the existing remote read-only SFTP browser path.
+- Added local path field, `Go`, `↑ Up`, `Refresh`, and double-click folder navigation.
+- Selecting or double-clicking files only updates status text; it does not upload, download, open, delete, or modify files.
+- Saved-session context menu now exposes `Open File Manager (read-only two-panel)`.
+- Added `docs/BUILD_AND_TEST_0.1.7.5.md` and `docs/TESTCASE_0.1.7.5.md`.
+
+### Preserved
+
+- Existing SFTP trust/auth/listing path remains the remote browser backend.
+- Existing terminal/xterm.js runtime remains isolated from the File Manager tab.
+- Known-host multi-key support, Windows KEX workaround, diagnostic logging, Session Traffic for terminal tabs, config import/export, and native paste hardening should not regress.
+
+### Not included
+
+- No upload/download.
+- No delete/rename/chmod/mkdir.
+- No queue, progress/cancel transfer UI, recursive transfer, or sync engine.
+- No SFTP traffic integration in the live Session Traffic monitor yet.
+
 ## dev 0.1.7.4.1 — Andromeda
 
 Read-only SFTP browser bugfix polish checkpoint.

@@ -47,11 +47,12 @@
 ### File transfer / File Manager
 
 - Architecture documentation exists in `docs/FILE_TRANSFER_ARCHITECTURE.md`
-- Saved-session context menu includes `Open File Manager (read-only)`
-- The SFTP browser uses saved session data, existing known-host preflight, approved host-key verification before auth, libssh SFTP initialization, and remote directory listing
-- Read-only browser UI includes remote path, `Go`, `Up`, `Refresh`, and a table with name/type/size/modified/permissions
+- Saved-session context menu includes `Open File Manager (read-only two-panel)`
+- The File Manager uses saved session data, existing known-host preflight, approved host-key verification before auth, libssh SFTP initialization, and remote directory listing
+- Left panel browses local files read-only using Qt filesystem APIs
+- Right panel browses remote SFTP directories read-only with path, `Go`, `↑ Up`, `Refresh`, and name/type/size/modified/permissions columns
 - Double-clicking directories navigates into them
-- Upload, download, delete, rename, queue, local file browsing, and transfer progress/cancel UI are not implemented yet
+- Upload, download, delete, rename, queue, and transfer progress/cancel UI are not implemented yet
 
 ### Config
 
@@ -138,4 +139,4 @@ The repository now includes public-alpha preparation documents:
 
 ## SFTP browser polish
 
-`dev 0.1.7.4.1` disables alternating row colors for readable dark-theme tables, includes SFTP browser tabs in app-exit safety confirmation, and hints tab scrolling for crowded tab bars.
+`dev 0.1.7.5` adds the first read-only two-panel File Manager foundation: local filesystem browser on the left and remote SFTP browser on the right. Transfer actions remain intentionally disabled. `dev 0.1.7.4.1` disabled alternating row colors for readable dark-theme tables, included SFTP browser tabs in app-exit safety confirmation, and hinted tab scrolling for crowded tab bars.

@@ -39,6 +39,8 @@ This directory contains the working documentation for DD-SSH.
 - [Release Artifacts](RELEASE_ARTIFACTS.md)
 - [Release Notes Template](RELEASE_NOTES_TEMPLATE.md) — future release checklist
 - [Release Checklist](RELEASE_CHECKLIST.md) — focused checkpoint smoke-test checklist
+- [Build/Test 0.1.7.5](BUILD_AND_TEST_0.1.7.5.md) — local + remote read-only file manager build/test notes
+- [Testcase 0.1.7.5](TESTCASE_0.1.7.5.md) — two-panel read-only file manager validation checklist
 - [Build/Test 0.1.7.4.1](BUILD_AND_TEST_0.1.7.4.1.md) — read-only SFTP browser bugfix polish build/test notes
 - [Testcase 0.1.7.4.1](TESTCASE_0.1.7.4.1.md) — read-only SFTP browser bugfix validation checklist
 - [Build/Test 0.1.7.4](BUILD_AND_TEST_0.1.7.4.md) — read-only remote file browser build/test notes
@@ -52,10 +54,10 @@ This directory contains the working documentation for DD-SSH.
 ## Current checkpoint
 
 ```text
-Version: dev 0.1.7.4.1
+Version: dev 0.1.7.5
 Codename: Andromeda
-Milestone: Read-only SFTP browser bugfix polish
-Phase: First graphical read-only SFTP browser tab, cross-platform polish before commit
+Milestone: Local + remote read-only file manager foundation
+Phase: First two-panel read-only File Manager tab, no transfers yet
 ```
 
 
@@ -86,4 +88,4 @@ GitHub issue templates live under `.github/ISSUE_TEMPLATE/`.
 
 - docs/TERMINAL_TRANSPORT.md explains the byte-stream terminal transport hardening added in dev 0.1.7.0.
 
-- docs/FILE_TRANSFER_ARCHITECTURE.md explains the planned libssh SFTP/File Manager design and the dev 0.1.7.4/0.1.7.4.1 read-only browser checkpoints.
+- docs/FILE_TRANSFER_ARCHITECTURE.md explains the planned libssh SFTP/File Manager design and the dev 0.1.7.5 two-panel read-only file manager checkpoint.
