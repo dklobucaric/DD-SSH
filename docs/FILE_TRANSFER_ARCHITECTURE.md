@@ -1,8 +1,8 @@
 # DD-SSH File Transfer Architecture
 
-**Checkpoint:** dev 0.1.7.7 — Andromeda  
-**Status:** Single-file SFTP upload foundation  
-**Runtime behavior:** saved-session File Manager can browse local/remote directories, download one selected remote file, and upload one selected local file
+**Checkpoint:** dev 0.1.7.8 — Andromeda  
+**Status:** Transfer progress and cancel polish  
+**Runtime behavior:** saved-session File Manager can browse local/remote directories, download one selected remote file, upload one selected local file, and show improved progress/completion/cancel feedback
 
 ---
 
@@ -26,17 +26,24 @@ The future File Manager should eventually provide:
 - diagnostic logging that never records file contents or secrets
 - Session Traffic integration for SFTP bytes where practical
 
-`dev 0.1.7.7` adds the first deliberately narrow local-to-remote transfer path: upload one selected local file into the currently open remote folder. `dev 0.1.7.6.1` preserved and polished the remote-to-local download path. Both transfer directions preserve the existing saved-session, known-host, host-key verification, auth, and libssh SFTP flow. The File Manager still does **not** implement folder transfer, queue, sync, delete, rename, chmod/mkdir, or SFTP traffic monitor integration yet.
+`dev 0.1.7.8` keeps the deliberately narrow single-file transfer boundary and polishes the user-visible transfer feedback: progress percent, transferred size, speed, elapsed time, completion summaries, and explicit cancel messages. `dev 0.1.7.7` added the first local-to-remote upload path, and `dev 0.1.7.6.1` preserved and polished the remote-to-local download path. Both transfer directions preserve the existing saved-session, known-host, host-key verification, auth, and libssh SFTP flow. The File Manager still does **not** implement folder transfer, queue, sync, delete, rename, chmod/mkdir, or SFTP traffic monitor integration yet.
 
 ---
 
-## dev 0.1.7.7 single-file upload boundary
+## dev 0.1.7.8 transfer progress/cancel boundary
 
-`dev 0.1.7.7` adds `Upload selected` to the local panel. The user selects one local file, confirms remote overwrite if needed, sees a basic progress dialog, and the remote panel refreshes after success. The right panel remains the remote SFTP destination selector.
+`dev 0.1.7.8` does not add a new transfer type. Instead, it hardens the user feedback around the existing one-file download and one-file upload actions:
 
-`dev 0.1.7.6.1` previously polished the first download path, and `dev 0.1.7.5` added the first two-panel File Manager foundation.
+- progress dialog shows transferred size / total size
+- progress percent is shown when total size is known
+- speed and elapsed time are visible while the transfer runs
+- completion dialogs show formatted size, raw bytes, elapsed time, and average speed
+- download cancellation explains that the local target was not replaced because DD-SSH writes through a safe temporary file
+- upload cancellation explains that a partial remote file may remain on the server
 
-## Non-goals for dev 0.1.7.7
+`dev 0.1.7.7` previously added `Upload selected` to the local panel, `dev 0.1.7.6.1` polished the first download path, and `dev 0.1.7.5` added the first two-panel File Manager foundation.
+
+## Non-goals for dev 0.1.7.8
 
 This checkpoint intentionally does not add:
 
@@ -52,7 +59,7 @@ This checkpoint intentionally does not add:
 - known-host behavior changes
 - encryption/master-password changes
 
-This is a first-download checkpoint, not a full file-transfer implementation.
+This is a progress/cancel polish checkpoint, not a full file-transfer implementation.
 
 ---
 
@@ -334,7 +341,7 @@ permissions display string if practical
 - right remote browser
 - read-only browsing
 
-### dev 0.1.7.6 — single-file download [current]
+### dev 0.1.7.6 — single-file download [passed]
 
 - select remote file
 - download to current local folder
@@ -342,12 +349,19 @@ permissions display string if practical
 - basic progress dialog
 - refresh local panel after success
 
-### dev 0.1.7.7 — single-file upload
+### dev 0.1.7.7 — single-file upload [passed]
 
 - select local file
 - upload to remote path
 - overwrite warning
 - progress/cancel if safe
+
+### dev 0.1.7.8 — transfer progress/cancel polish [current]
+
+- progress percent / transferred size / total size
+- speed and elapsed time during transfer
+- completion summaries include formatted size, raw bytes, elapsed time, and average speed
+- clearer cancellation messages for download and upload
 
 Further checkpoints should add queueing, folder transfer experiments, logging, traffic integration, and cross-platform stabilization.
 
@@ -472,6 +486,8 @@ This proves the first remote browser UI without risking the tested terminal base
 
 ### dev 0.1.7.6.1 — single-file download polish [passed]
 
-### dev 0.1.7.7 — single-file upload foundation [current]
+### dev 0.1.7.7 — single-file upload foundation [passed]
 
-Remote SFTP Size sorting uses raw byte counts instead of formatted display strings, and completion dialogs report formatted size plus raw bytes. Overwrite metadata comparison remains deferred.
+### dev 0.1.7.8 — transfer progress/cancel polish [current]
+
+Remote SFTP Size sorting uses raw byte counts instead of formatted display strings. Transfer dialogs now report formatted size, raw bytes, elapsed time, average speed, and clearer cancellation results. Overwrite metadata comparison remains deferred.

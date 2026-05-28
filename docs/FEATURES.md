@@ -142,4 +142,4 @@ The repository now includes public-alpha preparation documents:
 
 ## SFTP browser polish
 
-`dev 0.1.7.6.1` polishes the first single-file SFTP download action by fixing remote size sorting and completion-size reporting. `dev 0.1.7.6` added the first single-file SFTP download action on top of the two-panel File Manager foundation from `dev 0.1.7.5`. `dev 0.1.7.4.1` disabled alternating row colors for readable dark-theme tables, included SFTP browser tabs in app-exit safety confirmation, and hinted tab scrolling for crowded tab bars.
+`dev 0.1.7.8` polishes the single-file download/upload transfer dialogs with progress percent, transferred size, speed, elapsed time, completion summaries, and explicit cancel feedback. `dev 0.1.7.7` added the first single-file SFTP upload action. `dev 0.1.7.6.1` polished the first single-file SFTP download action by fixing remote size sorting and completion-size reporting. `dev 0.1.7.4.1` disabled alternating row colors for readable dark-theme tables, included SFTP browser tabs in app-exit safety confirmation, and hinted tab scrolling for crowded tab bars.

@@ -44,7 +44,7 @@ Already implemented:
 
 Active File Transfer / File Manager track:
 
-Current checkpoint: `dev 0.1.7.7` — single-file SFTP upload foundation.
+Current checkpoint: `dev 0.1.7.8` — transfer progress and cancel polish.
 
 ```text
 dev 0.1.7.2 — File transport architecture/design foundation [done]
@@ -54,9 +54,9 @@ dev 0.1.7.4.1 — read-only SFTP browser bugfix polish [passed]
 dev 0.1.7.5 — local + remote two-panel read-only UI [done]
 dev 0.1.7.6 — single-file download [superseded by 0.1.7.6.1]
 dev 0.1.7.6.1 — single-file download polish [passed]
-dev 0.1.7.7 — single-file upload [current]
-dev 0.1.7.8 — transfer progress/cancel polish
-dev 0.1.8.0 — transfer queue foundation
+dev 0.1.7.7 — single-file upload [passed]
+dev 0.1.7.8 — transfer progress/cancel polish [current]
+dev 0.1.8.0 — transfer queue foundation [next]
 dev 0.1.8.1 — folder transfer experiment
 dev 0.1.8.2 — file manager safety polish
 dev 0.1.8.3 — file transport logging + Session Traffic integration
@@ -155,7 +155,7 @@ Expected before Apollo:
 
 ## Current release-prep step
 
-`dev 0.1.7.7` adds the first single-file local-to-remote upload action. `dev 0.1.7.6.1` polishes remote size sorting and the download completion message. `dev 0.1.7.6` added the first single-file SFTP download action on top of the two-panel File Manager. `dev 0.1.7.5` added the first two-panel read-only File Manager foundation with local and remote browsing side by side. `dev 0.1.7.4.1` polished the first read-only SFTP browser after Linux/macOS testing feedback. `dev 0.1.7.4` added the first graphical read-only remote SFTP browser. `dev 0.1.7.3` added the first saved-session SFTP probe using libssh SFTP, while still avoiding transfers. `dev 0.1.7.2` started the File Transfer / File Manager development track with architecture documentation and a harmless UI placeholder. `dev 0.1.7.1` remains the closed terminal foundation baseline after native paste hardening. `dev 0.1.7.0` hardened terminal transport by moving SSH output through a byte-stream/Base64/WebChannel path, using streaming UTF-8 decoding in xterm.js, and making terminal input writes partial-write aware. `dev 0.1.6.x` completed the logging, Session Traffic, config safety, macOS DMG, repo hygiene, packaging, and SSH trust-chain foundations. `dev 0.1.5.x` completed Windows standalone deployment, known-host multi-key portability, and Windows libssh KEX compatibility work.
+`dev 0.1.7.8` polishes transfer progress, speed/elapsed reporting, completion summaries, and cancel feedback for both download and upload. `dev 0.1.7.7` added the first single-file local-to-remote upload action. `dev 0.1.7.6.1` polishes remote size sorting and the download completion message. `dev 0.1.7.6` added the first single-file SFTP download action on top of the two-panel File Manager. `dev 0.1.7.5` added the first two-panel read-only File Manager foundation with local and remote browsing side by side. `dev 0.1.7.4.1` polished the first read-only SFTP browser after Linux/macOS testing feedback. `dev 0.1.7.4` added the first graphical read-only remote SFTP browser. `dev 0.1.7.3` added the first saved-session SFTP probe using libssh SFTP, while still avoiding transfers. `dev 0.1.7.2` started the File Transfer / File Manager development track with architecture documentation and a harmless UI placeholder. `dev 0.1.7.1` remains the closed terminal foundation baseline after native paste hardening. `dev 0.1.7.0` hardened terminal transport by moving SSH output through a byte-stream/Base64/WebChannel path, using streaming UTF-8 decoding in xterm.js, and making terminal input writes partial-write aware. `dev 0.1.6.x` completed the logging, Session Traffic, config safety, macOS DMG, repo hygiene, packaging, and SSH trust-chain foundations. `dev 0.1.5.x` completed Windows standalone deployment, known-host multi-key portability, and Windows libssh KEX compatibility work.
 
 ---
 
@@ -244,8 +244,9 @@ dev 0.1.7.4.1 — Read-only SFTP browser bugfix polish [passed]
 dev 0.1.7.5 — Local + remote read-only file manager foundation [done]
 dev 0.1.7.6 — Single-file download foundation [superseded by 0.1.7.6.1]
 dev 0.1.7.6.1 — Single-file download polish [passed]
-dev 0.1.7.7 — Single-file upload foundation [current]
-dev 0.1.7.8 — Transfer progress/cancel polish [next]
+dev 0.1.7.7 — Single-file upload foundation [passed]
+dev 0.1.7.8 — Transfer progress/cancel polish [current]
+dev 0.1.8.0 — Transfer queue foundation [next]
 ```
 
 ## 0.1.7.0 terminal transport hardening

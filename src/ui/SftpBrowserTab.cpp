@@ -5,6 +5,7 @@
 #include <QAbstractItemView>
 #include <QApplication>
 #include <QDir>
+#include <QElapsedTimer>
 #include <QFileInfo>
 #include <QFileSystemModel>
 #include <QHeaderView>
@@ -57,6 +58,81 @@ QString formatSize(quint64 bytes)
 QString formatRawBytes(quint64 bytes)
 {
     return QLocale(QLocale::English).toString(static_cast<qulonglong>(bytes)) + QStringLiteral(" bytes");
+}
+
+QString formatDuration(qint64 elapsedMs)
+{
+    if (elapsedMs < 0) {
+        elapsedMs = 0;
+    }
+
+    const qint64 totalSeconds = elapsedMs / 1000;
+    const qint64 hours = totalSeconds / 3600;
+    const qint64 minutes = (totalSeconds % 3600) / 60;
+    const qint64 seconds = totalSeconds % 60;
+
+    if (hours > 0) {
+        return QStringLiteral("%1:%2:%3")
+            .arg(hours, 2, 10, QLatin1Char('0'))
+            .arg(minutes, 2, 10, QLatin1Char('0'))
+            .arg(seconds, 2, 10, QLatin1Char('0'));
+    }
+
+    return QStringLiteral("%1:%2")
+        .arg(minutes, 2, 10, QLatin1Char('0'))
+        .arg(seconds, 2, 10, QLatin1Char('0'));
+}
+
+QString formatTransferRate(quint64 bytesTransferred, qint64 elapsedMs)
+{
+    if (bytesTransferred == 0 || elapsedMs <= 0) {
+        return QStringLiteral("calculating ...");
+    }
+
+    const double bytesPerSecond = static_cast<double>(bytesTransferred) * 1000.0 / static_cast<double>(elapsedMs);
+    return formatSize(static_cast<quint64>(bytesPerSecond)) + QStringLiteral("/s");
+}
+
+QString formatTransferProgressLabel(
+    const QString &action,
+    const QString &message,
+    quint64 bytesTransferred,
+    quint64 totalBytes,
+    qint64 elapsedMs
+)
+{
+    const QString totalText = totalBytes > 0 ? formatSize(totalBytes) : QStringLiteral("unknown");
+    const int percent = totalBytes > 0
+        ? static_cast<int>(qMin<quint64>(100, (bytesTransferred * 100ULL) / totalBytes))
+        : 0;
+
+    QStringList lines;
+    lines << QStringLiteral("%1 — %2").arg(action, message);
+    lines << QStringLiteral("Transferred: %1 / %2").arg(formatSize(bytesTransferred), totalText);
+
+    if (totalBytes > 0) {
+        lines << QStringLiteral("Progress: %1%").arg(percent);
+    } else {
+        lines << QStringLiteral("Progress: unknown total size");
+    }
+
+    lines << QStringLiteral("Speed: %1").arg(formatTransferRate(bytesTransferred, elapsedMs));
+    lines << QStringLiteral("Elapsed: %1").arg(formatDuration(elapsedMs));
+
+    return lines.join(QLatin1Char('\n'));
+}
+
+QString formatTransferSummary(quint64 bytesTransferred, quint64 totalBytes, qint64 elapsedMs)
+{
+    QString summary = QStringLiteral("Transferred: %1 (%2)\nElapsed: %3\nAverage speed: %4")
+        .arg(formatSize(bytesTransferred), formatRawBytes(bytesTransferred), formatDuration(elapsedMs), formatTransferRate(bytesTransferred, elapsedMs));
+
+    if (totalBytes > 0) {
+        summary += QStringLiteral("\nExpected size: %1 (%2)")
+            .arg(formatSize(totalBytes), formatRawBytes(totalBytes));
+    }
+
+    return summary;
 }
 
 class SizeTableWidgetItem final : public QTableWidgetItem
@@ -141,7 +217,7 @@ void SftpBrowserTab::setupUi()
             .arg(m_username, m_host, QString::number(m_port)),
         this
     );
-    headerLabel->setToolTip(QStringLiteral("This checkpoint supports single-file download and single-file upload. Delete, rename, queue, sync, and folder transfer actions are intentionally not implemented yet."));
+    headerLabel->setToolTip(QStringLiteral("This checkpoint supports single-file download and upload with progress, speed, elapsed-time, completion, and cancel feedback. Delete, rename, queue, sync, and folder transfer actions are intentionally not implemented yet."));
     mainLayout->addWidget(headerLabel);
 
     auto *splitter = new QSplitter(Qt::Horizontal, this);
@@ -261,7 +337,7 @@ void SftpBrowserTab::setupUi()
     mainLayout->addWidget(splitter, 1);
 
     auto *transferNotice = new QLabel(
-        QStringLiteral("Single-file download and upload are enabled in this checkpoint. Delete, rename, folder transfer, queue, and sync actions are intentionally disabled."),
+        QStringLiteral("Single-file download and upload are enabled with progress, speed, elapsed-time, completion, and cancel feedback. Delete, rename, folder transfer, queue, and sync actions are intentionally disabled."),
         this
     );
     transferNotice->setWordWrap(true);
@@ -768,6 +844,8 @@ void SftpBrowserTab::downloadSelectedRemoteFile()
     }
 
     bool progressWasCancelled = false;
+    QElapsedTimer transferTimer;
+    transferTimer.start();
 
     const SftpDownloadResult result = SftpProbe::downloadRemoteFile(
         m_host,
@@ -778,7 +856,7 @@ void SftpBrowserTab::downloadSelectedRemoteFile()
         m_hostKeyExpectation,
         remoteFilePath,
         localTargetPath,
-        [&progress, &progressWasCancelled](quint64 bytesTransferred, quint64 totalBytes, const QString &message) -> bool {
+        [&progress, &progressWasCancelled, &transferTimer](quint64 bytesTransferred, quint64 totalBytes, const QString &message) -> bool {
             int percent = 0;
 
             if (totalBytes > 0) {
@@ -789,8 +867,13 @@ void SftpBrowserTab::downloadSelectedRemoteFile()
 
             progress.setValue(percent);
             progress.setLabelText(
-                QStringLiteral("%1\n%2 / %3")
-                    .arg(message, formatSize(bytesTransferred), totalBytes > 0 ? formatSize(totalBytes) : QStringLiteral("unknown"))
+                formatTransferProgressLabel(
+                    QStringLiteral("Download"),
+                    message,
+                    bytesTransferred,
+                    totalBytes,
+                    transferTimer.elapsed()
+                )
             );
             QApplication::processEvents();
 
@@ -805,6 +888,8 @@ void SftpBrowserTab::downloadSelectedRemoteFile()
 
     QApplication::restoreOverrideCursor();
     setRemoteBusy(false);
+
+    const qint64 elapsedMs = transferTimer.elapsed();
 
     if (result.success) {
         progress.setValue(100);
@@ -821,8 +906,15 @@ void SftpBrowserTab::downloadSelectedRemoteFile()
         QMessageBox::information(
             this,
             QStringLiteral("Download complete — DD-SSH"),
-            QStringLiteral("Downloaded remote file:\n%1\n\nTo local file:\n%2\n\nDownloaded: %3 (%4)")
-                .arg(remoteFilePath, localTargetPath, formatSize(result.bytesTransferred), formatRawBytes(result.bytesTransferred))
+            QStringLiteral("Downloaded remote file:\n%1\n\nTo local file:\n%2\n\nDownloaded: %3 (%4)\nElapsed: %5\nAverage speed: %6")
+                .arg(
+                    remoteFilePath,
+                    localTargetPath,
+                    formatSize(result.bytesTransferred),
+                    formatRawBytes(result.bytesTransferred),
+                    formatDuration(elapsedMs),
+                    formatTransferRate(result.bytesTransferred, elapsedMs)
+                )
         );
         return;
     }
@@ -831,6 +923,13 @@ void SftpBrowserTab::downloadSelectedRemoteFile()
         if (m_remoteStatusLabel != nullptr) {
             m_remoteStatusLabel->setText(statusPrefix() + QStringLiteral("download cancelled: ") + remoteFilePath);
         }
+
+        QMessageBox::information(
+            this,
+            QStringLiteral("Download cancelled — DD-SSH"),
+            QStringLiteral("Download cancelled by user.\n\nRemote file:\n%1\n\nLocal target was not replaced because DD-SSH uses a safe temporary download file.\n\n%2")
+                .arg(remoteFilePath, formatTransferSummary(result.bytesTransferred, result.totalBytes, elapsedMs))
+        );
         return;
     }
 
@@ -1000,6 +1099,8 @@ void SftpBrowserTab::uploadSelectedLocalFile()
     }
 
     bool progressWasCancelled = false;
+    QElapsedTimer transferTimer;
+    transferTimer.start();
 
     const SftpUploadResult result = SftpProbe::uploadLocalFile(
         m_host,
@@ -1011,7 +1112,7 @@ void SftpBrowserTab::uploadSelectedLocalFile()
         localFilePath,
         remoteTargetPath,
         allowOverwrite,
-        [&progress, &progressWasCancelled](quint64 bytesTransferred, quint64 totalBytes, const QString &message) -> bool {
+        [&progress, &progressWasCancelled, &transferTimer](quint64 bytesTransferred, quint64 totalBytes, const QString &message) -> bool {
             int percent = 0;
 
             if (totalBytes > 0) {
@@ -1022,8 +1123,13 @@ void SftpBrowserTab::uploadSelectedLocalFile()
 
             progress.setValue(percent);
             progress.setLabelText(
-                QStringLiteral("%1\n%2 / %3")
-                    .arg(message, formatSize(bytesTransferred), totalBytes > 0 ? formatSize(totalBytes) : QStringLiteral("unknown"))
+                formatTransferProgressLabel(
+                    QStringLiteral("Upload"),
+                    message,
+                    bytesTransferred,
+                    totalBytes,
+                    transferTimer.elapsed()
+                )
             );
             QApplication::processEvents();
 
@@ -1038,6 +1144,8 @@ void SftpBrowserTab::uploadSelectedLocalFile()
 
     QApplication::restoreOverrideCursor();
     setRemoteBusy(false);
+
+    const qint64 elapsedMs = transferTimer.elapsed();
 
     if (result.success) {
         progress.setValue(100);
@@ -1054,8 +1162,15 @@ void SftpBrowserTab::uploadSelectedLocalFile()
         QMessageBox::information(
             this,
             QStringLiteral("Upload complete — DD-SSH"),
-            QStringLiteral("Uploaded local file:\n%1\n\nTo remote file:\n%2\n\nUploaded: %3 (%4)")
-                .arg(localFilePath, remoteTargetPath, formatSize(result.bytesTransferred), formatRawBytes(result.bytesTransferred))
+            QStringLiteral("Uploaded local file:\n%1\n\nTo remote file:\n%2\n\nUploaded: %3 (%4)\nElapsed: %5\nAverage speed: %6")
+                .arg(
+                    localFilePath,
+                    remoteTargetPath,
+                    formatSize(result.bytesTransferred),
+                    formatRawBytes(result.bytesTransferred),
+                    formatDuration(elapsedMs),
+                    formatTransferRate(result.bytesTransferred, elapsedMs)
+                )
         );
         return;
     }
@@ -1078,6 +1193,12 @@ void SftpBrowserTab::uploadSelectedLocalFile()
             m_remoteStatusLabel->setText(statusPrefix() + QStringLiteral("upload cancelled: ") + remoteTargetPath + QStringLiteral(" — partial remote file may remain"));
         }
         refreshRemoteDirectory();
+        QMessageBox::information(
+            this,
+            QStringLiteral("Upload cancelled — DD-SSH"),
+            QStringLiteral("Upload cancelled by user.\n\nLocal file:\n%1\n\nRemote target:\n%2\n\nA partial remote file may remain on the server. Refresh/check the remote folder before retrying.\n\n%3")
+                .arg(localFilePath, remoteTargetPath, formatTransferSummary(result.bytesTransferred, result.totalBytes, elapsedMs))
+        );
         return;
     }
 

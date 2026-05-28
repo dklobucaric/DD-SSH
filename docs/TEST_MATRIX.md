@@ -1,8 +1,26 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.7.7 — Andromeda  
-**Milestone:** Single-file SFTP download polish  
-**Phase:** Remote size sorting and completion-size message polish
+**Checkpoint:** dev 0.1.7.8 — Andromeda  
+**Milestone:** Transfer progress and cancel polish  
+**Phase:** Single-file transfer progress/cancel feedback
+
+## dev 0.1.7.8 — transfer progress/cancel polish smoke test
+
+[ ] About shows dev 0.1.7.8  
+[ ] File Manager opens with local and remote panels  
+[ ] Download selected still works for a small file  
+[ ] Download progress dialog shows transferred size, total size, percent, speed, and elapsed time  
+[ ] Download completion dialog shows downloaded formatted size, raw byte count, elapsed time, and average speed  
+[ ] Cancelling a download shows a clear cancel message and does not replace the local target file  
+[ ] Upload selected still works for a small file  
+[ ] Upload progress dialog shows transferred size, total size, percent, speed, and elapsed time  
+[ ] Upload completion dialog shows uploaded formatted size, raw byte count, elapsed time, and average speed  
+[ ] Cancelling an upload shows a clear cancel message and warns that a partial remote file may remain  
+[ ] Existing overwrite prompts still appear  
+[ ] Folder upload/download are still rejected clearly  
+[ ] Terminal xterm.js session still opens and paste/Ctrl+C still work  
+[ ] Session Traffic for terminal tabs still works  
+[ ] SFTP traffic is still not expected in the live traffic widget yet  
 
 ## dev 0.1.7.7 — single-file SFTP upload smoke test
 

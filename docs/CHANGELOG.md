@@ -1,3 +1,41 @@
+## dev 0.1.7.8 — Andromeda
+
+Transfer progress and cancel polish checkpoint.
+
+### Added / polished
+
+- Transfer progress dialogs for both download and upload now show formatted progress details:
+  - transferred size / total size
+  - progress percent when total size is known
+  - transfer speed
+  - elapsed time
+- Download completion dialog now includes elapsed time and average speed in addition to formatted size and raw byte count.
+- Upload completion dialog now includes elapsed time and average speed in addition to formatted size and raw byte count.
+- Download cancellation now shows a clear user-facing message and explains that the local target was not replaced because DD-SSH uses a safe temporary download file.
+- Upload cancellation now shows a clear user-facing message and warns that a partial remote file may remain on the server.
+- File Manager notice text now reflects single-file transfer progress/cancel polish.
+
+### Preserved
+
+- Existing single-file download behavior remains available.
+- Existing single-file upload behavior remains available.
+- Existing overwrite prompts and folder-transfer blocking remain unchanged.
+- Existing two-panel local/remote browsing remains available.
+- Existing terminal/xterm.js runtime remains isolated from the File Manager tab.
+- Known-host multi-key support, Windows KEX workaround, diagnostic logging, Session Traffic for terminal tabs, config import/export, and native paste hardening should not regress.
+
+### Not included
+
+- No transfer queue.
+- No folder upload/download.
+- No delete/rename/chmod/mkdir.
+- No SFTP traffic integration in the live Session Traffic monitor yet.
+- No overwrite metadata comparison dialog yet.
+
+### Docs
+
+- Added `docs/BUILD_AND_TEST_0.1.7.8.md` and `docs/TESTCASE_0.1.7.8.md`.
+
 ## dev 0.1.7.7 — Andromeda
 
 Single-file SFTP upload foundation checkpoint.

@@ -1,6 +1,6 @@
 # DD-SSH Known Limitations
 
-**Checkpoint:** dev 0.1.7.7 — Andromeda
+**Checkpoint:** dev 0.1.7.8 — Andromeda
 
 This document lists limitations that should be visible to testers. Nothing here is hidden or sugar-coated.
 
@@ -29,7 +29,7 @@ This document lists limitations that should be visible to testers. Nothing here 
 
 ## Feature limitations
 
-`dev 0.1.7.7` adds the first single-file upload action while preserving the single-file download path from `dev 0.1.7.6.1`. It is intentionally not a complete file transfer tool yet: folder transfer, queue, sync, delete, rename, chmod, and mkdir are not implemented.
+`dev 0.1.7.8` polishes progress/completion/cancel feedback for the existing single-file download and upload paths. It is intentionally not a complete file transfer tool yet: folder transfer, queue, sync, delete, rename, chmod, mkdir, overwrite metadata comparison, and SFTP traffic monitor integration are not implemented.
 
 Not implemented yet:
 
