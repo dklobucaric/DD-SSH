@@ -1,6 +1,6 @@
 # DD-SSH File Transfer Architecture
 
-**Checkpoint:** dev 0.1.8.1.1 — Andromeda  
+**Checkpoint:** dev 0.1.8.1.2 — Andromeda  
 **Status:** Transfer queue foundation  
 **Runtime behavior:** saved-session File Manager can browse local/remote directories, perform immediate one-file download/upload, queue multiple individual file downloads/uploads, and run queued items sequentially
 
@@ -30,7 +30,7 @@ The future File Manager should eventually provide:
 - diagnostic logging that never records file contents or secrets
 - Session Traffic integration for SFTP bytes where practical
 
-`dev 0.1.8.1.1` consolidates File Manager queue controls into two clearer panel actions while keeping the same folder-transfer engine: local `Queue upload` and remote `Queue download` accept selected files and folders. `dev 0.1.8.1` adds the first folder-transfer experiment by recursively scanning folders and expanding them into existing sequential queue items. Destination directories are represented as create-directory queue items; symlinks are skipped. `dev 0.1.8.0.4.1` stabilized the conservative transfer queue foundation before folder-transfer work: exit safety now reports running/pending queue work, queue/navigation controls are locked during a queue run, and no-pending-items feedback is clearer. `dev 0.1.8.0.3` polishes the first conservative transfer queue foundation with `Retry selected` for finished queue items. `dev 0.1.8.0.2` added Overwrite all / Skip all decisions for repeated overwrite conflicts. `dev 0.1.8.0` adds the queue foundation on top of the existing single-file upload/download paths. Users can queue multiple individual remote files for download and multiple individual local files for upload, then run the queue sequentially one item at a time. Existing immediate single-file actions remain available. The File Manager now includes an experimental recursive folder queue path, but it still does **not** implement parallel execution, resume, sync, delete, rename, chmod, permission/timestamp preservation, symlink following, or SFTP traffic monitor integration yet.
+`dev 0.1.8.1.2` is a tester-release polish checkpoint for the accepted file-manager/folder-transfer baseline; it updates documentation and in-app status text without changing the SFTP runtime. `dev 0.1.8.1.1` consolidates File Manager queue controls into two clearer panel actions while keeping the same folder-transfer engine: local `Queue upload` and remote `Queue download` accept selected files and folders. `dev 0.1.8.1` adds the first folder-transfer experiment by recursively scanning folders and expanding them into existing sequential queue items. Destination directories are represented as create-directory queue items; symlinks are skipped. `dev 0.1.8.0.4.1` stabilized the conservative transfer queue foundation before folder-transfer work: exit safety now reports running/pending queue work, queue/navigation controls are locked during a queue run, and no-pending-items feedback is clearer. `dev 0.1.8.0.3` polishes the first conservative transfer queue foundation with `Retry selected` for finished queue items. `dev 0.1.8.0.2` added Overwrite all / Skip all decisions for repeated overwrite conflicts. `dev 0.1.8.0` adds the queue foundation on top of the existing single-file upload/download paths. Users can queue multiple individual remote files for download and multiple individual local files for upload, then run the queue sequentially one item at a time. Existing immediate single-file actions remain available. The File Manager now includes an experimental recursive folder queue path, but it still does **not** implement parallel execution, resume, sync, delete, rename, chmod, permission/timestamp preservation, symlink following, or SFTP traffic monitor integration yet.
 
 ---
 
@@ -370,7 +370,13 @@ permissions display string if practical
 ### dev 0.1.7.8 — transfer progress/cancel polish [passed]
 
 
-### dev 0.1.8.1.1 — queue selected UI consolidation [current]
+### dev 0.1.8.1.2 — tester release polish [current]
+
+`dev 0.1.8.1.2` prepares the current File Manager and folder-transfer experiment for third-party tester builds. It adds tester checklist documentation, clearer known limitations, and alpha safety notes while preserving the existing transfer runtime from `dev 0.1.8.1.1`.
+
+No SFTP engine, queue execution, folder scan, terminal runtime, known-host, Windows KEX, or config schema behavior is intentionally changed.
+
+### dev 0.1.8.1.1 — queue selected UI consolidation [passed]
 
 The File Manager now exposes two queue actions instead of four:
 

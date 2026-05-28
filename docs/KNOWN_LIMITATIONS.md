@@ -1,6 +1,6 @@
 # DD-SSH Known Limitations
 
-**Checkpoint:** dev 0.1.8.1.1 — Andromeda
+**Checkpoint:** dev 0.1.8.1.2 — Andromeda
 
 This document lists limitations that should be visible to testers. Nothing here is hidden or sugar-coated.
 
@@ -29,11 +29,19 @@ This document lists limitations that should be visible to testers. Nothing here 
 
 ## Feature limitations
 
-`dev 0.1.8.0.4.1` keeps the conservative transfer queue foundation and stabilizes queue behavior before folder work. Running/pending queues are now included in exit safety, and queue/navigation controls are locked while a queue run is active. `dev 0.1.8.0.3` adds `Retry selected` for finished queue items. `dev 0.1.8.0.2` adds Overwrite all / Skip all decisions for repeated overwrite conflicts. `dev 0.1.8.0.1` fixes overwrite prompt visibility. `dev 0.1.8.0` adds a conservative transfer queue foundation for multiple individual files. It is intentionally not a complete file transfer tool yet: parallel transfer, resume, sync/mirror, delete, rename, chmod, overwrite metadata comparison, permission/timestamp preservation, symlink following, and SFTP traffic monitor integration are not implemented. Folder transfer exists only as an experimental queue-expansion feature.
+`dev 0.1.8.1.2` is a tester-release polish checkpoint for the accepted File Manager baseline. The current file-transfer feature set includes single-file upload/download, sequential queue execution, Retry selected, Overwrite all / Skip all, and experimental recursive folder upload/download through queue expansion. It is intentionally not a complete file transfer tool yet: parallel transfer, resume, sync/mirror, delete, rename, chmod, overwrite metadata comparison, permission/timestamp preservation, symlink following, and SFTP traffic monitor integration are not implemented.
+
+Current experimental file-transfer limits:
+
+- Folder upload/download exists, but it is still experimental and should be tested first with small non-production folders.
+- Folder transfer works by scanning folders and expanding them into queue items; it is not a sync/mirror engine.
+- Symlinks and special files are skipped, not followed.
+- Permission and timestamp preservation are not implemented.
+- Empty folders are represented through create-directory queue items, but edge cases should still be reported.
+- Delete, rename, chmod, advanced mkdir controls, and recursive folder transfer polish are still future work.
 
 Not implemented yet:
 
-- Folder transfer
 - Delete, rename, chmod, advanced mkdir controls, recursive folder transfer polish
 - Multi-Exec
 - Keep-alive settings
@@ -106,5 +114,4 @@ SFTP activity is not yet included in the live Session Traffic monitor. This is p
 
 - Overwrite dialogs do not yet compare existing and incoming file size/date metadata; this is planned as later transfer polish.
 
-- Upload is limited to one selected local file at a time; folder upload and queue workflows are intentionally deferred.
 - If an upload is cancelled during transfer, a partial remote file may remain. Cancel cleanup is planned for later transfer polish.

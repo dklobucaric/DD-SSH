@@ -1,3 +1,19 @@
+## dev 0.1.8.1.2 — Andromeda
+
+Tester release polish checkpoint.
+
+### Added / polished
+- Added `docs/TESTER_CHECKLIST_0.1.8.1.2.md` for third-party tester flow, expected results, and bug-report format.
+- Added `docs/BUILD_AND_TEST_0.1.8.1.2.md` and `docs/TESTCASE_0.1.8.1.2.md` for the tester-ready checkpoint.
+- Updated tester-facing known limitations and File Transfer architecture notes to clearly mark folder transfer as experimental.
+- Updated README, Test Matrix, Roadmap, documentation index, Welcome text, and About dialog to describe the current tester-release polish phase.
+
+### Preserved
+- Existing file manager runtime behavior from `dev 0.1.8.1.1`.
+- Existing local `Queue upload` and remote `Queue download` buttons.
+- Existing sequential queue, Retry selected, Overwrite all / Skip all, folder queue expansion, and exit safety behavior.
+- No transfer core, folder scan engine, terminal runtime, known-host, Windows KEX, config schema, or SFTP traffic monitor changes.
+
 ## dev 0.1.8.1.1 — Andromeda
 
 - Consolidated File Manager queue controls into two clearer panel actions: local `Queue upload` and remote `Queue download`.

@@ -17,17 +17,18 @@ DD-SSH is designed for practical sysadmin use: saved sessions, one portable JSON
 
 ## Current status
 
-**Development checkpoint:** `dev 0.1.8.1.1`
+**Development checkpoint:** `dev 0.1.8.1.2`
 **Codename:** Andromeda
-**Milestone:** Transfer queue foundation
-**Current phase:** Transfer queue stabilization polish
+**Milestone:** Tester release polish
+**Current phase:** Third-party tester preparation
 
 DD-SSH is now moving from the closed terminal-foundation baseline into the File Transfer / File Manager development track. It is not a stable 1.0 release yet, but the core terminal workflow is functional and has been validated on Linux, Windows 10/11, and Intel macOS. Native Windows builds, a standalone Windows deployment folder, a Debian package, and a macOS Intel `.app` / `.dmg` tester flow have been tested.
 
-The current checkpoint is a small File Manager UI consolidation step: `dev 0.1.8.1.1` keeps the `dev 0.1.8.1` folder-transfer experiment but replaces separate file/folder queue buttons with two simpler panel actions: local `Queue upload` and remote `Queue download`. Each button accepts selected files and folders; folders are still confirmed and recursively expanded into existing queue items. Existing immediate single-file download/upload actions, overwrite-all queue decisions, retry-selected behavior, queue stabilization, and exit safety remain available. Symlinks, permissions/timestamp preservation, resume, sync/mirror, parallel transfers, delete/rename/chmod, and SFTP traffic counters remain intentionally deferred.
+The current checkpoint is a tester-release polish step: `dev 0.1.8.1.2` keeps the accepted `dev 0.1.8.1.1` File Manager baseline and prepares it for third-party alpha testing. It updates tester-facing documentation, build/test notes, known limitations, and in-app About/Welcome text. No transfer engine, terminal runtime, queue behavior, known-host handling, Windows KEX workaround, upload/download logic, or folder scan logic is changed. Folder transfer remains experimental and should be validated first with small test folders.
 
 Recent checkpoints:
 
+- `dev 0.1.8.1.2` is a tester-release polish checkpoint. It prepares the accepted file manager and folder/queue baseline for third-party testing with clearer docs, tester checklist, known limitations, and alpha safety notes. No runtime transfer behavior is intentionally changed.
 - `dev 0.1.8.1.1` consolidates File Manager queue actions into two clearer buttons: local `Queue upload` and remote `Queue download`. Selected files are queued directly; selected folders are confirmed and recursively expanded into normal queue items.
 - `dev 0.1.8.1` adds the first recursive folder-transfer experiment by expanding selected folders into normal queue items. Destination folders are created as queue items and symlinks are skipped.
 - `dev 0.1.8.0.3` adds `Retry selected` for finished queue items so selected `Done`, `Failed`, `Cancelled`, or `Skipped` transfers can be moved back to `Pending` and run again.
@@ -56,9 +57,9 @@ Recent checkpoints:
 - `dev 0.1.7.1` hardens native xterm.js paste handling: toolbar Paste, right-click paste, Ctrl+Shift+V, and macOS Command+V now route through the same DD-SSH safe paste path and should not leak bracketed paste markers such as `^[[200~` into the remote shell.
 - `dev 0.1.7.0` hardens terminal transport: SSH output is carried as bytes to the WebEngine terminal, decoded with a streaming UTF-8 decoder, and input writes are partial-write aware so large paste/input is not silently truncated.
 
-In `dev 0.1.8.1.1`, DD-SSH keeps queue processing sequential and conservative while simplifying the File Manager controls around the folder-transfer experiment. Folder transfer is still implemented as scan → expand into queue items → transfer one item at a time. No parallel execution, resume, sync engine, permission/timestamp preservation, symlink following, or SFTP Session Traffic integration yet.
+In `dev 0.1.8.1.2`, DD-SSH keeps the accepted `dev 0.1.8.1.1` queue/file-manager behavior and focuses on tester readiness. Queue processing remains sequential and conservative while the File Manager controls use local `Queue upload` and remote `Queue download` around the folder-transfer experiment. Folder transfer is still implemented as scan → expand into queue items → transfer one item at a time. No parallel execution, resume, sync engine, permission/timestamp preservation, symlink following, or SFTP Session Traffic integration yet.
 
-The future file-transfer design is documented in `docs/FILE_TRANSFER_ARCHITECTURE.md`. File transfer will use libssh SFTP APIs, not shell command parsing hacks. Terminal tabs and future File Manager tabs are intentionally separated so the working terminal foundation remains stable.
+The future file-transfer design is documented in `docs/FILE_TRANSFER_ARCHITECTURE.md`. Third-party tester flow is documented in `docs/TESTER_CHECKLIST_0.1.8.1.2.md`. File transfer will use libssh SFTP APIs, not shell command parsing hacks. Terminal tabs and future File Manager tabs are intentionally separated so the working terminal foundation remains stable.
 
 The portable known-host model now supports multi-key storage per `host:port`:
 

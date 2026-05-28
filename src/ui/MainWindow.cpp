@@ -1364,7 +1364,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: Read-only remote file browser.\n\n")
+            + QStringLiteral("Current phase: Tester release polish for File Manager alpha.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n")
@@ -1596,7 +1596,7 @@ void MainWindow::addWelcomeTab()
         "A clean cross-platform SSH client and session manager.\n\n"
         "Double-click a saved session on the left to open the xterm.js terminal.\n\n"
         "Current milestone:\n"
-        "Two-panel SFTP file manager — single-file download and upload foundation\n\n"
+        "Tester-ready SFTP File Manager alpha — queue, upload, download, and experimental folder transfer\n\n"
         "Working now:\n"
         "- saved sessions loaded from dd-ssh.json\n"
         "- portable plaintext secrets in dd-ssh.json\n"
@@ -1614,7 +1614,8 @@ void MainWindow::addWelcomeTab()
         "- cross-platform app icon resources for Qt, Windows, Linux, and macOS prep\n"
         "- Windows standalone deployment helper validated on real Windows 10/11 machines\n"
         "- app exit protection when active SSH terminals are still connected\n"
-        "- two-panel File Manager / SFTP download and upload actions for the 0.1.7.x SFTP development track\n\n"
+        "- two-panel File Manager with SFTP upload/download, queue, retry, overwrite-all/skip-all, and experimental folder transfer\n"
+        "- tester checklist and known limitations for third-party alpha validation\n\n"
         "Main menus:\n"
         "- File: Open Config Folder, Export Config, Import Config, Restore Latest Backup, Exit\n"
         "- Session: New Session, Connect / Auth test, Edit selected session\n"
@@ -1634,7 +1635,8 @@ void MainWindow::addWelcomeTab()
         "- docs/FILE_TRANSFER_ARCHITECTURE.md explains the planned SFTP/File Manager foundation and two-panel browser path\n\n"
         "Current development focus:\n"
         "- keep dev 0.1.7.1 as the closed terminal foundation baseline\n"
-        "- introduce safe single-file transfer actions without changing SSH terminal runtime behavior\n"
+        "- prepare the accepted file-transfer baseline for third-party tester validation\n"
+        "- keep file transfer conservative: sequential queue, test folders first, no sync/mirror yet\n"
         "- use libssh SFTP API for remote directory browsing, not shell command parsing hacks\n"
         "- keep terminal tabs and future File Manager tabs separated by design\n\n"
         "Codename roadmap:\n"

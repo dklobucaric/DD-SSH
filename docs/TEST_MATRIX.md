@@ -1,8 +1,27 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.8.1.1 — Andromeda  
-**Milestone:** File transfer / file manager  
-**Phase:** Queue selected UI consolidation
+**Checkpoint:** dev 0.1.8.1.2 — Andromeda  
+**Milestone:** Tester release polish  
+**Phase:** Third-party tester preparation
+
+## dev 0.1.8.1.2 — tester release polish smoke test
+
+[ ] About shows dev 0.1.8.1.2  
+[ ] Welcome tab mentions the tester-ready file transfer baseline  
+[ ] Existing SSH terminal still opens  
+[ ] Existing paste/Ctrl+C behavior still works  
+[ ] File Manager opens with local and remote panels  
+[ ] Local panel still shows `Queue upload`  
+[ ] Remote panel still shows `Queue download`  
+[ ] Single-file upload/download still works  
+[ ] Folder upload/download still works with a small test folder  
+[ ] Queue remains sequential, one item at a time  
+[ ] Retry selected still works  
+[ ] Overwrite all / Skip all still works  
+[ ] Exit safety still reports open terminal/file manager/queue work  
+[ ] No SFTP Session Traffic integration is expected yet  
+[ ] Tester checklist exists: `docs/TESTER_CHECKLIST_0.1.8.1.2.md`  
+[ ] Known limitations are clear about plaintext secrets and experimental folder transfer  
 
 ## dev 0.1.8.1.1 — queue selected UI consolidation smoke test
 
