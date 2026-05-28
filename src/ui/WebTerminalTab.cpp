@@ -183,6 +183,21 @@ QString WebTerminalTab::displayName() const
         + QString::number(m_session.port);
 }
 
+QString WebTerminalTab::trafficSessionName() const
+{
+    return displayName();
+}
+
+qint64 WebTerminalTab::receivedBytesTotal() const
+{
+    return m_receivedBytesTotal;
+}
+
+qint64 WebTerminalTab::sentBytesTotal() const
+{
+    return m_sentBytesTotal;
+}
+
 QString WebTerminalTab::targetLabel() const
 {
     return m_session.username
@@ -743,6 +758,9 @@ void WebTerminalTab::startShell()
     m_shellStarted = true;
     m_shellActive = true;
     m_disconnectRequested = false;
+    m_receivedBytesTotal = 0;
+    m_sentBytesTotal = 0;
+    emit trafficCountersChanged();
     setTerminalInputEnabled(false);
     setConnectionUiState(QStringLiteral("connecting"), false, false);
 
@@ -760,7 +778,8 @@ void WebTerminalTab::startShell()
         m_session.username,
         authMethod,
         m_secretValue,
-        m_hostKeyExpectation
+        m_hostKeyExpectation,
+        displayName()
     );
 
     if (m_lastTerminalColumns > 0 && m_lastTerminalRows > 0) {
@@ -771,6 +790,11 @@ void WebTerminalTab::startShell()
 
     connect(m_thread, &QThread::started, m_worker, &SshShellWorker::start);
     connect(m_worker, &SshShellWorker::outputReceived, m_bridge, &TerminalBridge::emitOutput);
+    connect(m_worker, &SshShellWorker::trafficUpdated, this, [this](qint64 receivedBytes, qint64 sentBytes) {
+        m_receivedBytesTotal = receivedBytes;
+        m_sentBytesTotal = sentBytes;
+        emit trafficCountersChanged();
+    });
     connect(m_worker, &SshShellWorker::stateChanged, this, [this](const QString &state) {
         QString uiState = state.trimmed();
         bool allowRemoteInput = false;

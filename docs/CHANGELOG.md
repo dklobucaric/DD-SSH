@@ -1,3 +1,30 @@
+## dev 0.1.6.7 — Andromeda
+
+### Added
+
+- Added a compact status-bar Session Traffic indicator for the active terminal tab.
+- Shows live received/sent rates and total received/sent bytes for the active xterm.js or basic shell tab.
+- The monitor follows the selected tab and shows a disconnected state with final totals after disconnect.
+- Added SSH channel traffic counters in `SshShellWorker` for bytes read from and written to the shell channel.
+- Added traffic lifecycle/summary logging when diagnostic logging is enabled:
+  - `Traffic monitor started: session="..."`
+  - `Session traffic summary: session="...", duration=..., received=..., sent=...`
+  - `Traffic monitor stopped: session="...", received=..., sent=...`
+- Added `docs/SESSION_TRAFFIC.md`, `docs/BUILD_AND_TEST_0.1.6.7.md`, and `docs/TESTCASE_0.1.6.7.md`.
+
+### Scope / privacy
+
+- This is application SSH shell-channel traffic, not global OS network traffic.
+- Logs do not include terminal input, terminal output, passwords, private-key contents, clipboard contents, or full JSON config data.
+- SFTP/file-transfer traffic is intentionally not implemented yet; the naming stays `Session Traffic` so future transport features can extend the same concept.
+
+### Unchanged
+
+- SSH trust-chain hardening remains unchanged.
+- Human-readable `dd-ssh.json` and `plain-v1` secrets remain unchanged.
+- Packaging scripts are unchanged except version defaults/comments.
+- No SFTP/file-manager work is included in this checkpoint.
+
 ## dev 0.1.6.6 — Andromeda
 
 ### Added

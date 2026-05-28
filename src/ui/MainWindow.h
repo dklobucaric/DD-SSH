@@ -4,11 +4,13 @@
 #include <QPoint>
 #include <QString>
 #include <QStringList>
+#include <QtGlobal>
 
 class QCloseEvent;
 class QLabel;
 class QListWidget;
 class QTabWidget;
+class QTimer;
 class QToolBar;
 struct ConfigInspection;
 
@@ -32,6 +34,8 @@ private:
     bool showConfigRecoveryDialog(const ConfigInspection &inspection);
     void openConfigFolder();
     void openLogFolder();
+    void setupTrafficStatusIndicator();
+    void updateTrafficStatusIndicator();
     void updateLoggingStatusIndicator();
     void exportConfig();
     void importConfig();
@@ -56,4 +60,10 @@ private:
     QTabWidget *m_tabs = nullptr;
     QToolBar *m_mainToolBar = nullptr;
     QLabel *m_loggingStatusLabel = nullptr;
+    QLabel *m_trafficStatusLabel = nullptr;
+    QTimer *m_trafficUpdateTimer = nullptr;
+    QWidget *m_lastTrafficWidget = nullptr;
+    qint64 m_lastTrafficReceivedBytes = 0;
+    qint64 m_lastTrafficSentBytes = 0;
+    qint64 m_lastTrafficUpdateMs = 0;
 };

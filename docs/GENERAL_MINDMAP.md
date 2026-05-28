@@ -10,7 +10,7 @@ Clean cross-platform SSH client and session manager
 ## Current identity
 
 ```text
-Version: dev 0.1.6.6
+Version: dev 0.1.6.7
 Codename: Andromeda
 Milestone: MF 0.2 candidate
 Phase: macOS Intel app/DMG foundation

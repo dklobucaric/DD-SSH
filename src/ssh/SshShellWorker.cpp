@@ -5,6 +5,7 @@
 #include <libssh/libssh.h>
 
 #include <QByteArray>
+#include <QDateTime>
 #include <QDir>
 #include <QFileDevice>
 #include <QMutexLocker>
@@ -12,6 +13,60 @@
 #include <QThread>
 
 namespace {
+
+QString safeLogLabel(QString value)
+{
+    value = value.trimmed();
+
+    if (value.isEmpty()) {
+        return QStringLiteral("unnamed");
+    }
+
+    value.replace(QChar('"'), QChar('\''));
+    value.replace(QChar('\n'), QChar(' '));
+    value.replace(QChar('\r'), QChar(' '));
+    return value;
+}
+
+QString formatByteCount(qint64 bytes)
+{
+    if (bytes < 0) {
+        bytes = 0;
+    }
+
+    const double value = static_cast<double>(bytes);
+
+    if (bytes < 1024) {
+        return QString::number(bytes) + QStringLiteral(" B");
+    }
+
+    if (bytes < 1024LL * 1024LL) {
+        return QString::number(value / 1024.0, 'f', 1) + QStringLiteral(" KB");
+    }
+
+    if (bytes < 1024LL * 1024LL * 1024LL) {
+        return QString::number(value / (1024.0 * 1024.0), 'f', 1) + QStringLiteral(" MB");
+    }
+
+    return QString::number(value / (1024.0 * 1024.0 * 1024.0), 'f', 1) + QStringLiteral(" GB");
+}
+
+QString formatDuration(qint64 milliseconds)
+{
+    if (milliseconds < 0) {
+        milliseconds = 0;
+    }
+
+    const qint64 totalSeconds = milliseconds / 1000;
+    const qint64 hours = totalSeconds / 3600;
+    const qint64 minutes = (totalSeconds % 3600) / 60;
+    const qint64 seconds = totalSeconds % 60;
+
+    return QStringLiteral("%1:%2:%3")
+        .arg(hours, 2, 10, QLatin1Char('0'))
+        .arg(minutes, 2, 10, QLatin1Char('0'))
+        .arg(seconds, 2, 10, QLatin1Char('0'));
+}
 
 bool readConnectedServerHostKey(
     ssh_session session,
@@ -153,6 +208,7 @@ SshShellWorker::SshShellWorker(
     SshAuthMethod authMethod,
     const QString &secretValue,
     const SshHostKeyExpectation &hostKeyExpectation,
+    const QString &sessionLabel,
     QObject *parent
 )
     : QObject(parent)
@@ -162,6 +218,7 @@ SshShellWorker::SshShellWorker(
     , m_authMethod(authMethod)
     , m_secretValue(secretValue)
     , m_hostKeyExpectation(hostKeyExpectation)
+    , m_sessionLabel(sessionLabel)
 {
 }
 
@@ -470,6 +527,14 @@ void SshShellWorker::start()
     emit stateChanged(QStringLiteral("Connected. SSH shell channel is open."));
     emit outputReceived(QStringLiteral("\n[DD-SSH] SSH shell channel is open.\n\n"));
 
+    const QString trafficSessionLabel = safeLogLabel(!m_sessionLabel.trimmed().isEmpty() ? m_sessionLabel : (m_username + QStringLiteral("@") + m_host));
+    qint64 receivedBytesTotal = 0;
+    qint64 sentBytesTotal = 0;
+    const QDateTime trafficStartedAt = QDateTime::currentDateTime();
+
+    AppLogger::info(QStringLiteral("Traffic monitor started: session=\"") + trafficSessionLabel + QStringLiteral("\""));
+    emit trafficUpdated(receivedBytesTotal, sentBytesTotal);
+
     char buffer[4096];
     bool connectionLost = false;
     bool remoteClosed = false;
@@ -488,6 +553,11 @@ void SshShellWorker::start()
         if (!pendingInput.isEmpty()) {
             const QByteArray inputUtf8 = pendingInput.toUtf8();
             const int writeRc = ssh_channel_write(channel, inputUtf8.constData(), inputUtf8.size());
+
+            if (writeRc > 0) {
+                sentBytesTotal += writeRc;
+                emit trafficUpdated(receivedBytesTotal, sentBytesTotal);
+            }
 
             if (writeRc == SSH_ERROR) {
                 connectionLost = true;
@@ -530,6 +600,8 @@ void SshShellWorker::start()
             );
 
             if (bytesRead > 0) {
+                receivedBytesTotal += bytesRead;
+                emit trafficUpdated(receivedBytesTotal, sentBytesTotal);
                 emit outputReceived(QString::fromUtf8(buffer, bytesRead));
                 continue;
             }
@@ -559,6 +631,8 @@ void SshShellWorker::start()
             );
 
             if (bytesRead > 0) {
+                receivedBytesTotal += bytesRead;
+                emit trafficUpdated(receivedBytesTotal, sentBytesTotal);
                 emit outputReceived(QString::fromUtf8(buffer, bytesRead));
                 continue;
             }
@@ -608,6 +682,15 @@ void SshShellWorker::start()
 
     ssh_disconnect(session);
     ssh_free(session);
+
+    const qint64 trafficDurationMs = trafficStartedAt.msecsTo(QDateTime::currentDateTime());
+    AppLogger::info(QStringLiteral("Session traffic summary: session=\"") + trafficSessionLabel
+        + QStringLiteral("\", duration=") + formatDuration(trafficDurationMs)
+        + QStringLiteral(", received=") + formatByteCount(receivedBytesTotal)
+        + QStringLiteral(", sent=") + formatByteCount(sentBytesTotal));
+    AppLogger::info(QStringLiteral("Traffic monitor stopped: session=\"") + trafficSessionLabel
+        + QStringLiteral("\", received=") + formatByteCount(receivedBytesTotal)
+        + QStringLiteral(", sent=") + formatByteCount(sentBytesTotal));
 
     AppLogger::info(QStringLiteral("SSH shell disconnected: host=") + m_host
         + QStringLiteral(", port=") + QString::number(m_port));

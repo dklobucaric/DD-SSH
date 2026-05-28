@@ -164,3 +164,6 @@ Linux: ~/.local/state/DD-SSH/logs
 Windows: %LOCALAPPDATA%\DD-SSH\logs
 macOS: ~/Library/Logs/DD-SSH
 ```
+
+
+`dev 0.1.6.7` adds a Session Traffic monitor. It shows application SSH shell-channel byte counters and logs only traffic lifecycle summaries when diagnostic logging is enabled. It must not log terminal input, terminal output, passwords, private-key contents, clipboard contents, or full config data.

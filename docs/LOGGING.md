@@ -1,7 +1,7 @@
 # DD-SSH diagnostic logging
 
-**Checkpoint:** dev 0.1.6.6 — Andromeda  
-**Scope:** optional diagnostic logging foundation
+**Checkpoint:** dev 0.1.6.7 — Andromeda  
+**Scope:** optional diagnostic logging foundation plus Session Traffic summaries
 
 DD-SSH diagnostic logging is an on-demand debugging tool for testers and developers. It is **off by default** and can be enabled only when needed.
 
@@ -81,6 +81,8 @@ Host-key verification before auth
 Authentication started / success / failed
 Private-key load errors
 Shell channel open / disconnect
+Session traffic monitor start/stop
+Session traffic summary on disconnect
 App closing
 ```
 
@@ -110,13 +112,12 @@ Reason: diagnostic logging is off by default and intended for short, on-demand t
 
 ## Future extensions
 
-The logger is intentionally generic so future features can use it without redesign. For example, a future Session Traffic / network monitor can log lifecycle and summary events:
+The logger is intentionally generic so future features can use it without redesign. The `dev 0.1.6.7` Session Traffic monitor uses the logger for lifecycle and summary events:
 
 ```text
-Traffic monitor started
-Traffic snapshot at connection time
-Traffic total on disconnect
-Traffic anomaly: transfer stalled
+Traffic monitor started: session="doma"
+Session traffic summary: session="doma", duration=00:04:12, received=3.8 MB, sent=220 KB
+Traffic monitor stopped: session="doma", received=3.8 MB, sent=220 KB
 ```
 
 The live traffic monitor itself should update in the UI, not spam the log every millisecond.

@@ -14,6 +14,7 @@
 #include <QApplication>
 #include <QCoreApplication>
 #include <QCloseEvent>
+#include <QDateTime>
 #include <QDesktopServices>
 #include <QFile>
 #include <QFileDevice>
@@ -35,6 +36,7 @@
 #include <QTemporaryFile>
 #include <QTextEdit>
 #include <QToolBar>
+#include <QTimer>
 #include <QUrl>
 
 #ifndef DD_SSH_CODENAME_STRING
@@ -56,6 +58,34 @@ QString normalizedAppTheme(const QString &themeName)
     }
 
     return QStringLiteral("system");
+}
+
+QString formatTrafficBytes(qint64 bytes)
+{
+    if (bytes < 0) {
+        bytes = 0;
+    }
+
+    const double value = static_cast<double>(bytes);
+
+    if (bytes < 1024) {
+        return QString::number(bytes) + QStringLiteral(" B");
+    }
+
+    if (bytes < 1024LL * 1024LL) {
+        return QString::number(value / 1024.0, 'f', 1) + QStringLiteral(" KB");
+    }
+
+    if (bytes < 1024LL * 1024LL * 1024LL) {
+        return QString::number(value / (1024.0 * 1024.0), 'f', 1) + QStringLiteral(" MB");
+    }
+
+    return QString::number(value / (1024.0 * 1024.0 * 1024.0), 'f', 1) + QStringLiteral(" GB");
+}
+
+QString formatTrafficRate(qint64 bytesPerSecond)
+{
+    return formatTrafficBytes(bytesPerSecond) + QStringLiteral("/s");
 }
 
 QString lightAppStyleSheet()
@@ -434,6 +464,7 @@ MainWindow::MainWindow(QWidget *parent)
     setupToolbar();
     applyQuickToolbarVisibility(startupSettings.showQuickToolbar);
     setupCentralLayout();
+    setupTrafficStatusIndicator();
     updateLoggingStatusIndicator();
 
     statusBar()->showMessage("DD-SSH Andromeda ready — exit safety enabled");
@@ -498,6 +529,106 @@ void MainWindow::openLogFolder()
     AppLogger::info(QStringLiteral("Opening log folder: ") + AppLogger::logDirectoryPath());
     QDesktopServices::openUrl(QUrl::fromLocalFile(AppLogger::logDirectoryPath()));
     statusBar()->showMessage(QStringLiteral("Opened DD-SSH log folder"));
+}
+
+void MainWindow::setupTrafficStatusIndicator()
+{
+    if (m_trafficStatusLabel == nullptr) {
+        m_trafficStatusLabel = new QLabel(this);
+        m_trafficStatusLabel->setText(QStringLiteral("Traffic: No active session"));
+        m_trafficStatusLabel->setToolTip(QStringLiteral("Live DD-SSH session traffic for the active terminal tab. This is application SSH channel traffic, not global OS network usage."));
+        statusBar()->addPermanentWidget(m_trafficStatusLabel);
+    }
+
+    if (m_trafficUpdateTimer == nullptr) {
+        m_trafficUpdateTimer = new QTimer(this);
+        m_trafficUpdateTimer->setInterval(1000);
+        connect(m_trafficUpdateTimer, &QTimer::timeout, this, [this]() {
+            updateTrafficStatusIndicator();
+        });
+        m_trafficUpdateTimer->start();
+    }
+
+    updateTrafficStatusIndicator();
+}
+
+void MainWindow::updateTrafficStatusIndicator()
+{
+    if (m_trafficStatusLabel == nullptr) {
+        return;
+    }
+
+    QWidget *currentWidget = m_tabs != nullptr ? m_tabs->currentWidget() : nullptr;
+
+    QString sessionName;
+    qint64 receivedBytes = 0;
+    qint64 sentBytes = 0;
+    bool terminalTab = false;
+    bool activeShell = false;
+
+    if (auto *webTerminal = dynamic_cast<WebTerminalTab *>(currentWidget)) {
+        terminalTab = true;
+        activeShell = webTerminal->hasActiveShell();
+        sessionName = webTerminal->trafficSessionName();
+        receivedBytes = webTerminal->receivedBytesTotal();
+        sentBytes = webTerminal->sentBytesTotal();
+    } else if (auto *basicTerminal = dynamic_cast<BasicTerminalTab *>(currentWidget)) {
+        terminalTab = true;
+        activeShell = basicTerminal->hasActiveShell();
+        sessionName = basicTerminal->trafficSessionName();
+        receivedBytes = basicTerminal->receivedBytesTotal();
+        sentBytes = basicTerminal->sentBytesTotal();
+    }
+
+    if (!terminalTab) {
+        m_trafficStatusLabel->setText(QStringLiteral("Traffic: No active session"));
+        m_lastTrafficWidget = nullptr;
+        m_lastTrafficReceivedBytes = 0;
+        m_lastTrafficSentBytes = 0;
+        m_lastTrafficUpdateMs = QDateTime::currentMSecsSinceEpoch();
+        return;
+    }
+
+    const qint64 nowMs = QDateTime::currentMSecsSinceEpoch();
+    qint64 receivedRate = 0;
+    qint64 sentRate = 0;
+
+    if (currentWidget == m_lastTrafficWidget && m_lastTrafficUpdateMs > 0 && nowMs > m_lastTrafficUpdateMs) {
+        const qint64 elapsedMs = nowMs - m_lastTrafficUpdateMs;
+        receivedRate = ((receivedBytes - m_lastTrafficReceivedBytes) * 1000) / elapsedMs;
+        sentRate = ((sentBytes - m_lastTrafficSentBytes) * 1000) / elapsedMs;
+
+        if (receivedRate < 0) {
+            receivedRate = 0;
+        }
+
+        if (sentRate < 0) {
+            sentRate = 0;
+        }
+    }
+
+    m_lastTrafficWidget = currentWidget;
+    m_lastTrafficReceivedBytes = receivedBytes;
+    m_lastTrafficSentBytes = sentBytes;
+    m_lastTrafficUpdateMs = nowMs;
+
+    const QString normalizedSessionName = sessionName.trimmed().isEmpty()
+        ? QStringLiteral("unnamed")
+        : sessionName.trimmed();
+
+    const QString stateSuffix = activeShell ? QString() : QStringLiteral(" disconnected");
+
+    m_trafficStatusLabel->setText(
+        QStringLiteral("Traffic: %1%2 ↓ %3 ↑ %4 | Total ↓ %5 ↑ %6")
+            .arg(
+                normalizedSessionName,
+                stateSuffix,
+                formatTrafficRate(receivedRate),
+                formatTrafficRate(sentRate),
+                formatTrafficBytes(receivedBytes),
+                formatTrafficBytes(sentBytes)
+            )
+    );
 }
 
 void MainWindow::updateLoggingStatusIndicator()
@@ -1030,7 +1161,7 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: optional diagnostic logging foundation.\n\n")
+            + QStringLiteral("Current phase: Basic Session Traffic Monitor.\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n")
@@ -1111,6 +1242,11 @@ void MainWindow::setupCentralLayout()
     m_tabs->setTabsClosable(true);
     m_tabs->setMovable(true);
 
+    connect(m_tabs, &QTabWidget::currentChanged, this, [this](int) {
+        m_lastTrafficWidget = nullptr;
+        updateTrafficStatusIndicator();
+    });
+
     connect(m_tabs, &QTabWidget::tabCloseRequested, this, [this](int index) {
         QWidget *widget = m_tabs->widget(index);
 
@@ -1162,6 +1298,9 @@ void MainWindow::setupCentralLayout()
         if (m_tabs->count() == 0) {
             addWelcomeTab();
         }
+
+        m_lastTrafficWidget = nullptr;
+        updateTrafficStatusIndicator();
     });
 
     connect(m_sessionList, &QListWidget::itemDoubleClicked, this, [this](QListWidgetItem *item) {
@@ -1746,6 +1885,8 @@ void MainWindow::openSavedSessionShellInternal(const QString &sessionId, bool us
             ? "Opening xterm.js terminal for " + tabTitle
             : "Opening basic shell for " + tabTitle
     );
+    m_lastTrafficWidget = nullptr;
+    updateTrafficStatusIndicator();
 }
 
 void MainWindow::testSavedSession(const QString &sessionId)

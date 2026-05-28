@@ -1,10 +1,22 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.6.6 — Andromeda
+**Checkpoint:** dev 0.1.6.7 — Andromeda
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
 **Phase:** macOS DMG/dependency polish
 
 This matrix tracks what has been confirmed manually, what is implemented but should be re-tested before a public alpha tag, and what is still planned.
+
+## dev 0.1.6.7 — Basic Session Traffic Monitor smoke test
+
+[ ] About shows dev 0.1.6.7
+[ ] Status bar shows `Traffic: No active session` on Welcome/non-terminal tabs
+[ ] Opening a saved xterm.js terminal shows `Traffic: <session>`
+[ ] Received rate/total increases with remote output
+[ ] Sent total increases with keyboard input/paste
+[ ] Switching terminal tabs changes the active traffic display
+[ ] Disconnect keeps final totals visible with a disconnected state
+[ ] With diagnostic logging ON, log contains traffic started/summary/stopped entries
+[ ] Logs do not contain terminal input/output or secrets
 
 ## dev 0.1.6.6 — optional diagnostic logging smoke test
 

@@ -82,8 +82,13 @@ BasicTerminalTab::BasicTerminalTab(
         m_session.username,
         authMethod,
         m_secretValue,
-        m_hostKeyExpectation
+        m_hostKeyExpectation,
+        displayName()
     );
+
+    m_receivedBytesTotal = 0;
+    m_sentBytesTotal = 0;
+    emit trafficCountersChanged();
 
     m_shellActive = true;
     m_disconnectRequested = false;
@@ -94,6 +99,11 @@ BasicTerminalTab::BasicTerminalTab(
 
     connect(m_thread, &QThread::started, m_worker, &SshShellWorker::start);
     connect(m_worker, &SshShellWorker::outputReceived, this, &BasicTerminalTab::appendOutput);
+    connect(m_worker, &SshShellWorker::trafficUpdated, this, [this](qint64 receivedBytes, qint64 sentBytes) {
+        m_receivedBytesTotal = receivedBytes;
+        m_sentBytesTotal = sentBytes;
+        emit trafficCountersChanged();
+    });
     connect(m_worker, &SshShellWorker::stateChanged, this, &BasicTerminalTab::updateState);
     connect(m_worker, &SshShellWorker::errorOccurred, this, &BasicTerminalTab::showWorkerError);
     connect(m_worker, &SshShellWorker::finished, this, &BasicTerminalTab::handleWorkerFinished);
@@ -145,6 +155,21 @@ QString BasicTerminalTab::displayName() const
         + m_session.host
         + QStringLiteral(":")
         + QString::number(m_session.port);
+}
+
+QString BasicTerminalTab::trafficSessionName() const
+{
+    return displayName();
+}
+
+qint64 BasicTerminalTab::receivedBytesTotal() const
+{
+    return m_receivedBytesTotal;
+}
+
+qint64 BasicTerminalTab::sentBytesTotal() const
+{
+    return m_sentBytesTotal;
 }
 
 void BasicTerminalTab::requestDisconnect()

@@ -29,11 +29,15 @@ public:
 
     bool hasActiveShell() const;
     QString displayName() const;
+    QString trafficSessionName() const;
+    qint64 receivedBytesTotal() const;
+    qint64 sentBytesTotal() const;
     void requestDisconnect();
 
 signals:
     void tabTitleChanged(const QString &title);
     void lifecycleStatusChanged(const QString &status);
+    void trafficCountersChanged();
 
 private slots:
     void sendCurrentInput();
@@ -62,6 +66,8 @@ private:
 
     QThread *m_thread = nullptr;
     SshShellWorker *m_worker = nullptr;
+    qint64 m_receivedBytesTotal = 0;
+    qint64 m_sentBytesTotal = 0;
     bool m_shellActive = false;
     bool m_disconnectRequested = false;
 };

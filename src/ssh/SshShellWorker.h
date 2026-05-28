@@ -20,6 +20,7 @@ public:
         SshAuthMethod authMethod,
         const QString &secretValue,
         const SshHostKeyExpectation &hostKeyExpectation = SshHostKeyExpectation(),
+        const QString &sessionLabel = QString(),
         QObject *parent = nullptr
     );
 
@@ -35,6 +36,7 @@ signals:
     void outputReceived(const QString &output);
     void stateChanged(const QString &state);
     void errorOccurred(const QString &error);
+    void trafficUpdated(qint64 receivedBytes, qint64 sentBytes);
     void finished();
 
 private:
@@ -48,6 +50,7 @@ private:
     SshAuthMethod m_authMethod = SshAuthMethod::Password;
     QString m_secretValue;
     SshHostKeyExpectation m_hostKeyExpectation;
+    QString m_sessionLabel;
 
     QMutex m_inputMutex;
     QStringList m_pendingInput;

@@ -32,11 +32,15 @@ public:
 
     bool hasActiveShell() const;
     QString displayName() const;
+    QString trafficSessionName() const;
+    qint64 receivedBytesTotal() const;
+    qint64 sentBytesTotal() const;
     void requestDisconnect();
 
 signals:
     void tabTitleChanged(const QString &title);
     void lifecycleStatusChanged(const QString &status);
+    void trafficCountersChanged();
 
 protected:
     void showEvent(QShowEvent *event) override;
@@ -80,6 +84,8 @@ private:
     SshShellWorker *m_worker = nullptr;
     int m_lastTerminalColumns = 0;
     int m_lastTerminalRows = 0;
+    qint64 m_receivedBytesTotal = 0;
+    qint64 m_sentBytesTotal = 0;
     bool m_shellStarted = false;
     bool m_shellActive = false;
     bool m_disconnectRequested = false;

@@ -17,14 +17,14 @@ DD-SSH is designed for practical sysadmin use: saved sessions, one portable JSON
 
 ## Current status
 
-**Development checkpoint:** `dev 0.1.6.6`
+**Development checkpoint:** `dev 0.1.6.7`
 **Codename:** Andromeda
 **Milestone:** MF 0.2 candidate — Real Terminal Foundation
-**Current phase:** macOS DMG/dependency polish
+**Current phase:** Basic Session Traffic Monitor
 
 DD-SSH is now in its early packaging phase. It is not a stable 1.0 release yet, but the core workflow is functional and has been validated on Linux, Windows 10, Windows 11, and an Intel macOS build machine. Native Windows Debug/Release builds, a copied standalone Windows deployment folder, a first Debian package, and a first macOS Intel `.app` / `.dmg` deployment experiment have been tested.
 
-The current macOS polish checkpoint keeps the 0.1.6.3 SSH trust-chain hardening and the 0.1.6.4 repo-hygiene rules intact, then improves the macOS tester package path:
+The current traffic-monitor checkpoint keeps the SSH trust-chain hardening, packaging helpers, macOS DMG flow, and optional diagnostic logging intact, then adds a compact live traffic indicator for the active terminal tab:
 
 - `dev 0.1.5.6` proved the Windows standalone deployment folder can run outside the build tree without manually extending `PATH`.
 - `dev 0.1.5.7` fixed portable `known_hosts` behavior so one shared `dd-ssh.json` can carry multiple legitimate host-key algorithms per `host:port`.
@@ -34,8 +34,9 @@ The current macOS polish checkpoint keeps the 0.1.6.3 SSH trust-chain hardening 
 - `dev 0.1.6.3` verifies the approved SSH host key again in the real authentication/shell connection before any password or private key is sent.
 - `dev 0.1.6.4` adds `.gitignore` protection, release-artifact documentation, and checksum helpers for Linux, macOS, and Windows.
 - `dev 0.1.6.6` adds optional diagnostic logging for tester/debug workflows: logging is OFF by default, can be enabled from Settings, writes to a standard per-user log folder, and Help → Open Log Folder opens the logs.
+- `dev 0.1.6.7` adds a compact Session Traffic indicator in the status bar for the active terminal tab, showing live received/sent rates and totals while logging only traffic lifecycle summaries when diagnostic logging is enabled.
 
-In `dev 0.1.6.6`, runtime/SSH behavior is intentionally unchanged from `dev 0.1.6.3`. The focus is an optional diagnostic logging foundation for real tester debugging without storing secrets, terminal input, or terminal output in logs.
+In `dev 0.1.6.7`, SSH authentication, known-host logic, human-readable JSON, and packaging behavior are intentionally unchanged. The focus is a small terminal-channel traffic monitor that prepares the UI direction for later file transport without implementing SFTP yet.
 
 The portable known-host model now supports multi-key storage per `host:port`:
 

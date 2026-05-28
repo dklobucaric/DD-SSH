@@ -1,6 +1,6 @@
 # DD-SSH Debian Package Tutorial
 
-**Checkpoint:** dev 0.1.6.6 — Andromeda  
+**Checkpoint:** dev 0.1.6.7 — Andromeda  
 **Goal:** build, package, install, test, and remove the first DD-SSH `.deb` package.
 
 This tutorial is the practical copy/paste path for creating a local Debian package from the DD-SSH source tree.
@@ -63,7 +63,7 @@ Optional local smoke test before packaging:
 Check the About dialog and confirm it shows:
 
 ```text
-Version: dev 0.1.6.6
+Version: dev 0.1.6.7
 Codename: Andromeda
 ```
 
@@ -126,7 +126,7 @@ Minimum test pass:
 ```text
 [ ] DD-SSH starts from terminal with `dd-ssh`
 [ ] app icon appears
-[ ] About shows dev 0.1.6.6
+[ ] About shows dev 0.1.6.7
 [ ] existing user config is preserved
 [ ] Settings opens and shows the config path
 [ ] saved session list loads

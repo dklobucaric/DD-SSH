@@ -1,7 +1,7 @@
 # DD-SSH Release Checklist
 
 **Current target line:** Andromeda / MF 0.2 candidate  
-**Current checkpoint:** dev 0.1.6.6
+**Current checkpoint:** dev 0.1.6.7
 
 This checklist is shorter than the full public-alpha checklist. Use it before tagging any internal development checkpoint or before preparing `v0.2.0-alpha`.
 
@@ -30,7 +30,7 @@ grep "DD_SSH_VERSION_STRING" CMakeLists.txt
 Expected for this checkpoint:
 
 ```text
-set(DD_SSH_VERSION_STRING "dev 0.1.6.6")
+set(DD_SSH_VERSION_STRING "dev 0.1.6.7")
 ```
 
 Also verify in the app:
@@ -42,7 +42,7 @@ Help → About DD-SSH
 Expected:
 
 ```text
-Version: dev 0.1.6.6
+Version: dev 0.1.6.7
 Codename: Andromeda
 Milestone: MF 0.2 candidate
 ```
@@ -228,3 +228,13 @@ Use public release tags only when the full public-alpha checklist passes.
 [ ] logs contain INFO/WARN/ERROR lifecycle events
 [ ] logs do not contain secrets or terminal content
 ```
+
+
+## dev 0.1.6.7 Session Traffic checks
+
+[ ] Status bar shows `Traffic: No active session` on non-terminal tabs.
+[ ] Active xterm.js/basic terminal tab shows live received/sent rates and totals.
+[ ] Switching terminal tabs changes the active traffic display.
+[ ] Disconnect keeps final totals visible with a disconnected state.
+[ ] With diagnostic logging ON, traffic started/summary/stopped lines are written.
+[ ] Logs do not include terminal input/output or secrets.
