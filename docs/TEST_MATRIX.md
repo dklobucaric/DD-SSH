@@ -1,8 +1,33 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.8.3 — Andromeda  
-**Milestone:** File transfer logging and diagnostics  
-**Phase:** Diagnostic validation
+**Checkpoint:** dev 0.1.8.4 — Andromeda  
+**Milestone:** SFTP logging polish  
+**Phase:** Diagnostic validation polish
+
+## dev 0.1.8.4 — overwrite metadata dialog polish smoke test
+
+[ ] About shows dev 0.1.8.4  
+[ ] Immediate download overwrite prompt shows existing local size/date and incoming remote size/date  
+[ ] Immediate upload overwrite prompt shows existing remote size/date and incoming local size/date  
+[ ] Queue download overwrite prompt shows existing local and incoming remote metadata  
+[ ] Queue upload overwrite prompt shows existing remote and incoming local metadata  
+[ ] Overwrite / Skip / Overwrite all / Skip all still work  
+[ ] Diagnostic logging behavior from dev 0.1.8.3.1 still works  
+[ ] Terminal and paste/Ctrl+C still work  
+
+## dev 0.1.8.3.1 — SFTP logging polish smoke test
+
+[ ] About shows dev 0.1.8.3.1  
+[ ] Diagnostic logging is OFF by default  
+[ ] Enable diagnostic logging in Settings  
+[ ] Upload a file that does not already exist remotely  
+[ ] Log contains `SFTP upload preflight started` before connection/auth metadata  
+[ ] Log contains `SFTP file upload started` only when the transfer phase begins  
+[ ] Queue/upload a file that already exists remotely and choose Overwrite / Overwrite all  
+[ ] Log contains `SFTP upload target exists before transfer` before the overwrite decision  
+[ ] Log no longer suggests a duplicate data-transfer start before overwrite approval  
+[ ] Logs still do not contain passwords, private keys, plaintext secret values, terminal input/output, clipboard contents, or file contents  
+[ ] Queue, upload/download, folder transfer, Retry selected, Overwrite all / Skip all, terminal, and paste/Ctrl+C still work  
 
 ## dev 0.1.8.3 — file transfer logging and diagnostics smoke test
 

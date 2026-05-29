@@ -1,3 +1,30 @@
+## dev 0.1.8.4 — Andromeda
+
+Overwrite metadata dialog polish.
+
+- Improved immediate download overwrite prompts with existing local file metadata and incoming remote file metadata.
+- Improved immediate upload overwrite prompts with existing remote file metadata and incoming local file metadata.
+- Improved queued download/upload overwrite prompts so Overwrite / Skip / Overwrite all / Skip all decisions show size and modified-time details where available.
+- Preserved the accepted SFTP diagnostic logging baseline from `dev 0.1.8.3.1`.
+- No transfer core, queue model, folder scan, SSH/terminal runtime, known-host, Windows KEX, or config schema changes.
+
+## dev 0.1.8.3.1 — Andromeda
+
+SFTP logging polish checkpoint.
+
+### Improved
+- Renamed the early upload log from `SFTP file upload started` to `SFTP upload preflight started` so overwrite checks do not look like a real data transfer already began.
+- Added `allowOverwrite=true/false` to the upload preflight log for clearer queue diagnostics.
+- Added an explicit `SFTP upload target exists before transfer` warning when the remote target already exists and overwrite approval is still needed.
+- Moved the real `SFTP file upload started` log to the actual data-transfer phase, after overwrite approval and immediately before opening/truncating the remote file.
+
+### Preserved
+- No transfer core rewrite.
+- No queue model changes.
+- No folder scan engine changes.
+- No SFTP traffic monitor integration yet.
+- No terminal runtime, known-host, Windows KEX, config schema, or auth changes.
+
 ## dev 0.1.8.3 — Andromeda
 
 File transfer logging and diagnostics checkpoint.

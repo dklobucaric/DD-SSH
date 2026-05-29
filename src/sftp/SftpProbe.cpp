@@ -1207,11 +1207,12 @@ SftpUploadResult SftpProbe::uploadLocalFile(
 
     result.totalBytes = static_cast<quint64>(localInfo.size());
 
-    AppLogger::info(QStringLiteral("SFTP file upload started: host=") + host
+    AppLogger::info(QStringLiteral("SFTP upload preflight started: host=") + host
         + QStringLiteral(", port=") + QString::number(port)
         + QStringLiteral(", user=") + username
         + QStringLiteral(", localPath=") + result.localPath
-        + QStringLiteral(", remotePath=") + result.remotePath);
+        + QStringLiteral(", remotePath=") + result.remotePath
+        + QStringLiteral(", allowOverwrite=") + (allowOverwrite ? QStringLiteral("true") : QStringLiteral("false")));
 
     ssh_session session = ssh_new();
 
@@ -1311,6 +1312,8 @@ SftpUploadResult SftpProbe::uploadLocalFile(
     if (remoteAttributes != nullptr) {
         result.remoteAlreadyExists = true;
         result.remoteTargetIsDirectory = remoteAttributes->type == SSH_FILEXFER_TYPE_DIRECTORY;
+        result.remoteExistingSizeBytes = static_cast<quint64>(remoteAttributes->size);
+        result.remoteExistingModifiedTime = timestampString(remoteAttributes->mtime);
         sftp_attributes_free(remoteAttributes);
 
         if (result.remoteTargetIsDirectory) {
@@ -1327,6 +1330,7 @@ SftpUploadResult SftpProbe::uploadLocalFile(
             result.success = false;
             result.message = QStringLiteral("Remote target already exists. Overwrite was not approved.");
             result.error = QStringLiteral("Remote file exists: ") + result.remotePath;
+            AppLogger::warn(QStringLiteral("SFTP upload target exists before transfer: remotePath=") + result.remotePath);
             sftp_free(sftp);
             ssh_disconnect(session);
             ssh_free(session);
@@ -1362,6 +1366,10 @@ SftpUploadResult SftpProbe::uploadLocalFile(
         ssh_free(session);
         return result;
     }
+
+    AppLogger::info(QStringLiteral("SFTP file upload started: localPath=") + result.localPath
+        + QStringLiteral(", remotePath=") + result.remotePath
+        + QStringLiteral(", bytes=") + QString::number(result.totalBytes));
 
     sftp_file remoteFile = sftp_open(sftp, remotePathUtf8.constData(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
 

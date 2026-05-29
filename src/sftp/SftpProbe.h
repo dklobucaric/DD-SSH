@@ -45,6 +45,8 @@ struct SftpUploadResult
     bool cancelled = false;
     bool remoteAlreadyExists = false;
     bool remoteTargetIsDirectory = false;
+    quint64 remoteExistingSizeBytes = 0;
+    QString remoteExistingModifiedTime;
     QString message;
     QString error;
     int sshErrorCode = 0;

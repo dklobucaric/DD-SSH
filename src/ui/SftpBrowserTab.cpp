@@ -6,6 +6,7 @@
 #include <QAbstractItemView>
 #include <QApplication>
 #include <QDir>
+#include <QDateTime>
 #include <QDirIterator>
 #include <QElapsedTimer>
 #include <QFileInfo>
@@ -163,6 +164,61 @@ QString formatTransferSummary(quint64 bytesTransferred, quint64 totalBytes, qint
     return summary;
 }
 
+QString formatSizeWithRawBytes(quint64 bytes)
+{
+    return QStringLiteral("%1 (%2)").arg(formatSize(bytes), formatRawBytes(bytes));
+}
+
+QString cleanMetadataText(const QString &value)
+{
+    const QString trimmed = value.trimmed();
+    return trimmed.isEmpty() ? QStringLiteral("(unknown)") : trimmed;
+}
+
+QString formatLocalModifiedTime(const QFileInfo &info)
+{
+    if (!info.exists()) {
+        return QStringLiteral("(unknown)");
+    }
+
+    const QDateTime modified = info.lastModified();
+    return modified.isValid() ? modified.toString(Qt::ISODate) : QStringLiteral("(unknown)");
+}
+
+QString metadataBlock(
+    const QString &title,
+    const QString &path,
+    bool sizeKnown,
+    quint64 sizeBytes,
+    const QString &modifiedTime
+)
+{
+    QStringList lines;
+    lines << title;
+    lines << QStringLiteral("Path: %1").arg(path);
+    lines << QStringLiteral("Size: %1").arg(sizeKnown ? formatSizeWithRawBytes(sizeBytes) : QStringLiteral("(unknown)"));
+    lines << QStringLiteral("Modified: %1").arg(cleanMetadataText(modifiedTime));
+    return lines.join(QLatin1Char('\n'));
+}
+
+QString overwriteMetadataMessage(
+    const QString &intro,
+    const QString &existingDetails,
+    const QString &incomingDetails,
+    const QString &question
+)
+{
+    QStringList lines;
+    lines << intro;
+    lines << QString();
+    lines << existingDetails;
+    lines << QString();
+    lines << incomingDetails;
+    lines << QString();
+    lines << question;
+    return lines.join(QLatin1Char('\n'));
+}
+
 
 enum class QueueOverwriteDecision
 {
@@ -177,14 +233,19 @@ QueueOverwriteDecision askQueueOverwriteDecision(
     QWidget *parent,
     const QString &title,
     const QString &targetPath,
-    const QString &replacementDescription
+    const QString &existingDetails,
+    const QString &incomingDetails
 )
 {
     QMessageBox box(parent);
     box.setIcon(QMessageBox::Warning);
     box.setWindowTitle(title);
-    box.setText(QStringLiteral("Queue target already exists:\n%1\n\nOverwrite it with %2?").arg(targetPath, replacementDescription));
-    box.setInformativeText(QStringLiteral("Choose one item, all remaining queue conflicts of this direction, or stop the queue."));
+    box.setText(overwriteMetadataMessage(
+        QStringLiteral("Queue target already exists:"),
+        existingDetails,
+        incomingDetails,
+        QStringLiteral("Overwrite this queue target?")));
+    box.setInformativeText(QStringLiteral("Target: %1\nChoose one item, all remaining queue conflicts of this direction, or stop the queue.").arg(targetPath));
 
     QAbstractButton *overwriteButton = box.addButton(QStringLiteral("Overwrite"), QMessageBox::AcceptRole);
     QAbstractButton *skipButton = box.addButton(QStringLiteral("Skip"), QMessageBox::NoRole);
@@ -945,6 +1006,8 @@ void SftpBrowserTab::downloadSelectedRemoteFile()
 
     QTableWidgetItem *nameItem = m_remoteTable->item(row, 0);
     QTableWidgetItem *typeItem = m_remoteTable->item(row, 1);
+    QTableWidgetItem *sizeItem = m_remoteTable->item(row, 2);
+    QTableWidgetItem *modifiedItem = m_remoteTable->item(row, 3);
 
     if (nameItem == nullptr || typeItem == nullptr) {
         return;
@@ -952,6 +1015,8 @@ void SftpBrowserTab::downloadSelectedRemoteFile()
 
     const QString name = nameItem->data(Qt::UserRole).toString();
     const QString type = typeItem->data(Qt::UserRole).toString();
+    const quint64 remoteSizeBytes = sizeItem != nullptr ? static_cast<quint64>(sizeItem->data(Qt::UserRole).toULongLong()) : 0ULL;
+    const QString remoteModifiedTime = modifiedItem != nullptr ? modifiedItem->text() : QStringLiteral("(unknown)");
 
     if (name.trimmed().isEmpty() || name == QStringLiteral(".") || name == QStringLiteral("..")) {
         QMessageBox::information(
@@ -1001,10 +1066,28 @@ void SftpBrowserTab::downloadSelectedRemoteFile()
     const QString localTargetPath = QDir(m_currentLocalPath).filePath(QFileInfo(name).fileName());
 
     if (QFileInfo::exists(localTargetPath)) {
+        const QFileInfo existingLocalInfo(localTargetPath);
+        const QString message = overwriteMetadataMessage(
+            QStringLiteral("The local file already exists."),
+            metadataBlock(
+                QStringLiteral("Existing local file"),
+                localTargetPath,
+                true,
+                static_cast<quint64>(existingLocalInfo.size()),
+                formatLocalModifiedTime(existingLocalInfo)),
+            metadataBlock(
+                QStringLiteral("Incoming remote file"),
+                remoteFilePath,
+                true,
+                remoteSizeBytes,
+                remoteModifiedTime),
+            QStringLiteral("Overwrite the local file with the selected remote file?")
+        );
+
         const QMessageBox::StandardButton overwriteDecision = QMessageBox::warning(
             this,
             QStringLiteral("Overwrite local file? — DD-SSH"),
-            QStringLiteral("The local file already exists:\n%1\n\nOverwrite it with the selected remote file?" ).arg(localTargetPath),
+            message,
             QMessageBox::Yes | QMessageBox::Cancel,
             QMessageBox::Cancel
         );
@@ -1238,11 +1321,15 @@ void SftpBrowserTab::uploadSelectedLocalFile()
     const QString remoteTargetPath = joinedRemotePath(m_currentRemotePath, fileName);
     bool remoteExistsInCurrentListing = false;
     bool remoteTargetIsDirectory = false;
+    quint64 remoteExistingSizeBytes = 0;
+    QString remoteExistingModifiedTime = QStringLiteral("(unknown)");
 
     if (m_remoteTable != nullptr) {
         for (int row = 0; row < m_remoteTable->rowCount(); ++row) {
             QTableWidgetItem *nameItem = m_remoteTable->item(row, 0);
             QTableWidgetItem *typeItem = m_remoteTable->item(row, 1);
+            QTableWidgetItem *sizeItem = m_remoteTable->item(row, 2);
+            QTableWidgetItem *modifiedItem = m_remoteTable->item(row, 3);
 
             if (nameItem == nullptr || typeItem == nullptr) {
                 continue;
@@ -1253,6 +1340,8 @@ void SftpBrowserTab::uploadSelectedLocalFile()
             if (remoteName == fileName) {
                 remoteExistsInCurrentListing = true;
                 remoteTargetIsDirectory = isDirectoryType(typeItem->data(Qt::UserRole).toString());
+                remoteExistingSizeBytes = sizeItem != nullptr ? static_cast<quint64>(sizeItem->data(Qt::UserRole).toULongLong()) : 0ULL;
+                remoteExistingModifiedTime = modifiedItem != nullptr ? modifiedItem->text() : QStringLiteral("(unknown)");
                 break;
             }
         }
@@ -1270,10 +1359,27 @@ void SftpBrowserTab::uploadSelectedLocalFile()
             return;
         }
 
+        const QString message = overwriteMetadataMessage(
+            QStringLiteral("The remote file already exists."),
+            metadataBlock(
+                QStringLiteral("Existing remote file"),
+                remoteTargetPath,
+                true,
+                remoteExistingSizeBytes,
+                remoteExistingModifiedTime),
+            metadataBlock(
+                QStringLiteral("Incoming local file"),
+                localFilePath,
+                true,
+                static_cast<quint64>(localInfo.size()),
+                formatLocalModifiedTime(localInfo)),
+            QStringLiteral("Overwrite the remote file with the selected local file?")
+        );
+
         const QMessageBox::StandardButton overwriteDecision = QMessageBox::warning(
             this,
             QStringLiteral("Overwrite remote file? — DD-SSH"),
-            QStringLiteral("The remote file already exists:\n%1\n\nOverwrite it with the selected local file?" ).arg(remoteTargetPath),
+            message,
             QMessageBox::Yes | QMessageBox::Cancel,
             QMessageBox::Cancel
         );
@@ -1483,6 +1589,7 @@ void SftpBrowserTab::queueSelectedRemoteDownloads()
         QTableWidgetItem *nameItem = m_remoteTable->item(row, 0);
         QTableWidgetItem *typeItem = m_remoteTable->item(row, 1);
         QTableWidgetItem *sizeItem = m_remoteTable->item(row, 2);
+        QTableWidgetItem *modifiedItem = m_remoteTable->item(row, 3);
 
         if (nameItem == nullptr || typeItem == nullptr) {
             ++skipped;
@@ -1536,6 +1643,7 @@ void SftpBrowserTab::queueSelectedRemoteDownloads()
         item.sourcePath = joinedRemotePath(m_currentRemotePath, name);
         item.targetPath = QDir(m_currentLocalPath).filePath(QFileInfo(name).fileName());
         item.sizeBytes = sizeItem != nullptr ? static_cast<quint64>(sizeItem->data(Qt::UserRole).toULongLong()) : 0ULL;
+        item.sourceModifiedTime = modifiedItem != nullptr ? modifiedItem->text() : QStringLiteral("(unknown)");
         item.status = QStringLiteral("Pending");
         item.message = QStringLiteral("Queued for download");
         m_transferQueue.append(item);
@@ -1667,6 +1775,7 @@ void SftpBrowserTab::queueSelectedLocalUploads()
         item.sourcePath = localInfo.absoluteFilePath();
         item.targetPath = joinedRemotePath(m_currentRemotePath, localInfo.fileName());
         item.sizeBytes = static_cast<quint64>(localInfo.size());
+        item.sourceModifiedTime = formatLocalModifiedTime(localInfo);
         item.status = QStringLiteral("Pending");
         item.message = QStringLiteral("Queued for upload");
         m_transferQueue.append(item);
@@ -1831,6 +1940,7 @@ bool SftpBrowserTab::addRemoteFolderDownloadToQueue(
         fileItem.sourcePath = childRemotePath;
         fileItem.targetPath = QDir::cleanPath(childLocalPath);
         fileItem.sizeBytes = entry.sizeBytes;
+        fileItem.sourceModifiedTime = entry.modifiedTime;
         fileItem.status = QStringLiteral("Pending");
         fileItem.message = QStringLiteral("Queued by folder download scan");
         m_transferQueue.append(fileItem);
@@ -1918,6 +2028,7 @@ bool SftpBrowserTab::addLocalFolderUploadToQueue(
         fileItem.sourcePath = info.absoluteFilePath();
         fileItem.targetPath = remotePath;
         fileItem.sizeBytes = static_cast<quint64>(info.size());
+        fileItem.sourceModifiedTime = formatLocalModifiedTime(info);
         fileItem.status = QStringLiteral("Pending");
         fileItem.message = QStringLiteral("Queued by folder upload scan");
         m_transferQueue.append(fileItem);
@@ -2068,7 +2179,18 @@ void SftpBrowserTab::startTransferQueue()
                         this,
                         QStringLiteral("Overwrite local file? — DD-SSH"),
                         item.targetPath,
-                        QStringLiteral("the remote file")
+                        metadataBlock(
+                            QStringLiteral("Existing local file"),
+                            item.targetPath,
+                            true,
+                            static_cast<quint64>(targetInfo.size()),
+                            formatLocalModifiedTime(targetInfo)),
+                        metadataBlock(
+                            QStringLiteral("Incoming remote file"),
+                            item.sourcePath,
+                            true,
+                            item.sizeBytes,
+                            item.sourceModifiedTime)
                     );
 
                     if (overwriteDecision == QueueOverwriteDecision::CancelQueue) {
@@ -2304,7 +2426,18 @@ void SftpBrowserTab::startTransferQueue()
                         this,
                         QStringLiteral("Overwrite remote file? — DD-SSH"),
                         item.targetPath,
-                        QStringLiteral("the local file")
+                        metadataBlock(
+                            QStringLiteral("Existing remote file"),
+                            item.targetPath,
+                            true,
+                            result.remoteExistingSizeBytes,
+                            result.remoteExistingModifiedTime),
+                        metadataBlock(
+                            QStringLiteral("Incoming local file"),
+                            item.sourcePath,
+                            true,
+                            item.sizeBytes,
+                            item.sourceModifiedTime)
                     );
 
                     if (overwriteDecision == QueueOverwriteDecision::CancelQueue) {

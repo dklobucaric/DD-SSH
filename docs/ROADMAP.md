@@ -44,7 +44,7 @@ Already implemented:
 
 Active File Transfer / File Manager track:
 
-Current checkpoint: `dev 0.1.8.3` — file transfer logging and diagnostics. This checkpoint adds explicit SFTP/File Manager diagnostic logging for immediate transfers, transfer queue runs, folder queue confirmation/summary events, overwrite/skip decisions, retry-selected events, and queue outcomes while keeping logging OFF by default and free of secrets/file contents.
+Current checkpoint: `dev 0.1.8.4` — overwrite metadata dialog polish. This checkpoint keeps the accepted `dev 0.1.8.3.1` diagnostic logging baseline and improves upload/download overwrite prompts with existing and incoming file metadata.
 
 ```text
 dev 0.1.7.2 — File transport architecture/design foundation [done]
@@ -64,9 +64,11 @@ dev 0.1.8.0.4.1 — transfer queue stabilization polish [passed]
 dev 0.1.8.1 — folder transfer experiment [passed]
 dev 0.1.8.1.1 — queue selected UI consolidation [passed]
 dev 0.1.8.2 — file manager safety polish [done]
-dev 0.1.8.2 — file manager safety polish [done]
-dev 0.1.8.3 — file transfer logging and diagnostics [current]
-dev 0.1.8.4 — overwrite metadata dialog [next]
+dev 0.1.8.3 — file transfer logging and diagnostics [accepted]
+dev 0.1.8.3.1 — SFTP logging polish [accepted]
+dev 0.1.8.4 — overwrite metadata dialog polish [current]
+dev 0.1.8.5 — remote queue delete experiment [planned]
+dev 0.1.8.6 — SFTP traffic monitor widget integration [planned]
 dev 0.1.9.x — cross-platform file transfer stabilization
 ```
 
@@ -261,7 +263,9 @@ dev 0.1.8.0.4.1 — Transfer queue stabilization polish [done]
 dev 0.1.8.1 — Folder transfer experiment [passed]
 dev 0.1.8.1.1 — Queue selected UI consolidation [passed]
 dev 0.1.8.2 — File manager safety polish [done]
-dev 0.1.8.3 — File transfer logging and diagnostics [current]
+dev 0.1.8.3 — File transfer logging and diagnostics [accepted]
+dev 0.1.8.3.1 — SFTP logging polish [accepted]
+dev 0.1.8.4 — overwrite metadata dialog polish [current]
 ```
 
 ## 0.1.7.0 terminal transport hardening

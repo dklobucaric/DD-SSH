@@ -1,6 +1,6 @@
 # DD-SSH diagnostic logging
 
-**Checkpoint:** dev 0.1.8.3 — Andromeda
+**Checkpoint:** dev 0.1.8.4 — Andromeda
 **Scope:** optional diagnostic logging foundation plus SSH terminal, Session Traffic, config safety, and SFTP/File Manager transfer diagnostics
 
 DD-SSH diagnostic logging is an on-demand debugging tool for testers and developers. It is **off by default** and can be enabled only when needed.
@@ -133,6 +133,16 @@ The live traffic monitor itself should update in the UI, not spam the log every 
 `dev 0.1.6.8` logs config import/export preview summaries when diagnostic logging is enabled. These entries include counts and flags only, such as sessions, known hosts, secrets mode, saved secret count, and plaintext-secret presence. They must not include passwords, private-key contents, terminal data, clipboard content, or full JSON.
 
 
+## dev 0.1.8.3.1 SFTP upload log polish
+
+`dev 0.1.8.3.1` clarifies upload logs around overwrite checks:
+
+- `SFTP upload preflight started` means DD-SSH is connecting/authenticating and checking whether the remote target exists.
+- `SFTP upload target exists before transfer` means the remote file already exists and the UI must ask for overwrite/skip/cancel before any data transfer begins.
+- `SFTP file upload started` now means the actual data-transfer phase is starting, after overwrite approval if needed.
+
+This avoids the confusing pattern where a queued upload could appear to start twice when the first attempt only discovered an overwrite conflict.
+
 ## SFTP/File Manager logging
 
 `dev 0.1.8.3` adds explicit SFTP/File Manager diagnostic events. These are written only when diagnostic logging is enabled.
@@ -147,3 +157,8 @@ SFTP transfer queue finished: session="DD-LAB", done=4, failed=0, cancelled=0, s
 ```
 
 These entries are intended to help testers report transfer behavior without exposing secrets or file contents. Paths, byte counts, elapsed times, queue decisions, and error messages are metadata. Do not paste logs publicly if path names themselves are sensitive.
+
+
+## dev 0.1.8.4 note
+
+`dev 0.1.8.4` keeps the accepted diagnostic logging behavior from `dev 0.1.8.3.1` and focuses on overwrite metadata dialogs. Logging remains optional and OFF by default.

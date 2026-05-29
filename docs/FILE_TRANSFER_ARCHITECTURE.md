@@ -1,6 +1,6 @@
 # DD-SSH File Transfer Architecture
 
-**Checkpoint:** dev 0.1.8.3 — Andromeda  
+**Checkpoint:** dev 0.1.8.4 — Andromeda  
 **Status:** Transfer queue foundation  
 **Runtime behavior:** saved-session File Manager can browse local/remote directories, perform immediate one-file download/upload, queue multiple individual file downloads/uploads, and run queued items sequentially
 
@@ -30,7 +30,7 @@ The future File Manager should eventually provide:
 - diagnostic logging that never records file contents or secrets
 - Session Traffic integration for SFTP bytes where practical
 
-`dev 0.1.8.3` adds optional SFTP/file-transfer diagnostic logging around queue runs, immediate transfers, folder queue confirmations/summaries, retry-selected actions, overwrite/skip decisions, and item outcomes while preserving the existing transfer runtime. `dev 0.1.8.2` is a file manager safety polish checkpoint for the accepted file-manager/folder-transfer baseline; it updates documentation and in-app status text without changing the SFTP runtime. `dev 0.1.8.1.1` consolidates File Manager queue controls into two clearer panel actions while keeping the same folder-transfer engine: local `Queue upload` and remote `Queue download` accept selected files and folders. `dev 0.1.8.1` adds the first folder-transfer experiment by recursively scanning folders and expanding them into existing sequential queue items. Destination directories are represented as create-directory queue items; symlinks are skipped. `dev 0.1.8.0.4.1` stabilized the conservative transfer queue foundation before folder-transfer work: exit safety now reports running/pending queue work, queue/navigation controls are locked during a queue run, and no-pending-items feedback is clearer. `dev 0.1.8.0.3` polishes the first conservative transfer queue foundation with `Retry selected` for finished queue items. `dev 0.1.8.0.2` added Overwrite all / Skip all decisions for repeated overwrite conflicts. `dev 0.1.8.0` adds the queue foundation on top of the existing single-file upload/download paths. Users can queue multiple individual remote files for download and multiple individual local files for upload, then run the queue sequentially one item at a time. Existing immediate single-file actions remain available. The File Manager now includes an experimental recursive folder queue path, but it still does **not** implement parallel execution, resume, sync, delete, rename, chmod, permission/timestamp preservation, symlink following, or SFTP traffic monitor integration yet.
+`dev 0.1.8.4` improves overwrite prompts with existing/incoming file metadata while preserving the transfer core. `dev 0.1.8.3.1` polishes SFTP upload logs around overwrite checks. `dev 0.1.8.3` adds optional SFTP/file-transfer diagnostic logging around queue runs, immediate transfers, folder queue confirmations/summaries, retry-selected actions, overwrite/skip decisions, and item outcomes while preserving the existing transfer runtime. `dev 0.1.8.2` is a file manager safety polish checkpoint for the accepted file-manager/folder-transfer baseline; it updates documentation and in-app status text without changing the SFTP runtime. `dev 0.1.8.1.1` consolidates File Manager queue controls into two clearer panel actions while keeping the same folder-transfer engine: local `Queue upload` and remote `Queue download` accept selected files and folders. `dev 0.1.8.1` adds the first folder-transfer experiment by recursively scanning folders and expanding them into existing sequential queue items. Destination directories are represented as create-directory queue items; symlinks are skipped. `dev 0.1.8.0.4.1` stabilized the conservative transfer queue foundation before folder-transfer work: exit safety now reports running/pending queue work, queue/navigation controls are locked during a queue run, and no-pending-items feedback is clearer. `dev 0.1.8.0.3` polishes the first conservative transfer queue foundation with `Retry selected` for finished queue items. `dev 0.1.8.0.2` added Overwrite all / Skip all decisions for repeated overwrite conflicts. `dev 0.1.8.0` adds the queue foundation on top of the existing single-file upload/download paths. Users can queue multiple individual remote files for download and multiple individual local files for upload, then run the queue sequentially one item at a time. Existing immediate single-file actions remain available. The File Manager now includes an experimental recursive folder queue path, but it still does **not** implement parallel execution, resume, sync, delete, rename, chmod, permission/timestamp preservation, symlink following, or SFTP traffic monitor integration yet.
 
 ---
 
@@ -566,7 +566,15 @@ This proves the first remote browser UI without risking the tested terminal base
 Queue foundation adds multiple individual file items and sequential execution while preserving existing transfer safety behavior. Overwrite metadata comparison, folder transfer, parallel transfer, and SFTP traffic integration remain deferred.
 
 
-### dev 0.1.8.3 — file transfer logging and diagnostics [current]
+### dev 0.1.8.4 — overwrite metadata dialog polish [current]
+
+`dev 0.1.8.4` adds clearer overwrite decisions for immediate and queued upload/download operations. Dialogs now show existing and incoming file size and modified time when available, while preserving the existing transfer, queue, and logging behavior.
+
+### dev 0.1.8.3.1 — SFTP logging polish [accepted]
+
+`dev 0.1.8.3.1` clarifies upload logs around overwrite checks. Early upload calls are now logged as `SFTP upload preflight started`, while the real `SFTP file upload started` event is emitted only when the actual data-transfer phase begins after overwrite approval. This keeps tester logs easier to read without changing the transfer core.
+
+### dev 0.1.8.3 — file transfer logging and diagnostics [accepted]
 
 `dev 0.1.8.3` adds explicit logging around SFTP/File Manager workflows while keeping diagnostic logging optional and OFF by default. The goal is tester/debug visibility, not telemetry.
 

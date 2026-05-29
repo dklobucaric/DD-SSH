@@ -86,6 +86,7 @@ private:
         QString sourcePath;
         QString targetPath;
         quint64 sizeBytes = 0;
+        QString sourceModifiedTime;
         QString status = QStringLiteral("Pending");
         QString message;
     };
