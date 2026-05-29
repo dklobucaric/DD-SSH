@@ -1,6 +1,6 @@
 # DD-SSH Known Limitations
 
-**Checkpoint:** dev 0.1.8.4 — Andromeda
+**Checkpoint:** dev 0.1.8.5 — Andromeda
 
 This document lists limitations that should be visible to testers. Nothing here is hidden or sugar-coated.
 
@@ -29,7 +29,7 @@ This document lists limitations that should be visible to testers. Nothing here 
 
 ## Feature limitations
 
-`dev 0.1.8.4` is an overwrite metadata dialog polish checkpoint. It improves overwrite prompts but does not add delete, rename, sync, resume, parallel transfers, or SFTP traffic monitor integration. `dev 0.1.8.3.1` is a small SFTP logging polish checkpoint on top of the file-transfer diagnostics baseline. `dev 0.1.8.3` is a file-transfer diagnostics checkpoint. Diagnostic logging is optional and OFF by default; when enabled, logs are intended to contain transfer metadata, queue decisions, paths, sizes, durations, and errors only. Logs must not contain passwords, private keys, secret values, terminal input/output, clipboard contents, or file contents. `dev 0.1.8.2` is a file manager safety polish checkpoint for the accepted File Manager baseline. The current file-transfer feature set includes single-file upload/download, sequential queue execution, Retry selected, Overwrite all / Skip all, and experimental recursive folder upload/download through queue expansion. It is intentionally not a complete file transfer tool yet: parallel transfer, resume, sync/mirror, delete, rename, chmod, permission/timestamp preservation, symlink following, and SFTP traffic monitor integration are not implemented.
+`dev 0.1.8.5` is a remote queue delete experiment checkpoint. It adds conservative remote Queue delete support for regular files, symlinks, and empty folders, but does not add rename, sync, resume, recursive non-empty folder delete, parallel transfers, or SFTP traffic monitor integration. `dev 0.1.8.3.1` is a small SFTP logging polish checkpoint on top of the file-transfer diagnostics baseline. `dev 0.1.8.3` is a file-transfer diagnostics checkpoint. Diagnostic logging is optional and OFF by default; when enabled, logs are intended to contain transfer metadata, queue decisions, paths, sizes, durations, and errors only. Logs must not contain passwords, private keys, secret values, terminal input/output, clipboard contents, or file contents. `dev 0.1.8.2` is a file manager safety polish checkpoint for the accepted File Manager baseline. The current file-transfer feature set includes single-file upload/download, sequential queue execution, Retry selected, Overwrite all / Skip all, experimental recursive folder upload/download through queue expansion, and conservative remote Queue delete. It is intentionally not a complete file transfer tool yet: parallel transfer, resume, sync/mirror, rename, chmod, permission/timestamp preservation, symlink following, and SFTP traffic monitor integration are not implemented.
 
 Current experimental file-transfer limits:
 
@@ -38,11 +38,11 @@ Current experimental file-transfer limits:
 - Symlinks and special files are skipped, not followed.
 - Permission and timestamp preservation are not implemented.
 - Empty folders are represented through create-directory queue items, but edge cases should still be reported.
-- Delete, rename, chmod, advanced mkdir controls, and recursive folder transfer polish are still future work.
+- Recursive non-empty folder delete, local delete, rename, chmod, advanced mkdir controls, and recursive folder transfer polish are still future work.
 
 Not implemented yet:
 
-- Delete, rename, chmod, advanced mkdir controls, recursive folder transfer polish
+- Recursive non-empty folder delete, local delete, rename, chmod, advanced mkdir controls, recursive folder transfer polish
 - Multi-Exec
 - Keep-alive settings
 - Portable mode next to binary

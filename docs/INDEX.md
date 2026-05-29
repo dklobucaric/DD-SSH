@@ -39,7 +39,9 @@ This directory contains the working documentation for DD-SSH.
 - [Release Artifacts](RELEASE_ARTIFACTS.md)
 - [Release Notes Template](RELEASE_NOTES_TEMPLATE.md) — future release checklist
 - [Release Checklist](RELEASE_CHECKLIST.md) — focused checkpoint smoke-test checklist
+- [Build/Test 0.1.8.5](BUILD_AND_TEST_0.1.8.5.md) — remote queue delete build/test notes
 - [Build/Test 0.1.8.4](BUILD_AND_TEST_0.1.8.4.md) — overwrite metadata dialog build/test notes
+- [Testcase 0.1.8.5](TESTCASE_0.1.8.5.md) — remote queue delete validation checklist
 - [Testcase 0.1.8.4](TESTCASE_0.1.8.4.md) — overwrite metadata validation checklist
 - [Build/Test 0.1.8.3](BUILD_AND_TEST_0.1.8.3.md) — file transfer logging/diagnostics build/test notes
 - [Testcase 0.1.8.3](TESTCASE_0.1.8.3.md) — diagnostic logging validation checklist
@@ -83,7 +85,7 @@ This directory contains the working documentation for DD-SSH.
 ## Current checkpoint
 
 ```text
-Version: dev 0.1.8.4
+Version: dev 0.1.8.5
 Codename: Andromeda
 Milestone: File manager safety polish
 Phase: Third-party tester preparation
@@ -117,7 +119,7 @@ GitHub issue templates live under `.github/ISSUE_TEMPLATE/`.
 
 - docs/TERMINAL_TRANSPORT.md explains the byte-stream terminal transport hardening added in dev 0.1.7.0.
 
-- docs/FILE_TRANSFER_ARCHITECTURE.md explains the planned libssh SFTP/File Manager design and the dev 0.1.8.4 overwrite metadata dialog polish checkpoint.
+- docs/FILE_TRANSFER_ARCHITECTURE.md explains the planned libssh SFTP/File Manager design and the dev 0.1.8.5 remote queue delete experiment checkpoint.
 
 - docs/TESTER_CHECKLIST_0.1.8.1.2.md explains how third-party testers should validate the current build and report issues.
 

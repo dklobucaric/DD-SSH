@@ -64,6 +64,24 @@ struct SftpUploadResult
 
 using SftpUploadProgressCallback = std::function<bool(quint64 bytesTransferred, quint64 totalBytes, const QString &message)>;
 
+
+struct SftpDeleteResult
+{
+    bool success = false;
+    bool remotePathIsDirectory = false;
+    bool blockedNonRecursiveDirectory = false;
+    QString message;
+    QString error;
+    int sshErrorCode = 0;
+    int authReturnCode = 0;
+    int sftpErrorCode = 0;
+    bool hostKeyVerificationAttempted = false;
+    bool hostKeyVerified = false;
+    QString hostKeyType;
+    QString hostKeyFingerprint;
+    QString remotePath;
+};
+
 struct SftpMkdirResult
 {
     bool success = false;
@@ -111,6 +129,17 @@ public:
     );
 
     static SftpMkdirResult createRemoteDirectory(
+        const QString &host,
+        int port,
+        const QString &username,
+        SshAuthMethod authMethod,
+        const QString &secretValue,
+        const SshHostKeyExpectation &hostKeyExpectation,
+        const QString &remotePath
+    );
+
+
+    static SftpDeleteResult deleteRemotePath(
         const QString &host,
         int port,
         const QString &username,

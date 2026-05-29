@@ -6,7 +6,7 @@ project(DD_SSH
     LANGUAGES CXX
 )
 
-set(DD_SSH_VERSION_STRING "dev 0.1.8.4")
+set(DD_SSH_VERSION_STRING "dev 0.1.8.5")
 set(DD_SSH_CODENAME_STRING "Andromeda")
 set(DD_SSH_MILESTONE_STRING "Tester release polish")
 

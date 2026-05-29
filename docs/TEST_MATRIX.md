@@ -1,18 +1,22 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.8.4 — Andromeda  
-**Milestone:** SFTP logging polish  
-**Phase:** Diagnostic validation polish
+**Checkpoint:** dev 0.1.8.5 — Andromeda  
+**Milestone:** Remote queue delete experiment  
+**Phase:** Destructive-operation safety validation
 
-## dev 0.1.8.4 — overwrite metadata dialog polish smoke test
+## dev 0.1.8.5 — remote queue delete experiment smoke test
 
-[ ] About shows dev 0.1.8.4  
-[ ] Immediate download overwrite prompt shows existing local size/date and incoming remote size/date  
-[ ] Immediate upload overwrite prompt shows existing remote size/date and incoming local size/date  
-[ ] Queue download overwrite prompt shows existing local and incoming remote metadata  
-[ ] Queue upload overwrite prompt shows existing remote and incoming local metadata  
-[ ] Overwrite / Skip / Overwrite all / Skip all still work  
-[ ] Diagnostic logging behavior from dev 0.1.8.3.1 still works  
+[ ] About shows dev 0.1.8.5  
+[ ] Remote panel shows `Queue delete`  
+[ ] Select a harmless remote test file and queue it for delete  
+[ ] Enqueue confirmation warns that delete is destructive  
+[ ] Queue table shows a `Delete remote file` item  
+[ ] Start queue asks for a second destructive confirmation before delete runs  
+[ ] Cancelling the start confirmation leaves delete item(s) Pending  
+[ ] Confirming delete removes the remote test file and refreshes the remote panel  
+[ ] Empty remote folder delete may succeed; non-empty folder delete fails safely  
+[ ] Diagnostic logging records queued/started/completed/failed delete events without secrets or file contents  
+[ ] Upload/download/overwrite metadata dialogs still work  
 [ ] Terminal and paste/Ctrl+C still work  
 
 ## dev 0.1.8.3.1 — SFTP logging polish smoke test

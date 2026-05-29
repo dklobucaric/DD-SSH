@@ -49,6 +49,7 @@ private:
     void downloadSelectedRemoteFile();
     void uploadSelectedLocalFile();
     void queueSelectedRemoteDownloads();
+    void queueSelectedRemoteDeletes();
     void queueSelectedLocalUploads();
     void startTransferQueue();
     void clearFinishedTransferQueueItems();
@@ -59,6 +60,8 @@ private:
     void setQueueItemStatus(int index, const QString &status, const QString &message = QString());
     QString transferQueueSummaryText() const;
     bool confirmFolderQueue(const QString &title, const QString &sourcePath, const QString &targetPath) const;
+    bool confirmQueueRemoteDelete(int fileCount, int folderCount, int skippedCount) const;
+    bool confirmPendingRemoteDeleteRun(int deleteFileCount, int deleteDirCount) const;
     bool addRemoteFolderDownloadToQueue(const QString &remoteFolderPath, const QString &localTargetFolder, int *filesAdded, int *dirsAdded, int *skipped, int depth = 0);
     bool addLocalFolderUploadToQueue(const QString &localFolderPath, const QString &remoteTargetFolder, int *filesAdded, int *dirsAdded, int *skipped);
     void populateRemoteTable(const QList<SftpRemoteEntry> &entries);
@@ -110,6 +113,7 @@ private:
     QPushButton *m_remoteRefreshButton = nullptr;
     QPushButton *m_remoteDownloadButton = nullptr;
     QPushButton *m_remoteQueueDownloadButton = nullptr;
+    QPushButton *m_remoteQueueDeleteButton = nullptr;
     QLabel *m_remoteStatusLabel = nullptr;
     QTableWidget *m_remoteTable = nullptr;
 

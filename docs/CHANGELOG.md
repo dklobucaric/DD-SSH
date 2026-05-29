@@ -1,3 +1,15 @@
+## dev 0.1.8.5 — Andromeda
+
+Remote queue delete experiment.
+
+- Added remote panel `Queue delete` action.
+- Delete items are queued and executed through the existing sequential transfer queue.
+- Supports regular remote files, symlinks, and empty remote directories.
+- Recursive non-empty folder delete is intentionally not implemented in this checkpoint.
+- Added destructive confirmation before queueing delete items and again before starting a queue that contains pending delete work.
+- Added diagnostic logging for delete queue confirmation, queued delete items, delete start, success, and failure.
+- Kept transfer core, upload/download, folder scan, overwrite metadata dialogs, terminal runtime, known-host handling, Windows KEX workaround, and config schema unchanged.
+
 ## dev 0.1.8.4 — Andromeda
 
 Overwrite metadata dialog polish.
