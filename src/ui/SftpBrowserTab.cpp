@@ -33,6 +33,10 @@
 #include <utility>
 
 namespace {
+constexpr int kMaxFolderScanDepth = 64;
+constexpr int kMaxQueuedFolderItems = 5000;
+constexpr int kFolderQueueWarningItemThreshold = 250;
+
 QString formatUnitValue(double value, const QString &suffix)
 {
     QString number = QString::number(value, 'f', 1);
@@ -64,6 +68,24 @@ QString formatSize(quint64 bytes)
 QString formatRawBytes(quint64 bytes)
 {
     return QLocale(QLocale::English).toString(static_cast<qulonglong>(bytes)) + QStringLiteral(" bytes");
+}
+
+QString logSafeValue(QString value)
+{
+    value.replace(QLatin1Char('\r'), QLatin1Char(' '));
+    value.replace(QLatin1Char('\n'), QLatin1Char(' '));
+    value.replace(QLatin1Char('\t'), QLatin1Char(' '));
+
+    if (value.size() > 512) {
+        value = value.left(509) + QStringLiteral("...");
+    }
+
+    return value;
+}
+
+QString quotedLogValue(const QString &value)
+{
+    return QStringLiteral("\"") + logSafeValue(value) + QStringLiteral("\"");
 }
 
 QString formatDuration(qint64 elapsedMs)
@@ -435,7 +457,7 @@ void SftpBrowserTab::setupUi()
     mainLayout->addWidget(splitter, 1);
 
     auto *queueTitle = new QLabel(QStringLiteral("Transfer queue (folder experiment — one item at a time)"), this);
-    queueTitle->setToolTip(QStringLiteral("This checkpoint can queue files and experimental recursive folder scans. Folder contents are expanded into normal queue items and run sequentially."));
+    queueTitle->setToolTip(QStringLiteral("This checkpoint can queue files and experimental recursive folder scans. Folder contents are expanded into normal queue items, summarized after scanning, and run sequentially."));
     mainLayout->addWidget(queueTitle);
 
     m_queueTable = new QTableWidget(this);
@@ -478,7 +500,7 @@ void SftpBrowserTab::setupUi()
     mainLayout->addLayout(queueControlsLayout);
 
     auto *transferNotice = new QLabel(
-        QStringLiteral("Single-file download/upload still works. Folder transfer is experimental: selected folders are scanned recursively and expanded into queue items. Symlinks, resume, parallel transfer, delete, rename, chmod, timestamps, and sync are intentionally disabled."),
+        QStringLiteral("Single-file download/upload still works. Folder transfer is experimental: selected folders are scanned recursively, summarized, and expanded into queue items. Symlinks/special files, resume, parallel transfer, delete, rename, chmod, timestamps, and sync are intentionally disabled."),
         this
     );
     transferNotice->setWordWrap(true);
@@ -1067,6 +1089,11 @@ void SftpBrowserTab::downloadSelectedRemoteFile()
     const qint64 elapsedMs = transferTimer.elapsed();
 
     if (result.success) {
+        AppLogger::info(QStringLiteral("SFTP immediate download completed: session=") + quotedLogValue(m_sessionName)
+            + QStringLiteral(", remotePath=") + quotedLogValue(remoteFilePath)
+            + QStringLiteral(", localPath=") + quotedLogValue(localTargetPath)
+            + QStringLiteral(", bytes=") + QString::number(result.bytesTransferred)
+            + QStringLiteral(", elapsedMs=") + QString::number(elapsedMs));
         progress.setValue(100);
         refreshLocalDirectory();
 
@@ -1095,6 +1122,11 @@ void SftpBrowserTab::downloadSelectedRemoteFile()
     }
 
     if (result.cancelled || progressWasCancelled) {
+        AppLogger::warn(QStringLiteral("SFTP immediate download cancelled: session=") + quotedLogValue(m_sessionName)
+            + QStringLiteral(", remotePath=") + quotedLogValue(remoteFilePath)
+            + QStringLiteral(", localPath=") + quotedLogValue(localTargetPath)
+            + QStringLiteral(", bytes=") + QString::number(result.bytesTransferred)
+            + QStringLiteral(", elapsedMs=") + QString::number(elapsedMs));
         if (m_remoteStatusLabel != nullptr) {
             m_remoteStatusLabel->setText(statusPrefix() + QStringLiteral("download cancelled: ") + remoteFilePath);
         }
@@ -1107,6 +1139,12 @@ void SftpBrowserTab::downloadSelectedRemoteFile()
         );
         return;
     }
+
+    AppLogger::error(QStringLiteral("SFTP immediate download failed: session=") + quotedLogValue(m_sessionName)
+        + QStringLiteral(", remotePath=") + quotedLogValue(remoteFilePath)
+        + QStringLiteral(", localPath=") + quotedLogValue(localTargetPath)
+        + QStringLiteral(", message=") + logSafeValue(result.message)
+        + QStringLiteral(", error=") + logSafeValue(result.error));
 
     if (m_remoteStatusLabel != nullptr) {
         m_remoteStatusLabel->setText(statusPrefix() + QStringLiteral("download failed: ") + result.message);
@@ -1323,6 +1361,11 @@ void SftpBrowserTab::uploadSelectedLocalFile()
     const qint64 elapsedMs = transferTimer.elapsed();
 
     if (result.success) {
+        AppLogger::info(QStringLiteral("SFTP immediate upload completed: session=") + quotedLogValue(m_sessionName)
+            + QStringLiteral(", localPath=") + quotedLogValue(localFilePath)
+            + QStringLiteral(", remotePath=") + quotedLogValue(remoteTargetPath)
+            + QStringLiteral(", bytes=") + QString::number(result.bytesTransferred)
+            + QStringLiteral(", elapsedMs=") + QString::number(elapsedMs));
         progress.setValue(100);
         refreshRemoteDirectory();
 
@@ -1364,6 +1407,11 @@ void SftpBrowserTab::uploadSelectedLocalFile()
     }
 
     if (result.cancelled || progressWasCancelled) {
+        AppLogger::warn(QStringLiteral("SFTP immediate upload cancelled: session=") + quotedLogValue(m_sessionName)
+            + QStringLiteral(", localPath=") + quotedLogValue(localFilePath)
+            + QStringLiteral(", remotePath=") + quotedLogValue(remoteTargetPath)
+            + QStringLiteral(", bytes=") + QString::number(result.bytesTransferred)
+            + QStringLiteral(", elapsedMs=") + QString::number(elapsedMs));
         if (m_remoteStatusLabel != nullptr) {
             m_remoteStatusLabel->setText(statusPrefix() + QStringLiteral("upload cancelled: ") + remoteTargetPath + QStringLiteral(" — partial remote file may remain"));
         }
@@ -1376,6 +1424,12 @@ void SftpBrowserTab::uploadSelectedLocalFile()
         );
         return;
     }
+
+    AppLogger::error(QStringLiteral("SFTP immediate upload failed: session=") + quotedLogValue(m_sessionName)
+        + QStringLiteral(", localPath=") + quotedLogValue(localFilePath)
+        + QStringLiteral(", remotePath=") + quotedLogValue(remoteTargetPath)
+        + QStringLiteral(", message=") + logSafeValue(result.message)
+        + QStringLiteral(", error=") + logSafeValue(result.error));
 
     if (m_remoteStatusLabel != nullptr) {
         m_remoteStatusLabel->setText(statusPrefix() + QStringLiteral("upload failed: ") + result.message);
@@ -1422,6 +1476,7 @@ void SftpBrowserTab::queueSelectedRemoteDownloads()
     int folderFileItemsAdded = 0;
     int folderDirItemsAdded = 0;
     int skipped = 0;
+    bool folderScanIssue = false;
 
     for (const QModelIndex &index : selectedRows) {
         const int row = index.row();
@@ -1458,9 +1513,14 @@ void SftpBrowserTab::queueSelectedRemoteDownloads()
             }
 
             QApplication::setOverrideCursor(Qt::WaitCursor);
-            addRemoteFolderDownloadToQueue(remoteFolderPath, localTargetFolder, &folderFileItemsAdded, &folderDirItemsAdded, &skipped);
+            const bool scanOk = addRemoteFolderDownloadToQueue(remoteFolderPath, localTargetFolder, &folderFileItemsAdded, &folderDirItemsAdded, &skipped);
             QApplication::restoreOverrideCursor();
             QApplication::processEvents();
+
+            if (!scanOk) {
+                folderScanIssue = true;
+            }
+
             continue;
         }
 
@@ -1492,6 +1552,45 @@ void SftpBrowserTab::queueSelectedRemoteDownloads()
             .arg(skipped)
             .arg(transferQueueSummaryText()));
     }
+
+    AppLogger::info(QStringLiteral("SFTP queue download selection processed: session=") + quotedLogValue(m_sessionName)
+        + QStringLiteral(", directFiles=") + QString::number(fileItemsAdded)
+        + QStringLiteral(", folderFiles=") + QString::number(folderFileItemsAdded)
+        + QStringLiteral(", folderDirs=") + QString::number(folderDirItemsAdded)
+        + QStringLiteral(", skipped=") + QString::number(skipped)
+        + QStringLiteral(", scanIssue=") + (folderScanIssue ? QStringLiteral("true") : QStringLiteral("false")));
+
+
+    const int folderItemsAdded = folderFileItemsAdded + folderDirItemsAdded;
+    if (folderItemsAdded > 0 || skipped > 0 || folderScanIssue) {
+        QStringList lines;
+        lines << QStringLiteral("Folder queue scan complete.");
+        lines << QString();
+        lines << QStringLiteral("Direction: download");
+        lines << QStringLiteral("Direct file item(s): %1").arg(fileItemsAdded);
+        lines << QStringLiteral("Folder file item(s): %1").arg(folderFileItemsAdded);
+        lines << QStringLiteral("Folder create item(s): %1").arg(folderDirItemsAdded);
+        lines << QStringLiteral("Skipped/unsupported/cancelled item(s): %1").arg(skipped);
+
+        if (folderItemsAdded >= kFolderQueueWarningItemThreshold) {
+            lines << QString();
+            lines << QStringLiteral("Large folder queue warning: review the queue before starting.");
+        }
+
+        if (folderScanIssue) {
+            lines << QString();
+            lines << QStringLiteral("One or more folder scans stopped early because of a permission/listing error, depth limit, or safety item limit.");
+        }
+
+        lines << QString();
+        lines << QStringLiteral("The queue was not started automatically. Review it, then click Start queue.");
+
+        QMessageBox::information(
+            this,
+            QStringLiteral("Folder queue summary — DD-SSH"),
+            lines.join(QLatin1Char('\n'))
+        );
+    }
 }
 
 void SftpBrowserTab::queueSelectedLocalUploads()
@@ -1515,6 +1614,7 @@ void SftpBrowserTab::queueSelectedLocalUploads()
     int folderFileItemsAdded = 0;
     int folderDirItemsAdded = 0;
     int skipped = 0;
+    bool folderScanIssue = false;
 
     for (const QModelIndex &index : selectedRows) {
         if (!index.isValid()) {
@@ -1545,9 +1645,14 @@ void SftpBrowserTab::queueSelectedLocalUploads()
             }
 
             QApplication::setOverrideCursor(Qt::WaitCursor);
-            addLocalFolderUploadToQueue(localInfo.absoluteFilePath(), remoteTargetFolder, &folderFileItemsAdded, &folderDirItemsAdded, &skipped);
+            const bool scanOk = addLocalFolderUploadToQueue(localInfo.absoluteFilePath(), remoteTargetFolder, &folderFileItemsAdded, &folderDirItemsAdded, &skipped);
             QApplication::restoreOverrideCursor();
             QApplication::processEvents();
+
+            if (!scanOk) {
+                folderScanIssue = true;
+            }
+
             continue;
         }
 
@@ -1578,6 +1683,44 @@ void SftpBrowserTab::queueSelectedLocalUploads()
             .arg(skipped)
             .arg(transferQueueSummaryText()));
     }
+
+    AppLogger::info(QStringLiteral("SFTP queue upload selection processed: session=") + quotedLogValue(m_sessionName)
+        + QStringLiteral(", directFiles=") + QString::number(fileItemsAdded)
+        + QStringLiteral(", folderFiles=") + QString::number(folderFileItemsAdded)
+        + QStringLiteral(", folderDirs=") + QString::number(folderDirItemsAdded)
+        + QStringLiteral(", skipped=") + QString::number(skipped)
+        + QStringLiteral(", scanIssue=") + (folderScanIssue ? QStringLiteral("true") : QStringLiteral("false")));
+
+    const int folderItemsAdded = folderFileItemsAdded + folderDirItemsAdded;
+    if (folderItemsAdded > 0 || skipped > 0 || folderScanIssue) {
+        QStringList lines;
+        lines << QStringLiteral("Folder queue scan complete.");
+        lines << QString();
+        lines << QStringLiteral("Direction: upload");
+        lines << QStringLiteral("Direct file item(s): %1").arg(fileItemsAdded);
+        lines << QStringLiteral("Folder file item(s): %1").arg(folderFileItemsAdded);
+        lines << QStringLiteral("Folder create item(s): %1").arg(folderDirItemsAdded);
+        lines << QStringLiteral("Skipped/unsupported/cancelled item(s): %1").arg(skipped);
+
+        if (folderItemsAdded >= kFolderQueueWarningItemThreshold) {
+            lines << QString();
+            lines << QStringLiteral("Large folder queue warning: review the queue before starting.");
+        }
+
+        if (folderScanIssue) {
+            lines << QString();
+            lines << QStringLiteral("One or more folder scans stopped early because of a permission/listing error, depth limit, or safety item limit.");
+        }
+
+        lines << QString();
+        lines << QStringLiteral("The queue was not started automatically. Review it, then click Start queue.");
+
+        QMessageBox::information(
+            this,
+            QStringLiteral("Folder queue summary — DD-SSH"),
+            lines.join(QLatin1Char('\n'))
+        );
+    }
 }
 
 bool SftpBrowserTab::confirmFolderQueue(const QString &title, const QString &sourcePath, const QString &targetPath) const
@@ -1585,11 +1728,17 @@ bool SftpBrowserTab::confirmFolderQueue(const QString &title, const QString &sou
     const QMessageBox::StandardButton decision = QMessageBox::question(
         const_cast<SftpBrowserTab *>(this),
         title,
-        QStringLiteral("Queue folder recursively?\n\nSource:\n%1\n\nTarget:\n%2\n\nThis may add many files to the transfer queue. Symlinks are skipped. Folder permissions, timestamps, resume, and sync are not preserved in this experimental checkpoint.")
-            .arg(sourcePath, targetPath),
+        QStringLiteral("Queue folder recursively?\n\nSource:\n%1\n\nTarget:\n%2\n\nThis may add many files to the transfer queue. DD-SSH will scan the folder first, expand supported files/folders into normal queue items, then wait for you to click Start queue.\n\nSafety rules in this checkpoint:\n- symlinks and special files are skipped\n- folder permissions and timestamps are not preserved\n- resume, sync, mirror, and parallel transfer are not implemented\n- safety limit: up to %3 scanned folder queue items")
+            .arg(sourcePath, targetPath)
+            .arg(kMaxQueuedFolderItems),
         QMessageBox::Yes | QMessageBox::No,
         QMessageBox::No
     );
+
+    AppLogger::info(QStringLiteral("SFTP folder queue confirmation: session=") + quotedLogValue(m_sessionName)
+        + QStringLiteral(", accepted=") + (decision == QMessageBox::Yes ? QStringLiteral("true") : QStringLiteral("false"))
+        + QStringLiteral(", source=") + quotedLogValue(sourcePath)
+        + QStringLiteral(", target=") + quotedLogValue(targetPath));
 
     return decision == QMessageBox::Yes;
 }
@@ -1603,9 +1752,6 @@ bool SftpBrowserTab::addRemoteFolderDownloadToQueue(
     int depth
 )
 {
-    constexpr int kMaxFolderScanDepth = 64;
-    constexpr int kMaxQueuedFolderItems = 5000;
-
     if (filesAdded == nullptr || dirsAdded == nullptr || skipped == nullptr) {
         return false;
     }
@@ -1667,7 +1813,10 @@ bool SftpBrowserTab::addRemoteFolderDownloadToQueue(
         const QString childLocalPath = QDir(localTargetFolder).filePath(entry.name);
 
         if (isDirectoryType(entry.type)) {
-            addRemoteFolderDownloadToQueue(childRemotePath, childLocalPath, filesAdded, dirsAdded, skipped, depth + 1);
+            const bool childScanOk = addRemoteFolderDownloadToQueue(childRemotePath, childLocalPath, filesAdded, dirsAdded, skipped, depth + 1);
+            if (!childScanOk) {
+                return false;
+            }
             continue;
         }
 
@@ -1699,8 +1848,6 @@ bool SftpBrowserTab::addLocalFolderUploadToQueue(
     int *skipped
 )
 {
-    constexpr int kMaxQueuedFolderItems = 5000;
-
     if (filesAdded == nullptr || dirsAdded == nullptr || skipped == nullptr) {
         return false;
     }
@@ -1794,6 +1941,8 @@ void SftpBrowserTab::startTransferQueue()
     }
 
     if (pendingCount == 0) {
+        AppLogger::info(QStringLiteral("SFTP transfer queue start ignored: session=") + quotedLogValue(m_sessionName)
+            + QStringLiteral(", reason=no pending items"));
         if (m_queueStatusLabel != nullptr) {
             m_queueStatusLabel->setText(QStringLiteral("Queue: no pending items. Use Retry selected or add new files before starting."));
         }
@@ -1808,6 +1957,10 @@ void SftpBrowserTab::startTransferQueue()
 
     m_transferQueueRunning = true;
     setTransferQueueBusy(true);
+
+    AppLogger::info(QStringLiteral("SFTP transfer queue started: session=") + quotedLogValue(m_sessionName)
+        + QStringLiteral(", pending=") + QString::number(pendingCount)
+        + QStringLiteral(", totalItems=") + QString::number(m_transferQueue.size()));
 
     int doneCount = 0;
     int failedCount = 0;
@@ -1831,21 +1984,33 @@ void SftpBrowserTab::startTransferQueue()
         }
 
         setQueueItemStatus(i, QStringLiteral("Running"), QStringLiteral("Checking target"));
+        AppLogger::info(QStringLiteral("SFTP queue item started: session=") + quotedLogValue(m_sessionName)
+            + QStringLiteral(", index=") + QString::number(i + 1)
+            + QStringLiteral(", direction=") + logSafeValue(item.direction)
+            + QStringLiteral(", name=") + quotedLogValue(item.displayName)
+            + QStringLiteral(", source=") + quotedLogValue(item.sourcePath)
+            + QStringLiteral(", target=") + quotedLogValue(item.targetPath)
+            + QStringLiteral(", sizeBytes=") + QString::number(item.sizeBytes));
 
         if (item.direction == QStringLiteral("Create local dir")) {
             const QFileInfo existing(item.targetPath);
 
             if (existing.exists() && !existing.isDir()) {
-                setQueueItemStatus(i, QStringLiteral("Failed"), QStringLiteral("Local target exists and is not a folder"));
+                setQueueItemStatus(i, QStringLiteral("Failed"), QStringLiteral("Local target exists and is not a folder: ") + item.targetPath);
                 ++failedCount;
                 continue;
             }
 
             if (QDir().mkpath(item.targetPath)) {
                 setQueueItemStatus(i, QStringLiteral("Done"), existing.exists() ? QStringLiteral("Local folder already exists") : QStringLiteral("Local folder ready"));
+                AppLogger::info(QStringLiteral("SFTP queue create local dir completed: session=") + quotedLogValue(m_sessionName)
+                    + QStringLiteral(", target=") + quotedLogValue(item.targetPath)
+                    + QStringLiteral(", alreadyExisted=") + (existing.exists() ? QStringLiteral("true") : QStringLiteral("false")));
                 ++doneCount;
             } else {
-                setQueueItemStatus(i, QStringLiteral("Failed"), QStringLiteral("Could not create local folder"));
+                setQueueItemStatus(i, QStringLiteral("Failed"), QStringLiteral("Could not create local folder: ") + item.targetPath);
+                AppLogger::error(QStringLiteral("SFTP queue create local dir failed: session=") + quotedLogValue(m_sessionName)
+                    + QStringLiteral(", target=") + quotedLogValue(item.targetPath));
                 ++failedCount;
             }
 
@@ -1865,9 +2030,16 @@ void SftpBrowserTab::startTransferQueue()
 
             if (mkdirResult.success) {
                 setQueueItemStatus(i, QStringLiteral("Done"), mkdirResult.alreadyExists ? QStringLiteral("Remote folder already exists") : QStringLiteral("Remote folder created"));
+                AppLogger::info(QStringLiteral("SFTP queue create remote dir completed: session=") + quotedLogValue(m_sessionName)
+                    + QStringLiteral(", target=") + quotedLogValue(item.targetPath)
+                    + QStringLiteral(", alreadyExisted=") + (mkdirResult.alreadyExists ? QStringLiteral("true") : QStringLiteral("false")));
                 ++doneCount;
             } else {
                 setQueueItemStatus(i, QStringLiteral("Failed"), mkdirResult.message + QStringLiteral(" — ") + mkdirResult.error);
+                AppLogger::error(QStringLiteral("SFTP queue create remote dir failed: session=") + quotedLogValue(m_sessionName)
+                    + QStringLiteral(", target=") + quotedLogValue(item.targetPath)
+                    + QStringLiteral(", message=") + logSafeValue(mkdirResult.message)
+                    + QStringLiteral(", error=") + logSafeValue(mkdirResult.error));
                 ++failedCount;
             }
 
@@ -1879,7 +2051,7 @@ void SftpBrowserTab::startTransferQueue()
             const QFileInfo targetFolderInfo(targetInfo.absolutePath());
 
             if (!targetFolderInfo.exists() || !targetFolderInfo.isDir()) {
-                setQueueItemStatus(i, QStringLiteral("Failed"), QStringLiteral("Local destination folder is not available"));
+                setQueueItemStatus(i, QStringLiteral("Failed"), QStringLiteral("Local destination folder is not available: ") + targetFolderInfo.absoluteFilePath());
                 ++failedCount;
                 continue;
             }
@@ -1900,6 +2072,8 @@ void SftpBrowserTab::startTransferQueue()
                     );
 
                     if (overwriteDecision == QueueOverwriteDecision::CancelQueue) {
+                        AppLogger::warn(QStringLiteral("SFTP queue download overwrite cancelled queue: session=") + quotedLogValue(m_sessionName)
+                            + QStringLiteral(", target=") + quotedLogValue(item.targetPath));
                         setQueueItemStatus(i, QStringLiteral("Cancelled"), QStringLiteral("Queue stopped before overwrite"));
                         ++cancelledCount;
                         shouldStopQueue = true;
@@ -1907,12 +2081,15 @@ void SftpBrowserTab::startTransferQueue()
                     }
 
                     if (overwriteDecision == QueueOverwriteDecision::SkipOne) {
+                        AppLogger::warn(QStringLiteral("SFTP queue download skipped existing target: session=") + quotedLogValue(m_sessionName)
+                            + QStringLiteral(", target=") + quotedLogValue(item.targetPath));
                         setQueueItemStatus(i, QStringLiteral("Skipped"), QStringLiteral("Skipped existing local file"));
                         ++skippedCount;
                         continue;
                     }
 
                     if (overwriteDecision == QueueOverwriteDecision::SkipAll) {
+                        AppLogger::warn(QStringLiteral("SFTP queue download skip-all selected: session=") + quotedLogValue(m_sessionName));
                         skipAllExistingDownloads = true;
                         setQueueItemStatus(i, QStringLiteral("Skipped"), QStringLiteral("Skipped existing local file (skip all)"));
                         ++skippedCount;
@@ -1920,6 +2097,7 @@ void SftpBrowserTab::startTransferQueue()
                     }
 
                     if (overwriteDecision == QueueOverwriteDecision::OverwriteAll) {
+                        AppLogger::info(QStringLiteral("SFTP queue download overwrite-all selected: session=") + quotedLogValue(m_sessionName));
                         overwriteAllDownloads = true;
                     }
                 }
@@ -1992,11 +2170,20 @@ void SftpBrowserTab::startTransferQueue()
             QApplication::processEvents();
 
             if (result.success) {
+                AppLogger::info(QStringLiteral("SFTP queue download completed: session=") + quotedLogValue(m_sessionName)
+                    + QStringLiteral(", source=") + quotedLogValue(item.sourcePath)
+                    + QStringLiteral(", target=") + quotedLogValue(item.targetPath)
+                    + QStringLiteral(", bytes=") + QString::number(result.bytesTransferred)
+                    + QStringLiteral(", elapsedMs=") + QString::number(elapsedMs));
                 setQueueItemStatus(i, QStringLiteral("Done"), QStringLiteral("Downloaded %1 (%2), %3, %4")
                     .arg(formatSize(result.bytesTransferred), formatRawBytes(result.bytesTransferred), formatDuration(elapsedMs), formatTransferRate(result.bytesTransferred, elapsedMs)));
                 ++doneCount;
                 refreshLocalDirectory();
             } else if (result.cancelled || progressWasCancelled) {
+                AppLogger::warn(QStringLiteral("SFTP queue download cancelled: session=") + quotedLogValue(m_sessionName)
+                    + QStringLiteral(", source=") + quotedLogValue(item.sourcePath)
+                    + QStringLiteral(", target=") + quotedLogValue(item.targetPath)
+                    + QStringLiteral(", bytes=") + QString::number(result.bytesTransferred));
                 setQueueItemStatus(i, QStringLiteral("Cancelled"), QStringLiteral("Download cancelled; local target was not replaced"));
                 ++cancelledCount;
 
@@ -2012,6 +2199,11 @@ void SftpBrowserTab::startTransferQueue()
                     shouldStopQueue = true;
                 }
             } else {
+                AppLogger::error(QStringLiteral("SFTP queue download failed: session=") + quotedLogValue(m_sessionName)
+                    + QStringLiteral(", source=") + quotedLogValue(item.sourcePath)
+                    + QStringLiteral(", target=") + quotedLogValue(item.targetPath)
+                    + QStringLiteral(", message=") + logSafeValue(result.message)
+                    + QStringLiteral(", error=") + logSafeValue(result.error));
                 setQueueItemStatus(i, QStringLiteral("Failed"), result.message + QStringLiteral(" — ") + result.error);
                 ++failedCount;
             }
@@ -2019,7 +2211,7 @@ void SftpBrowserTab::startTransferQueue()
             const QFileInfo localInfo(item.sourcePath);
 
             if (!localInfo.exists() || !localInfo.isFile()) {
-                setQueueItemStatus(i, QStringLiteral("Failed"), QStringLiteral("Local source file is not available"));
+                setQueueItemStatus(i, QStringLiteral("Failed"), QStringLiteral("Local source file is not available: ") + item.sourcePath);
                 ++failedCount;
                 continue;
             }
@@ -2116,6 +2308,8 @@ void SftpBrowserTab::startTransferQueue()
                     );
 
                     if (overwriteDecision == QueueOverwriteDecision::CancelQueue) {
+                        AppLogger::warn(QStringLiteral("SFTP queue upload overwrite cancelled queue: session=") + quotedLogValue(m_sessionName)
+                            + QStringLiteral(", target=") + quotedLogValue(item.targetPath));
                         setQueueItemStatus(i, QStringLiteral("Cancelled"), QStringLiteral("Queue stopped before remote overwrite"));
                         ++cancelledCount;
                         shouldStopQueue = true;
@@ -2123,12 +2317,15 @@ void SftpBrowserTab::startTransferQueue()
                     }
 
                     if (overwriteDecision == QueueOverwriteDecision::SkipOne) {
+                        AppLogger::warn(QStringLiteral("SFTP queue upload skipped existing target: session=") + quotedLogValue(m_sessionName)
+                            + QStringLiteral(", target=") + quotedLogValue(item.targetPath));
                         setQueueItemStatus(i, QStringLiteral("Skipped"), QStringLiteral("Skipped existing remote file"));
                         ++skippedCount;
                         break;
                     }
 
                     if (overwriteDecision == QueueOverwriteDecision::SkipAll) {
+                        AppLogger::warn(QStringLiteral("SFTP queue upload skip-all selected: session=") + quotedLogValue(m_sessionName));
                         skipAllExistingUploads = true;
                         setQueueItemStatus(i, QStringLiteral("Skipped"), QStringLiteral("Skipped existing remote file (skip all)"));
                         ++skippedCount;
@@ -2136,6 +2333,7 @@ void SftpBrowserTab::startTransferQueue()
                     }
 
                     if (overwriteDecision == QueueOverwriteDecision::OverwriteAll) {
+                        AppLogger::info(QStringLiteral("SFTP queue upload overwrite-all selected: session=") + quotedLogValue(m_sessionName));
                         overwriteAllUploads = true;
                     }
 
@@ -2145,11 +2343,20 @@ void SftpBrowserTab::startTransferQueue()
                 }
 
                 if (result.success) {
+                    AppLogger::info(QStringLiteral("SFTP queue upload completed: session=") + quotedLogValue(m_sessionName)
+                        + QStringLiteral(", source=") + quotedLogValue(item.sourcePath)
+                        + QStringLiteral(", target=") + quotedLogValue(item.targetPath)
+                        + QStringLiteral(", bytes=") + QString::number(result.bytesTransferred)
+                        + QStringLiteral(", elapsedMs=") + QString::number(elapsedMs));
                     setQueueItemStatus(i, QStringLiteral("Done"), QStringLiteral("Uploaded %1 (%2), %3, %4")
                         .arg(formatSize(result.bytesTransferred), formatRawBytes(result.bytesTransferred), formatDuration(elapsedMs), formatTransferRate(result.bytesTransferred, elapsedMs)));
                     ++doneCount;
                     refreshRemoteDirectory();
                 } else if (result.cancelled || progressWasCancelled) {
+                    AppLogger::warn(QStringLiteral("SFTP queue upload cancelled: session=") + quotedLogValue(m_sessionName)
+                        + QStringLiteral(", source=") + quotedLogValue(item.sourcePath)
+                        + QStringLiteral(", target=") + quotedLogValue(item.targetPath)
+                        + QStringLiteral(", bytes=") + QString::number(result.bytesTransferred));
                     setQueueItemStatus(i, QStringLiteral("Cancelled"), QStringLiteral("Upload cancelled; partial remote file may remain"));
                     ++cancelledCount;
                     refreshRemoteDirectory();
@@ -2166,6 +2373,11 @@ void SftpBrowserTab::startTransferQueue()
                         shouldStopQueue = true;
                     }
                 } else {
+                    AppLogger::error(QStringLiteral("SFTP queue upload failed: session=") + quotedLogValue(m_sessionName)
+                        + QStringLiteral(", source=") + quotedLogValue(item.sourcePath)
+                        + QStringLiteral(", target=") + quotedLogValue(item.targetPath)
+                        + QStringLiteral(", message=") + logSafeValue(result.message)
+                        + QStringLiteral(", error=") + logSafeValue(result.error));
                     setQueueItemStatus(i, QStringLiteral("Failed"), result.message + QStringLiteral(" — ") + result.error);
                     ++failedCount;
                 }
@@ -2181,6 +2393,8 @@ void SftpBrowserTab::startTransferQueue()
     m_transferQueueRunning = false;
     setTransferQueueBusy(false);
     refreshTransferQueueTable();
+    refreshLocalDirectory();
+    refreshRemoteDirectory();
 
     if (m_queueStatusLabel != nullptr) {
         m_queueStatusLabel->setText(QStringLiteral("Queue finished: done %1, failed %2, cancelled %3, skipped %4. %5")
@@ -2191,10 +2405,17 @@ void SftpBrowserTab::startTransferQueue()
             .arg(transferQueueSummaryText()));
     }
 
+    AppLogger::info(QStringLiteral("SFTP transfer queue finished: session=") + quotedLogValue(m_sessionName)
+        + QStringLiteral(", done=") + QString::number(doneCount)
+        + QStringLiteral(", failed=") + QString::number(failedCount)
+        + QStringLiteral(", cancelled=") + QString::number(cancelledCount)
+        + QStringLiteral(", skipped=") + QString::number(skippedCount)
+        + QStringLiteral(", totalItems=") + QString::number(m_transferQueue.size()));
+
     QMessageBox::information(
         this,
         QStringLiteral("Transfer queue finished — DD-SSH"),
-        QStringLiteral("Transfer queue finished.\n\nDone: %1\nFailed: %2\nCancelled: %3\nSkipped: %4")
+        QStringLiteral("Transfer queue finished.\n\nDone: %1\nFailed: %2\nCancelled: %3\nSkipped: %4\n\nLocal and remote panels were refreshed after the queue run.")
             .arg(doneCount)
             .arg(failedCount)
             .arg(cancelledCount)
@@ -2284,6 +2505,12 @@ void SftpBrowserTab::retrySelectedTransferQueueItems()
             .arg(notRetryable)
             .arg(transferQueueSummaryText()));
     }
+
+    AppLogger::info(QStringLiteral("SFTP transfer queue retry selected: session=") + quotedLogValue(m_sessionName)
+        + QStringLiteral(", requeued=") + QString::number(requeued)
+        + QStringLiteral(", alreadyPending=") + QString::number(alreadyPending)
+        + QStringLiteral(", runningSkipped=") + QString::number(skippedRunning)
+        + QStringLiteral(", notRetryable=") + QString::number(notRetryable));
 }
 
 void SftpBrowserTab::removeSelectedTransferQueueItems()

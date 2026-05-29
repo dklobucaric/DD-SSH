@@ -1,3 +1,35 @@
+## dev 0.1.8.3 — Andromeda
+
+File transfer logging and diagnostics checkpoint.
+
+### Added / improved
+- Added explicit SFTP/File Manager diagnostic logging around immediate single-file download/upload completion, cancellation, and failure.
+- Added transfer queue logging for queue start, queue finish, item start, create-directory items, upload/download completion, failure, cancellation, skip, overwrite-all, skip-all, and retry-selected events.
+- Added folder queue confirmation and folder selection summary logging so tester runs can be reconstructed from metadata when diagnostic logging is enabled.
+- Added safe log-value formatting for File Manager log messages so newlines/tabs in paths are flattened before writing logs.
+
+### Safety rules
+- Diagnostic logging remains OFF by default and controlled from Settings.
+- Logs contain transfer metadata only: paths, sizes/bytes, elapsed time, queue decisions, and error messages.
+- Logs must not contain passwords, private keys, plaintext secret values, terminal input/output, clipboard contents, or file contents.
+
+### Preserved
+- No transfer core rewrite.
+- No folder scan engine changes.
+- No SFTP Session Traffic widget integration yet; that is planned after overwrite metadata/delete/monitor sequencing is settled.
+- No terminal runtime, known-host, Windows KEX, or config schema changes.
+
+## dev 0.1.8.2 — Andromeda
+
+File manager safety polish checkpoint.
+
+- Improved experimental folder queue confirmation with clearer safety rules and the queue item safety limit.
+- Added folder queue scan summaries after recursive upload/download scans, including direct file items, folder file items, folder create items, skipped/cancelled items, and large-folder warnings.
+- Added clearer warning text when a folder scan stops early because of a listing/permission error, recursion depth limit, or safety item limit.
+- Improved queue failure messages for local destination/source path problems so the relevant path is shown.
+- Refreshed local and remote file panels after a queue run completes.
+- No transfer core, folder scan engine architecture, terminal runtime, known-host handling, Windows KEX workaround, config schema, upload/download flow, or queue status model changes are intended.
+
 ## dev 0.1.8.1.2 — Andromeda
 
 Tester release polish checkpoint.

@@ -1,12 +1,30 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.8.1.2 — Andromeda  
-**Milestone:** Tester release polish  
-**Phase:** Third-party tester preparation
+**Checkpoint:** dev 0.1.8.3 — Andromeda  
+**Milestone:** File transfer logging and diagnostics  
+**Phase:** Diagnostic validation
 
-## dev 0.1.8.1.2 — tester release polish smoke test
+## dev 0.1.8.3 — file transfer logging and diagnostics smoke test
 
-[ ] About shows dev 0.1.8.1.2  
+[ ] About shows dev 0.1.8.3  
+[ ] Diagnostic logging is OFF by default  
+[ ] Enable diagnostic logging in Settings  
+[ ] Help → Open Log Folder opens the expected per-user log directory  
+[ ] Single-file download writes useful start/success metadata to the log  
+[ ] Single-file upload writes useful start/success metadata to the log  
+[ ] Cancelled download/upload writes WARN metadata, not file contents  
+[ ] Queue start and queue finish are logged with counts  
+[ ] Queue item Done/Failed/Cancelled/Skipped states are logged  
+[ ] Queue Overwrite all / Skip all decisions are logged  
+[ ] Retry selected is logged with requeued counts  
+[ ] Folder queue confirmation and folder scan summary events are logged  
+[ ] Logs do not contain passwords, private keys, plaintext secret values, terminal input/output, clipboard contents, or file contents  
+[ ] Terminal, paste/Ctrl+C, File Manager, queue, folder upload/download, and safety behavior still work  
+[ ] Disable diagnostic logging and confirm no new transfer events are appended after disabling  
+
+## dev 0.1.8.2 — file manager safety polish smoke test
+
+[ ] About shows dev 0.1.8.2  
 [ ] Welcome tab mentions the tester-ready file transfer baseline  
 [ ] Existing SSH terminal still opens  
 [ ] Existing paste/Ctrl+C behavior still works  
@@ -15,6 +33,9 @@
 [ ] Remote panel still shows `Queue download`  
 [ ] Single-file upload/download still works  
 [ ] Folder upload/download still works with a small test folder  
+[ ] Folder queue confirmation includes safety rules and the item limit  
+[ ] Folder queue scan summary appears after selecting a folder  
+[ ] Queue completion refreshes local and remote panels  
 [ ] Queue remains sequential, one item at a time  
 [ ] Retry selected still works  
 [ ] Overwrite all / Skip all still works  

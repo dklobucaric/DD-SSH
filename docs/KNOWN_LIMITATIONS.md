@@ -1,6 +1,6 @@
 # DD-SSH Known Limitations
 
-**Checkpoint:** dev 0.1.8.1.2 — Andromeda
+**Checkpoint:** dev 0.1.8.3 — Andromeda
 
 This document lists limitations that should be visible to testers. Nothing here is hidden or sugar-coated.
 
@@ -29,7 +29,7 @@ This document lists limitations that should be visible to testers. Nothing here 
 
 ## Feature limitations
 
-`dev 0.1.8.1.2` is a tester-release polish checkpoint for the accepted File Manager baseline. The current file-transfer feature set includes single-file upload/download, sequential queue execution, Retry selected, Overwrite all / Skip all, and experimental recursive folder upload/download through queue expansion. It is intentionally not a complete file transfer tool yet: parallel transfer, resume, sync/mirror, delete, rename, chmod, overwrite metadata comparison, permission/timestamp preservation, symlink following, and SFTP traffic monitor integration are not implemented.
+`dev 0.1.8.3` is a file-transfer diagnostics checkpoint. Diagnostic logging is optional and OFF by default; when enabled, logs are intended to contain transfer metadata, queue decisions, paths, sizes, durations, and errors only. Logs must not contain passwords, private keys, secret values, terminal input/output, clipboard contents, or file contents. `dev 0.1.8.2` is a file manager safety polish checkpoint for the accepted File Manager baseline. The current file-transfer feature set includes single-file upload/download, sequential queue execution, Retry selected, Overwrite all / Skip all, and experimental recursive folder upload/download through queue expansion. It is intentionally not a complete file transfer tool yet: parallel transfer, resume, sync/mirror, delete, rename, chmod, overwrite metadata comparison, permission/timestamp preservation, symlink following, and SFTP traffic monitor integration are not implemented.
 
 Current experimental file-transfer limits:
 

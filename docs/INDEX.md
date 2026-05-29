@@ -39,6 +39,10 @@ This directory contains the working documentation for DD-SSH.
 - [Release Artifacts](RELEASE_ARTIFACTS.md)
 - [Release Notes Template](RELEASE_NOTES_TEMPLATE.md) — future release checklist
 - [Release Checklist](RELEASE_CHECKLIST.md) — focused checkpoint smoke-test checklist
+- [Build/Test 0.1.8.3](BUILD_AND_TEST_0.1.8.3.md) — file transfer logging/diagnostics build/test notes
+- [Testcase 0.1.8.3](TESTCASE_0.1.8.3.md) — diagnostic logging validation checklist
+- [Build/Test 0.1.8.2](BUILD_AND_TEST_0.1.8.2.md) — file manager safety polish build/test notes
+- [Testcase 0.1.8.2](TESTCASE_0.1.8.2.md) — file manager safety validation checklist
 - [Tester Checklist 0.1.8.1.2](TESTER_CHECKLIST_0.1.8.1.2.md) — third-party tester guide and bug-report format
 - [Build/Test 0.1.8.1.2](BUILD_AND_TEST_0.1.8.1.2.md) — tester release polish build/test notes
 - [Testcase 0.1.8.1.2](TESTCASE_0.1.8.1.2.md) — tester release polish validation checklist
@@ -77,9 +81,9 @@ This directory contains the working documentation for DD-SSH.
 ## Current checkpoint
 
 ```text
-Version: dev 0.1.8.1.2
+Version: dev 0.1.8.3
 Codename: Andromeda
-Milestone: Tester release polish
+Milestone: File manager safety polish
 Phase: Third-party tester preparation
 ```
 
@@ -111,7 +115,7 @@ GitHub issue templates live under `.github/ISSUE_TEMPLATE/`.
 
 - docs/TERMINAL_TRANSPORT.md explains the byte-stream terminal transport hardening added in dev 0.1.7.0.
 
-- docs/FILE_TRANSFER_ARCHITECTURE.md explains the planned libssh SFTP/File Manager design and the dev 0.1.8.1.2 tester release polish checkpoint.
+- docs/FILE_TRANSFER_ARCHITECTURE.md explains the planned libssh SFTP/File Manager design and the dev 0.1.8.3 file transfer logging/diagnostics checkpoint.
 
 - docs/TESTER_CHECKLIST_0.1.8.1.2.md explains how third-party testers should validate the current build and report issues.
 

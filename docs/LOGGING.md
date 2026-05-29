@@ -1,7 +1,7 @@
 # DD-SSH diagnostic logging
 
-**Checkpoint:** dev 0.1.7.0 — Andromeda
-**Scope:** optional diagnostic logging foundation plus Session Traffic summaries
+**Checkpoint:** dev 0.1.8.3 — Andromeda
+**Scope:** optional diagnostic logging foundation plus SSH terminal, Session Traffic, config safety, and SFTP/File Manager transfer diagnostics
 
 DD-SSH diagnostic logging is an on-demand debugging tool for testers and developers. It is **off by default** and can be enabled only when needed.
 
@@ -84,6 +84,11 @@ Shell channel open / disconnect
 Session traffic monitor start/stop
 Session traffic summary on disconnect
 App closing
+SFTP immediate upload/download completed / cancelled / failed
+SFTP transfer queue started / finished
+SFTP queue item started / completed / failed / cancelled / skipped
+SFTP folder queue confirmation and scan summaries
+SFTP retry-selected and overwrite-all / skip-all queue decisions
 ```
 
 ## What is never logged
@@ -100,6 +105,7 @@ terminal input
 terminal output
 clipboard contents
 full dd-ssh.json contents
+file contents
 ```
 
 It is OK to log metadata such as auth method (`password` or `private-key`), host, port, username, key type, and host-key fingerprint because these are needed for troubleshooting SSH trust/auth issues.
@@ -125,3 +131,19 @@ The live traffic monitor itself should update in the UI, not spam the log every 
 ## Config preview logging
 
 `dev 0.1.6.8` logs config import/export preview summaries when diagnostic logging is enabled. These entries include counts and flags only, such as sessions, known hosts, secrets mode, saved secret count, and plaintext-secret presence. They must not include passwords, private-key contents, terminal data, clipboard content, or full JSON.
+
+
+## SFTP/File Manager logging
+
+`dev 0.1.8.3` adds explicit SFTP/File Manager diagnostic events. These are written only when diagnostic logging is enabled.
+
+Examples:
+
+```text
+SFTP transfer queue started: session="DD-LAB", pending=4, totalItems=4
+SFTP queue item started: session="DD-LAB", index=1, direction=Download, name="test.zip", source="/root/test.zip", target="/home/user/test.zip", sizeBytes=123456
+SFTP queue download completed: session="DD-LAB", source="/root/test.zip", target="/home/user/test.zip", bytes=123456, elapsedMs=1200
+SFTP transfer queue finished: session="DD-LAB", done=4, failed=0, cancelled=0, skipped=0, totalItems=4
+```
+
+These entries are intended to help testers report transfer behavior without exposing secrets or file contents. Paths, byte counts, elapsed times, queue decisions, and error messages are metadata. Do not paste logs publicly if path names themselves are sensitive.
