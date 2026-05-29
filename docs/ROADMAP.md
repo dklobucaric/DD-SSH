@@ -44,7 +44,7 @@ Already implemented:
 
 Active File Transfer / File Manager track:
 
-Current checkpoint: `dev 0.1.8.5` — remote queue delete experiment. This checkpoint keeps the accepted `dev 0.1.8.4` overwrite metadata baseline and adds conservative remote `Queue delete` support for regular files, symlinks, and empty directories with destructive confirmations and diagnostic logging.
+Current checkpoint: `dev 0.1.8.6` — File Manager delete UI polish. This checkpoint keeps the accepted `dev 0.1.8.5` remote delete baseline, adds conservative local `Delete local`, renames the remote button to `Delete remote`, and simplifies the session context menu to `Open File Manager`.
 
 ```text
 dev 0.1.7.2 — File transport architecture/design foundation [done]
@@ -67,8 +67,8 @@ dev 0.1.8.2 — file manager safety polish [done]
 dev 0.1.8.3 — file transfer logging and diagnostics [accepted]
 dev 0.1.8.3.1 — SFTP logging polish [accepted]
 dev 0.1.8.4 — overwrite metadata dialog polish [accepted]
-dev 0.1.8.5 — remote queue delete experiment [current]
-dev 0.1.8.6 — SFTP traffic monitor widget integration [planned]
+dev 0.1.8.6 — File Manager delete UI polish [current]
+dev 0.1.8.7 — SFTP traffic monitor widget integration [planned]
 dev 0.1.9.x — cross-platform file transfer stabilization
 ```
 
@@ -265,7 +265,7 @@ dev 0.1.8.1.1 — Queue selected UI consolidation [passed]
 dev 0.1.8.2 — File manager safety polish [done]
 dev 0.1.8.3 — File transfer logging and diagnostics [accepted]
 dev 0.1.8.3.1 — SFTP logging polish [accepted]
-dev 0.1.8.5 — remote queue delete experiment [current]
+dev 0.1.8.6 — File Manager delete UI polish [current]
 ```
 
 ## 0.1.7.0 terminal transport hardening

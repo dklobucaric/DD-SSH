@@ -17,18 +17,19 @@ DD-SSH is designed for practical sysadmin use: saved sessions, one portable JSON
 
 ## Current status
 
-**Development checkpoint:** `dev 0.1.8.5`
+**Development checkpoint:** `dev 0.1.8.6`
 **Codename:** Andromeda
-**Milestone:** File Manager polish
-**Current phase:** Overwrite metadata polish for file transfer
+**Milestone:** File Manager delete UI polish
+**Current phase:** Local/remote queued delete UI cleanup
 
 DD-SSH is now moving from the closed terminal-foundation baseline into the File Transfer / File Manager development track. It is not a stable 1.0 release yet, but the core terminal workflow is functional and has been validated on Linux, Windows 10/11, and Intel macOS. Native Windows builds, a standalone Windows deployment folder, a Debian package, and a macOS Intel `.app` / `.dmg` tester flow have been tested.
 
-The current checkpoint is remote queue delete experiment: `dev 0.1.8.5` keeps the accepted `dev 0.1.8.4` overwrite metadata baseline and adds a conservative remote `Queue delete` action. Delete is remote-only, queued, destructive-confirmed, logged when diagnostic logging is enabled, and intentionally limited to regular files, symlinks, and empty directories. Recursive non-empty folder delete is not implemented.
+The current checkpoint is delete UI polish: `dev 0.1.8.6` keeps the accepted `dev 0.1.8.5` remote delete baseline, renames the remote action to `Delete remote`, replaces the local immediate upload toolbar action with `Delete local`, and keeps delete operations queued, destructive-confirmed, and logged when diagnostic logging is enabled. Local and remote delete are intentionally limited to regular files, symlinks, and empty directories. Recursive non-empty folder delete is not implemented.
 
 Recent checkpoints:
 
-- `dev 0.1.8.5` adds remote `Queue delete` for regular files, symlinks, and empty directories with destructive confirmation and diagnostic logging.
+- `dev 0.1.8.6` polishes File Manager delete UI: local panel shows `Delete local`, remote panel shows `Delete remote`, and saved-session context menu says `Open File Manager`. Immediate local upload remains in code but is no longer the main toolbar action.
+- `dev 0.1.8.5` adds remote delete queue support for regular files, symlinks, and empty directories with destructive confirmation and diagnostic logging.
 - `dev 0.1.8.3.1` polishes SFTP upload logging: early upload attempts are logged as preflight/overwrite checks, and the real `SFTP file upload started` event is emitted only when the data-transfer phase actually begins.
 - `dev 0.1.8.3` adds explicit SFTP/file-transfer diagnostic logging for immediate transfers, queue runs, queue overwrite/skip/cancel decisions, folder queue confirmations, and queue summaries. Logging remains OFF by default and must not include secrets, private keys, terminal I/O, clipboard contents, or file contents.
 - `dev 0.1.8.2` is a file manager safety polish checkpoint. It adds clearer recursive-folder confirmation text, folder scan summaries, large-folder/scan-interruption warnings, final panel refresh after queue runs, and more useful local path failure messages.
@@ -60,7 +61,7 @@ Recent checkpoints:
 - `dev 0.1.7.1` hardens native xterm.js paste handling: toolbar Paste, right-click paste, Ctrl+Shift+V, and macOS Command+V now route through the same DD-SSH safe paste path and should not leak bracketed paste markers such as `^[[200~` into the remote shell.
 - `dev 0.1.7.0` hardens terminal transport: SSH output is carried as bytes to the WebEngine terminal, decoded with a streaming UTF-8 decoder, and input writes are partial-write aware so large paste/input is not silently truncated.
 
-In `dev 0.1.8.5`, DD-SSH keeps the accepted `dev 0.1.8.4` overwrite metadata behavior and adds a conservative remote delete queue experiment. In `dev 0.1.8.4`, DD-SSH kept the accepted `dev 0.1.8.3.1` logging behavior and focused on clearer overwrite decisions with file metadata. In `dev 0.1.8.3`, DD-SSH kept the accepted `dev 0.1.8.2` queue/file-manager behavior and added diagnostic logging for tester runs. Diagnostic logging is still optional and OFF by default; when enabled, it records transfer metadata and queue outcomes only. It must not record secrets, file contents, clipboard data, or terminal input/output. In `dev 0.1.8.2`, DD-SSH focused on safety polish for tester runs. Queue processing remains sequential and conservative while the File Manager controls use local `Queue upload` and remote `Queue download` around the folder-transfer experiment. Folder transfer is still implemented as scan → expand into queue items → transfer one item at a time. No parallel execution, resume, sync engine, permission/timestamp preservation, symlink following, or SFTP Session Traffic integration yet.
+In `dev 0.1.8.6`, DD-SSH keeps the accepted `dev 0.1.8.5` remote delete queue behavior and adds a matching conservative local delete queue action while simplifying File Manager labels. In `dev 0.1.8.5`, DD-SSH kept the accepted `dev 0.1.8.4` overwrite metadata behavior and added a conservative remote delete queue experiment. In `dev 0.1.8.4`, DD-SSH kept the accepted `dev 0.1.8.3.1` logging behavior and focused on clearer overwrite decisions with file metadata. In `dev 0.1.8.3`, DD-SSH kept the accepted `dev 0.1.8.2` queue/file-manager behavior and added diagnostic logging for tester runs. Diagnostic logging is still optional and OFF by default; when enabled, it records transfer metadata and queue outcomes only. It must not record secrets, file contents, clipboard data, or terminal input/output. In `dev 0.1.8.2`, DD-SSH focused on safety polish for tester runs. Queue processing remains sequential and conservative while the File Manager controls use local `Queue upload` and remote `Queue download` around the folder-transfer experiment. Folder transfer is still implemented as scan → expand into queue items → transfer one item at a time. No parallel execution, resume, sync engine, permission/timestamp preservation, symlink following, or SFTP Session Traffic integration yet.
 
 The future file-transfer design is documented in `docs/FILE_TRANSFER_ARCHITECTURE.md`. Third-party tester flow is documented in `docs/TESTER_CHECKLIST_0.1.8.1.2.md`. File transfer will use libssh SFTP APIs, not shell command parsing hacks. Terminal tabs and future File Manager tabs are intentionally separated so the working terminal foundation remains stable.
 

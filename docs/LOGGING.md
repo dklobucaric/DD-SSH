@@ -1,6 +1,6 @@
 # DD-SSH diagnostic logging
 
-**Checkpoint:** dev 0.1.8.5 — Andromeda
+**Checkpoint:** dev 0.1.8.6 — Andromeda
 **Scope:** optional diagnostic logging foundation plus SSH terminal, Session Traffic, config safety, and SFTP/File Manager transfer diagnostics
 
 DD-SSH diagnostic logging is an on-demand debugging tool for testers and developers. It is **off by default** and can be enabled only when needed.
@@ -159,11 +159,11 @@ SFTP transfer queue finished: session="DD-LAB", done=4, failed=0, cancelled=0, s
 These entries are intended to help testers report transfer behavior without exposing secrets or file contents. Paths, byte counts, elapsed times, queue decisions, and error messages are metadata. Do not paste logs publicly if path names themselves are sensitive.
 
 
-## dev 0.1.8.5 note
+## dev 0.1.8.6 note
 
-`dev 0.1.8.5` keeps the accepted diagnostic logging behavior from `dev 0.1.8.3.1`, preserves the overwrite metadata work from `dev 0.1.8.4`, and adds remote Queue delete events. Logging remains optional and OFF by default.
+`dev 0.1.8.6` keeps the accepted diagnostic logging behavior from `dev 0.1.8.3.1`, preserves the overwrite metadata work from `dev 0.1.8.4`, and adds local/remote queued delete events. Logging remains optional and OFF by default.
 
 
-## Remote queue delete logging
+## Local/remote queued delete logging
 
-`dev 0.1.8.5` adds diagnostic log events for remote delete queue confirmation, queued delete item(s), delete start, delete success, and delete failure. These events may include remote paths and filenames as diagnostic metadata. They must not include password values, private key contents, plaintext secrets, file contents, clipboard contents, terminal input/output, or the full config file.
+`dev 0.1.8.6` adds diagnostic log events for local and remote delete queue confirmation, queued delete item(s), delete start, delete success, and delete failure. These events may include local/remote paths and filenames as diagnostic metadata. They must not include password values, private key contents, plaintext secrets, file contents, clipboard contents, terminal input/output, or the full config file.

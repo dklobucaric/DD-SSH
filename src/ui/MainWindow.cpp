@@ -1895,7 +1895,7 @@ void MainWindow::showSessionContextMenu(const QPoint &position)
 
     QMenu menu(this);
     QAction *openWebTerminalAction = menu.addAction("Open xterm.js terminal");
-    QAction *fileManagerAction = menu.addAction("Open File Manager (transfer enabled)");
+    QAction *fileManagerAction = menu.addAction("Open File Manager");
     QAction *connectAction = menu.addAction("Run auth test");
     QAction *openShellAction = menu.addAction("Open basic shell (fallback)");
     menu.addSeparator();

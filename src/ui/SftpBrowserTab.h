@@ -48,6 +48,7 @@ private:
     void handleRemoteCellDoubleClicked(int row, int column);
     void downloadSelectedRemoteFile();
     void uploadSelectedLocalFile();
+    void queueSelectedLocalDeletes();
     void queueSelectedRemoteDownloads();
     void queueSelectedRemoteDeletes();
     void queueSelectedLocalUploads();
@@ -60,7 +61,9 @@ private:
     void setQueueItemStatus(int index, const QString &status, const QString &message = QString());
     QString transferQueueSummaryText() const;
     bool confirmFolderQueue(const QString &title, const QString &sourcePath, const QString &targetPath) const;
+    bool confirmQueueLocalDelete(int fileCount, int folderCount, int skippedCount) const;
     bool confirmQueueRemoteDelete(int fileCount, int folderCount, int skippedCount) const;
+    bool confirmPendingLocalDeleteRun(int deleteFileCount, int deleteDirCount) const;
     bool confirmPendingRemoteDeleteRun(int deleteFileCount, int deleteDirCount) const;
     bool addRemoteFolderDownloadToQueue(const QString &remoteFolderPath, const QString &localTargetFolder, int *filesAdded, int *dirsAdded, int *skipped, int depth = 0);
     bool addLocalFolderUploadToQueue(const QString &localFolderPath, const QString &remoteTargetFolder, int *filesAdded, int *dirsAdded, int *skipped);

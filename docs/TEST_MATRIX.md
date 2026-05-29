@@ -1,8 +1,23 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.8.5 — Andromeda  
-**Milestone:** Remote queue delete experiment  
-**Phase:** Destructive-operation safety validation
+**Checkpoint:** dev 0.1.8.6 — Andromeda  
+**Milestone:** File Manager delete UI polish  
+**Phase:** Local/remote queued delete validation
+
+## dev 0.1.8.6 — local/remote delete UI polish smoke test
+
+[ ] About shows dev 0.1.8.6  
+[ ] Saved-session context menu shows `Open File Manager`  
+[ ] Local panel shows `Delete local` instead of `Upload selected now`  
+[ ] Remote panel shows `Delete remote` instead of `Queue delete`  
+[ ] Local regular test file can be queued for delete after confirmation  
+[ ] Queue start asks for a second local destructive confirmation  
+[ ] Cancelling local delete start leaves item Pending  
+[ ] Confirming local delete removes the local test file and refreshes the local panel  
+[ ] Local empty folder delete works or fails safely if not empty/permission denied  
+[ ] Remote delete behavior from dev 0.1.8.5 still works  
+[ ] Diagnostic logging records local/remote delete events without secrets or file contents  
+[ ] Queue upload/download, folder transfer, Retry selected, Overwrite all / Skip all, and terminal paste/Ctrl+C still work  
 
 ## dev 0.1.8.5 — remote queue delete experiment smoke test
 

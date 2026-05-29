@@ -1,3 +1,16 @@
+## dev 0.1.8.6 — Andromeda
+
+File Manager delete UI polish.
+
+- Renamed remote panel `Queue delete` to `Delete remote` while preserving queued destructive-confirmed behavior.
+- Replaced the local panel immediate-upload toolbar button with `Delete local`.
+- Added conservative local delete queue support for regular files, symlinks, and empty folders.
+- Local delete requires enqueue confirmation and a second destructive confirmation before queue execution.
+- Local delete is logged as WARN when diagnostic logging is enabled.
+- Kept immediate upload helper code available internally, but removed it from the main local panel toolbar.
+- Simplified saved-session context menu label to `Open File Manager`.
+- Kept transfer core, queue model, remote delete behavior, logging baseline, overwrite metadata dialogs, terminal runtime, known-host handling, Windows KEX workaround, and config schema unchanged.
+
 ## dev 0.1.8.5 — Andromeda
 
 Remote queue delete experiment.
