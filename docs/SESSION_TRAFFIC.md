@@ -1,8 +1,8 @@
 # DD-SSH Session Traffic Monitor
 
-**Checkpoint:** dev 0.1.7.0 — Andromeda
+**Checkpoint:** dev 0.1.8.9 — Andromeda
 
-DD-SSH includes a compact live traffic indicator in the status bar for the active terminal tab.
+DD-SSH includes a compact live traffic indicator in the status bar for the active terminal tab or active File Manager tab.
 
 Example:
 
@@ -12,14 +12,16 @@ Traffic: doma ↓ 4.2 KB/s ↑ 0.4 KB/s | Total ↓ 1.1 MB ↑ 80 KB
 
 ## What it measures
 
-For this checkpoint, the monitor measures application-level SSH shell-channel traffic:
+The monitor measures application-level DD-SSH channel traffic:
 
 ```text
-received = bytes read by DD-SSH from the SSH shell channel
-sent     = bytes successfully written by DD-SSH to the SSH shell channel
+terminal received = bytes read by DD-SSH from the SSH shell channel
+terminal sent     = bytes successfully written by DD-SSH to the SSH shell channel
+SFTP received     = bytes downloaded through File Manager transfers
+SFTP sent         = bytes uploaded through File Manager transfers
 ```
 
-It follows the active terminal tab. If you switch from one terminal tab to another, the status bar switches to the selected session.
+It follows the active terminal tab or active File Manager tab. If you switch from one terminal tab to another, the status bar switches to the selected session.
 
 ## What it does not measure
 
@@ -29,10 +31,10 @@ The monitor does not measure:
 global OS network traffic
 traffic from other applications
 TCP/VPN/protocol overhead
-SFTP/file-transfer traffic yet
+directory listing, mkdir, delete, or metadata checks as bulk transfer traffic
 ```
 
-This is intentional. The current feature is a small terminal-channel monitor and a foundation for future file transport visibility.
+This is intentional. The widget is an application-level DD-SSH transfer monitor, not a global network monitor.
 
 ## Logging behavior
 
@@ -56,6 +58,6 @@ The feature is named Session Traffic rather than Terminal Traffic so future DD-S
 
 ```text
 terminal channel traffic
-future SFTP/file-transfer traffic
+SFTP/file-transfer traffic
 future per-session totals
 ```

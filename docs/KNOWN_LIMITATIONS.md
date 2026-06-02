@@ -1,11 +1,11 @@
 # DD-SSH Known Limitations
 
-## dev 0.1.8.7 tester-build limitations
+## dev 0.1.8.9 tester-build limitations
 
-`dev 0.1.8.7` is a tester packaging/documentation checkpoint on top of the accepted `dev 0.1.8.6.4` File Manager baseline. Runtime behavior is still alpha quality. Use harmless test folders first. The current File Manager intentionally does not implement sync/mirror, resume, parallel transfers, recursive non-empty folder delete, rename, chmod/chown, permission/timestamp preservation, symlink following in recursive folder transfer, or SFTP traffic monitor integration. `plain-v1` secrets remain human-readable in `dd-ssh.json`; keep configs private.
+`dev 0.1.8.9` adds File Manager SFTP upload/download byte counters to the live Session Traffic widget on top of the accepted Settings polish baseline. Runtime behavior is still alpha quality. Use harmless test folders first. The current File Manager intentionally does not implement sync/mirror, resume, parallel transfers, recursive non-empty folder delete, rename, chmod/chown, permission/timestamp preservation, symlink following in recursive folder transfer, or OS-wide/global traffic monitoring. `plain-v1` secrets remain human-readable in `dd-ssh.json`; keep configs private.
 
 
-**Checkpoint:** dev 0.1.8.7 — Andromeda
+**Checkpoint:** dev 0.1.8.9 — Andromeda
 
 This document lists limitations that should be visible to testers. Nothing here is hidden or sugar-coated.
 
@@ -34,7 +34,7 @@ This document lists limitations that should be visible to testers. Nothing here 
 
 ## Feature limitations
 
-`dev 0.1.8.6.4` is a Queue delete confirmation ordering polish checkpoint that keeps the `dev 0.1.8.6.2` paste newline fix. The legacy immediate single-file transfer helpers may remain in code but the visible File Manager toolbar is queue-first. `dev 0.1.8.6.2` is a terminal paste newline safety polish checkpoint that keeps the `dev 0.1.8.6` File Manager delete UI baseline. `dev 0.1.8.6` is a File Manager delete UI polish checkpoint. It adds conservative local `Delete local` queue support and renames the remote action to `Delete remote`; both are limited to regular files, symlinks, and empty folders. It does not add rename, sync, resume, recursive non-empty folder delete, parallel transfers, or SFTP traffic monitor integration. `dev 0.1.8.3.1` is a small SFTP logging polish checkpoint on top of the file-transfer diagnostics baseline. `dev 0.1.8.3` is a file-transfer diagnostics checkpoint. Diagnostic logging is optional and OFF by default; when enabled, logs are intended to contain transfer metadata, queue decisions, paths, sizes, durations, and errors only. Logs must not contain passwords, private keys, secret values, terminal input/output, clipboard contents, or file contents. `dev 0.1.8.2` is a file manager safety polish checkpoint for the accepted File Manager baseline. The current file-transfer feature set includes single-file upload/download, sequential queue execution, Retry selected, Overwrite all / Skip all, experimental recursive folder upload/download through queue expansion, and conservative local/remote delete. It is intentionally not a complete file transfer tool yet: parallel transfer, resume, sync/mirror, rename, chmod, permission/timestamp preservation, symlink following, and SFTP traffic monitor integration are not implemented.
+`dev 0.1.8.6.4` is a Queue delete confirmation ordering polish checkpoint that keeps the `dev 0.1.8.6.2` paste newline fix. The legacy immediate single-file transfer helpers may remain in code but the visible File Manager toolbar is queue-first. `dev 0.1.8.6.2` is a terminal paste newline safety polish checkpoint that keeps the `dev 0.1.8.6` File Manager delete UI baseline. `dev 0.1.8.6` is a File Manager delete UI polish checkpoint. It adds conservative local `Delete local` queue support and renames the remote action to `Delete remote`; both are limited to regular files, symlinks, and empty folders. It does not add rename, sync, resume, recursive non-empty folder delete, parallel transfers, or OS-wide/global traffic monitoring. `dev 0.1.8.3.1` is a small SFTP logging polish checkpoint on top of the file-transfer diagnostics baseline. `dev 0.1.8.3` is a file-transfer diagnostics checkpoint. Diagnostic logging is optional and OFF by default; when enabled, logs are intended to contain transfer metadata, queue decisions, paths, sizes, durations, and errors only. Logs must not contain passwords, private keys, secret values, terminal input/output, clipboard contents, or file contents. `dev 0.1.8.2` is a file manager safety polish checkpoint for the accepted File Manager baseline. The current file-transfer feature set includes single-file upload/download, sequential queue execution, Retry selected, Overwrite all / Skip all, experimental recursive folder upload/download through queue expansion, and conservative local/remote delete. It is intentionally not a complete file transfer tool yet: parallel transfer, resume, sync/mirror, rename, chmod, permission/timestamp preservation, symlink following, and OS-wide/global traffic monitoring are not implemented.
 
 Current experimental file-transfer limits:
 
@@ -115,7 +115,7 @@ Known macOS alpha notes:
 
 ## SFTP traffic monitor
 
-SFTP activity is not yet included in the live Session Traffic monitor. This is planned for a later transfer polish phase, not the first single-file download checkpoint.
+SFTP upload/download activity is included in the live Session Traffic monitor for the active File Manager tab. Directory listings, mkdir, and delete operations are not treated as bulk transfer traffic, and the widget is not a global OS network monitor.
 
 - Overwrite dialogs do not yet compare existing and incoming file size/date metadata; this is planned as later transfer polish.
 

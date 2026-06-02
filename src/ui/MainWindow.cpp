@@ -617,7 +617,7 @@ void MainWindow::setupTrafficStatusIndicator()
     if (m_trafficStatusLabel == nullptr) {
         m_trafficStatusLabel = new QLabel(this);
         m_trafficStatusLabel->setText(QStringLiteral("Traffic: No active session"));
-        m_trafficStatusLabel->setToolTip(QStringLiteral("Live DD-SSH session traffic for the active terminal tab. This is application SSH channel traffic, not global OS network usage."));
+        m_trafficStatusLabel->setToolTip(QStringLiteral("Live DD-SSH session traffic for the active terminal or File Manager tab. This is application SSH/SFTP traffic, not global OS network usage."));
         statusBar()->addPermanentWidget(m_trafficStatusLabel);
     }
 
@@ -644,24 +644,30 @@ void MainWindow::updateTrafficStatusIndicator()
     QString sessionName;
     qint64 receivedBytes = 0;
     qint64 sentBytes = 0;
-    bool terminalTab = false;
-    bool activeShell = false;
+    bool trafficCapableTab = false;
+    bool activeTransferOrShell = false;
 
     if (auto *webTerminal = dynamic_cast<WebTerminalTab *>(currentWidget)) {
-        terminalTab = true;
-        activeShell = webTerminal->hasActiveShell();
+        trafficCapableTab = true;
+        activeTransferOrShell = webTerminal->hasActiveShell();
         sessionName = webTerminal->trafficSessionName();
         receivedBytes = webTerminal->receivedBytesTotal();
         sentBytes = webTerminal->sentBytesTotal();
     } else if (auto *basicTerminal = dynamic_cast<BasicTerminalTab *>(currentWidget)) {
-        terminalTab = true;
-        activeShell = basicTerminal->hasActiveShell();
+        trafficCapableTab = true;
+        activeTransferOrShell = basicTerminal->hasActiveShell();
         sessionName = basicTerminal->trafficSessionName();
         receivedBytes = basicTerminal->receivedBytesTotal();
         sentBytes = basicTerminal->sentBytesTotal();
+    } else if (auto *sftpBrowser = dynamic_cast<SftpBrowserTab *>(currentWidget)) {
+        trafficCapableTab = true;
+        activeTransferOrShell = sftpBrowser->hasActiveSftpTransfer();
+        sessionName = sftpBrowser->trafficSessionName();
+        receivedBytes = sftpBrowser->receivedBytesTotal();
+        sentBytes = sftpBrowser->sentBytesTotal();
     }
 
-    if (!terminalTab) {
+    if (!trafficCapableTab) {
         m_trafficStatusLabel->setText(QStringLiteral("Traffic: No active session"));
         m_lastTrafficWidget = nullptr;
         m_lastTrafficReceivedBytes = 0;
@@ -697,7 +703,7 @@ void MainWindow::updateTrafficStatusIndicator()
         ? QStringLiteral("unnamed")
         : sessionName.trimmed();
 
-    const QString stateSuffix = activeShell ? QString() : QStringLiteral(" disconnected");
+    const QString stateSuffix = activeTransferOrShell ? QString() : QStringLiteral(" idle");
 
     m_trafficStatusLabel->setText(
         QStringLiteral("Traffic: %1%2 ↓ %3 ↑ %4 | Total ↓ %5 ↑ %6")
@@ -1372,7 +1378,7 @@ void MainWindow::setupMenus()
             + QStringLiteral("Codename: ")
             + QStringLiteral(DD_SSH_CODENAME_STRING)
             + QStringLiteral("\n")
-            + QStringLiteral("Current phase: Release/tester packaging polish for File Manager alpha.\n")
+            + QStringLiteral("Current phase: Settings dialog layout polish for File Manager alpha.\n")
             + QStringLiteral("Milestone: ")
             + QStringLiteral(DD_SSH_MILESTONE_STRING)
             + QStringLiteral("\n\n")
@@ -1599,7 +1605,7 @@ void MainWindow::addWelcomeTab()
         "Double-click a saved session on the left to open the xterm.js terminal.\n"
         "Right-click a saved session and choose Open file manager for the SFTP workflow.\n\n"
         "Current checkpoint:\n"
-        "dev 0.1.8.7 — Release/tester packaging polish\n\n"
+        "dev 0.1.8.9 — SFTP traffic monitor integration\n\n"
         "Current milestone:\n"
         "Andromeda tester build candidate — terminal + queue-first SFTP File Manager\n\n"
         "Core features working now:\n"
@@ -1615,7 +1621,7 @@ void MainWindow::addWelcomeTab()
         "- settings foundation with theme, terminal font, toolbar visibility, and backups\n"
         "- config import/export/restore and corrupt config recovery\n"
         "- optional diagnostic logging, OFF by default\n"
-        "- active terminal Session Traffic status-bar indicator\n"
+        "- active terminal and SFTP Session Traffic status-bar indicator\n"
         "- Windows standalone deployment helper\n"
         "- Debian package helper and Linux release staging flow\n"
         "- macOS Intel .app/.dmg helper with dependency audit report\n\n"
@@ -1640,17 +1646,16 @@ void MainWindow::addWelcomeTab()
         "- no chmod/chown/rename yet\n"
         "- no permission/timestamp preservation yet\n"
         "- no symlink following in folder transfer\n"
-        "- SFTP traffic is not yet included in the Session Traffic widget\n\n"
+        "- SFTP upload/download bytes are now included in the Session Traffic widget\n\n"
         "Main menus:\n"
         "- File: Open Config Folder, Export Config, Import Config, Restore Latest Backup, Exit\n"
         "- Session: New Session, Connect / Auth test, Edit selected session\n"
         "- Tools: Multi-Exec placeholder, Settings\n"
         "- Help: About DD-SSH, Open Log Folder\n\n"
-        "Packaging/tester docs for this checkpoint:\n"
+        "Docs for this checkpoint:\n"
         "- README.md — public tester entry point and feature summary\n"
-        "- docs/FEATURE_AUDIT_0.1.8.7.md — current feature inventory\n"
-        "- docs/RELEASE_TESTER_PACKAGING_0.1.8.7.md — Linux/Windows/macOS packaging checklist\n"
-        "- docs/TESTER_CHECKLIST_0.1.8.7.md — third-party tester checklist\n"
+        "- docs/BUILD_AND_TEST_0.1.8.9.md — SFTP traffic build/test notes\n"
+        "- docs/TESTCASE_0.1.8.9.md — SFTP traffic validation checklist\n"
         "- docs/TEST_MATRIX.md — current validation matrix\n"
         "- docs/KNOWN_LIMITATIONS.md — alpha limits and safety notes\n"
         "- docs/FILE_TRANSFER_ARCHITECTURE.md — File Manager design notes\n\n"

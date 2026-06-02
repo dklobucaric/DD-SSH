@@ -39,6 +39,8 @@ This directory contains the working documentation for DD-SSH.
 - [Release Artifacts](RELEASE_ARTIFACTS.md)
 - [Release Notes Template](RELEASE_NOTES_TEMPLATE.md) — future release checklist
 - [Release Checklist](RELEASE_CHECKLIST.md) — focused checkpoint smoke-test checklist
+- [Build/Test 0.1.8.8.1](BUILD_AND_TEST_0.1.8.8.1.md) — Settings General page build/test notes
+- [Testcase 0.1.8.8.1](TESTCASE_0.1.8.8.1.md) — Settings General page validation checklist
 - [Build/Test 0.1.8.7](BUILD_AND_TEST_0.1.8.7.md) — release/tester packaging build/test notes
 - [Testcase 0.1.8.7](TESTCASE_0.1.8.7.md) — release/tester packaging validation checklist
 - [Feature Audit 0.1.8.7](FEATURE_AUDIT_0.1.8.7.md) — current feature inventory and limits
@@ -92,10 +94,10 @@ This directory contains the working documentation for DD-SSH.
 ## Current checkpoint
 
 ```text
-Version: dev 0.1.8.7
+Version: dev 0.1.8.9
 Codename: Andromeda
-Milestone: Release/tester packaging polish
-Phase: Release/tester packaging polish for File Manager alpha
+Milestone: SFTP traffic monitor integration
+Phase: SFTP traffic monitor polish for File Manager alpha
 ```
 
 

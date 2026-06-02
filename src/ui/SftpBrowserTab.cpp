@@ -32,6 +32,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <limits>
 #include <utility>
 
 namespace {
@@ -348,6 +349,58 @@ QString SftpBrowserTab::displayName() const
         + QStringLiteral(":")
         + QString::number(m_port)
         + QStringLiteral(")");
+}
+
+QString SftpBrowserTab::trafficSessionName() const
+{
+    const QString normalized = m_sessionName.trimmed();
+    return normalized.isEmpty() ? QStringLiteral("SFTP") : normalized + QStringLiteral(" SFTP");
+}
+
+qint64 SftpBrowserTab::receivedBytesTotal() const
+{
+    return m_sftpReceivedBytesTotal;
+}
+
+qint64 SftpBrowserTab::sentBytesTotal() const
+{
+    return m_sftpSentBytesTotal;
+}
+
+bool SftpBrowserTab::hasActiveSftpTransfer() const
+{
+    return m_sftpTransferActive;
+}
+
+void SftpBrowserTab::setSftpTransferActive(bool active)
+{
+    m_sftpTransferActive = active;
+}
+
+void SftpBrowserTab::noteSftpDownloadProgress(quint64 bytesTransferred, quint64 *lastBytes)
+{
+    if (lastBytes == nullptr) {
+        return;
+    }
+
+    if (bytesTransferred > *lastBytes) {
+        const quint64 delta = bytesTransferred - *lastBytes;
+        m_sftpReceivedBytesTotal += static_cast<qint64>(qMin<quint64>(delta, static_cast<quint64>(std::numeric_limits<qint64>::max())));
+        *lastBytes = bytesTransferred;
+    }
+}
+
+void SftpBrowserTab::noteSftpUploadProgress(quint64 bytesTransferred, quint64 *lastBytes)
+{
+    if (lastBytes == nullptr) {
+        return;
+    }
+
+    if (bytesTransferred > *lastBytes) {
+        const quint64 delta = bytesTransferred - *lastBytes;
+        m_sftpSentBytesTotal += static_cast<qint64>(qMin<quint64>(delta, static_cast<quint64>(std::numeric_limits<qint64>::max())));
+        *lastBytes = bytesTransferred;
+    }
 }
 
 bool SftpBrowserTab::hasTransferQueueWorkForExit() const
@@ -1135,6 +1188,8 @@ void SftpBrowserTab::downloadSelectedRemoteFile()
     bool progressWasCancelled = false;
     QElapsedTimer transferTimer;
     transferTimer.start();
+    quint64 lastTrafficBytes = 0;
+    setSftpTransferActive(true);
 
     const SftpDownloadResult result = SftpProbe::downloadRemoteFile(
         m_host,
@@ -1145,7 +1200,8 @@ void SftpBrowserTab::downloadSelectedRemoteFile()
         m_hostKeyExpectation,
         remoteFilePath,
         localTargetPath,
-        [&progress, &progressWasCancelled, &transferTimer](quint64 bytesTransferred, quint64 totalBytes, const QString &message) -> bool {
+        [this, &progress, &progressWasCancelled, &transferTimer, &lastTrafficBytes](quint64 bytesTransferred, quint64 totalBytes, const QString &message) -> bool {
+            noteSftpDownloadProgress(bytesTransferred, &lastTrafficBytes);
             int percent = 0;
 
             if (totalBytes > 0) {
@@ -1175,6 +1231,7 @@ void SftpBrowserTab::downloadSelectedRemoteFile()
         }
     );
 
+    setSftpTransferActive(false);
     QApplication::restoreOverrideCursor();
     setRemoteBusy(false);
 
@@ -1429,6 +1486,8 @@ void SftpBrowserTab::uploadSelectedLocalFile()
     bool progressWasCancelled = false;
     QElapsedTimer transferTimer;
     transferTimer.start();
+    quint64 lastTrafficBytes = 0;
+    setSftpTransferActive(true);
 
     const SftpUploadResult result = SftpProbe::uploadLocalFile(
         m_host,
@@ -1440,7 +1499,8 @@ void SftpBrowserTab::uploadSelectedLocalFile()
         localFilePath,
         remoteTargetPath,
         allowOverwrite,
-        [&progress, &progressWasCancelled, &transferTimer](quint64 bytesTransferred, quint64 totalBytes, const QString &message) -> bool {
+        [this, &progress, &progressWasCancelled, &transferTimer, &lastTrafficBytes](quint64 bytesTransferred, quint64 totalBytes, const QString &message) -> bool {
+            noteSftpUploadProgress(bytesTransferred, &lastTrafficBytes);
             int percent = 0;
 
             if (totalBytes > 0) {
@@ -1470,6 +1530,7 @@ void SftpBrowserTab::uploadSelectedLocalFile()
         }
     );
 
+    setSftpTransferActive(false);
     QApplication::restoreOverrideCursor();
     setRemoteBusy(false);
 
@@ -2720,7 +2781,9 @@ void SftpBrowserTab::startTransferQueue()
 
             QElapsedTimer transferTimer;
             transferTimer.start();
+            quint64 lastTrafficBytes = 0;
             bool progressWasCancelled = false;
+            setSftpTransferActive(true);
 
             QProgressDialog progress(
                 QStringLiteral("Queue item %1/%2: download %3 ...")
@@ -2750,7 +2813,8 @@ void SftpBrowserTab::startTransferQueue()
                 m_hostKeyExpectation,
                 item.sourcePath,
                 item.targetPath,
-                [&progress, &progressWasCancelled, &transferTimer, &item](quint64 bytesTransferred, quint64 totalBytes, const QString &message) -> bool {
+                [this, &progress, &progressWasCancelled, &transferTimer, &item, &lastTrafficBytes](quint64 bytesTransferred, quint64 totalBytes, const QString &message) -> bool {
+                    noteSftpDownloadProgress(bytesTransferred, &lastTrafficBytes);
                     int percent = 0;
 
                     if (totalBytes > 0) {
@@ -2778,6 +2842,7 @@ void SftpBrowserTab::startTransferQueue()
                 }
             );
 
+            setSftpTransferActive(false);
             const qint64 elapsedMs = transferTimer.elapsed();
             progress.close();
             QApplication::processEvents();
@@ -2837,7 +2902,9 @@ void SftpBrowserTab::startTransferQueue()
 
                 QElapsedTimer transferTimer;
                 transferTimer.start();
+                quint64 lastTrafficBytes = 0;
                 bool progressWasCancelled = false;
+                setSftpTransferActive(true);
 
                 QProgressDialog progress(
                     QStringLiteral("Queue item %1/%2: upload %3 ...")
@@ -2868,7 +2935,8 @@ void SftpBrowserTab::startTransferQueue()
                     item.sourcePath,
                     item.targetPath,
                     allowOverwrite,
-                    [&progress, &progressWasCancelled, &transferTimer, &item](quint64 bytesTransferred, quint64 totalBytes, const QString &message) -> bool {
+                    [this, &progress, &progressWasCancelled, &transferTimer, &item, &lastTrafficBytes](quint64 bytesTransferred, quint64 totalBytes, const QString &message) -> bool {
+                        noteSftpUploadProgress(bytesTransferred, &lastTrafficBytes);
                         int percent = 0;
 
                         if (totalBytes > 0) {
@@ -2896,6 +2964,7 @@ void SftpBrowserTab::startTransferQueue()
                     }
                 );
 
+                setSftpTransferActive(false);
                 const qint64 elapsedMs = transferTimer.elapsed();
                 progress.close();
                 QApplication::processEvents();
@@ -3014,6 +3083,7 @@ void SftpBrowserTab::startTransferQueue()
         }
     }
 
+    setSftpTransferActive(false);
     m_transferQueueRunning = false;
     setTransferQueueBusy(false);
     refreshTransferQueueTable();

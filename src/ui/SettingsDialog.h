@@ -10,6 +10,8 @@ class QLabel;
 class QLineEdit;
 class QComboBox;
 class QSpinBox;
+class QListWidget;
+class QStackedWidget;
 
 class SettingsDialog : public QDialog
 {
@@ -34,4 +36,6 @@ private:
     QCheckBox *m_configBackupsCheck = nullptr;
     QSpinBox *m_maxBackupsSpin = nullptr;
     QLabel *m_doubleClickLabel = nullptr;
+    QListWidget *m_categoryList = nullptr;
+    QStackedWidget *m_pages = nullptr;
 };

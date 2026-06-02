@@ -1,3 +1,30 @@
+## dev 0.1.8.9 — SFTP traffic monitor integration smoke test
+
+[ ] About shows dev 0.1.8.9  
+[ ] terminal traffic still updates for terminal tabs  
+[ ] File Manager tab shows SFTP traffic context  
+[ ] upload increases sent/up rate and total  
+[ ] download increases received/down rate and total  
+[ ] queued folder-expanded upload/download items update totals  
+[ ] delete/mkdir/listing are not treated as bulk traffic  
+[ ] diagnostic logging privacy rules still hold  
+
+## dev 0.1.8.8.1 — Settings dialog General page polish smoke test
+
+[ ] About shows dev 0.1.8.8.1  
+[ ] Tools → Settings opens a readable dialog on Linux/Windows/macOS  
+[ ] Category sidebar shows General, Diagnostics, Appearance, Terminal, Config safety, Security note  
+[ ] Each category page uses left-aligned/readable controls without clipped labels  
+[ ] Config path is visible in a read-only field  
+[ ] Copy path copies the dd-ssh.json path to the clipboard  
+[ ] Open folder opens the config folder  
+[ ] Diagnostic logging checkbox still saves and toggles logging  
+[ ] App theme setting still saves and applies after OK  
+[ ] Terminal font family/size still save for newly opened terminals  
+[ ] Config backup settings still save  
+[ ] Cancel closes without saving changes  
+[ ] Existing terminal, paste, SFTP File Manager, queue/delete, and packaging behavior still work  
+
 # DD-SSH Test Matrix
 
 ## dev 0.1.8.7 — Release/tester packaging polish smoke test
@@ -268,7 +295,7 @@
 [ ] Folder upload/download are still rejected clearly  
 [ ] Terminal xterm.js session still opens and paste/Ctrl+C still work  
 [ ] Session Traffic for terminal tabs still works  
-[ ] SFTP traffic is still not expected in the live traffic widget yet  
+[ ] SFTP upload/download traffic is expected in the live traffic widget for active File Manager tabs  
 
 ## dev 0.1.7.7 — single-file SFTP upload smoke test
 
@@ -284,7 +311,7 @@
 [ ] Folder upload is rejected clearly  
 [ ] Terminal xterm.js session still opens and paste/Ctrl+C still work  
 [ ] Session Traffic for terminal tabs still works  
-[ ] SFTP traffic is still not expected in the live traffic widget yet  
+[ ] SFTP upload/download traffic is expected in the live traffic widget for active File Manager tabs  
 
 ## dev 0.1.7.6.1 — single-file SFTP download polish smoke test
 
@@ -341,7 +368,7 @@
 [ ] Closing the whole app with open SFTP browser tab(s) lists SFTP browser tabs in the confirmation  
 [ ] Closing the whole app with both SSH and SFTP tabs lists both groups  
 [ ] Cancelling the exit confirmation keeps the app open  
-[ ] SFTP traffic is not expected in the live Session Traffic monitor yet  
+[ ] SFTP upload/download traffic is expected in the live Session Traffic monitor  
 [ ] Existing xterm.js terminal, paste paths, Ctrl+C interrupt, known-host checks, and logging still work  
 
 ## dev 0.1.7.4 — read-only remote file browser smoke test

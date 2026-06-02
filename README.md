@@ -17,14 +17,14 @@ DD-SSH is designed for practical sysadmin use: saved sessions, one portable JSON
 
 ## Current status
 
-**Development checkpoint:** `dev 0.1.8.7`  
+**Development checkpoint:** `dev 0.1.8.9`  
 **Codename:** Andromeda  
-**Milestone:** Release/tester packaging polish  
-**Current phase:** Release/tester packaging polish for File Manager alpha
+**Milestone:** SFTP traffic monitor integration  
+**Current phase:** SFTP traffic monitor polish for File Manager alpha
 
 DD-SSH is currently in the Andromeda tester-build line: the terminal foundation is stable, and the SFTP File Manager alpha is ready for wider Linux/Windows/macOS tester validation. The app has been validated across Linux, Windows 10/11, and Intel macOS through earlier checkpoints. Current packaging targets are a Linux `.deb`, a Windows portable deployment folder/ZIP, and an unsigned Intel macOS `.app` / `.dmg` tester flow.
 
-The current checkpoint, `dev 0.1.8.7`, does not add risky runtime behavior. It refreshes the README, Welcome screen, feature inventory, test matrix, release/tester packaging checklist, and tester checklist so Linux/Windows/macOS builds can be packaged and handed to testers cleanly. It keeps the accepted `dev 0.1.8.6.4` queue/delete ordering behavior and the `dev 0.1.8.6.2` multiline paste fix.
+The current checkpoint, `dev 0.1.8.9`, extends the existing Session Traffic status-bar widget so active File Manager SFTP upload/download bytes are counted alongside terminal SSH traffic. It keeps the accepted Settings dialog polish from `dev 0.1.8.8.1` and does not change transfer semantics, queue/delete behavior, logging privacy rules, known-host handling, config schema, or packaging scripts.
 
 ### Current feature inventory
 
@@ -50,7 +50,7 @@ Terminal features:
 - native paste routing for toolbar Paste, right-click paste, Ctrl+Shift+V, and macOS Command+V
 - multiline paste newline handling for `nano`, YAML, and config editing
 - Ctrl+C remote interrupt behavior
-- active terminal Session Traffic status-bar widget
+- active terminal and File Manager SFTP Session Traffic status-bar widget
 
 File Manager alpha features:
 
@@ -65,6 +65,7 @@ File Manager alpha features:
 - local and remote queued delete for regular files, symlinks, and empty directories
 - destructive delete confirmations shown only when the queue reaches the delete item
 - diagnostic SFTP/file-transfer logs when logging is enabled
+- live SFTP upload/download byte counters in the Session Traffic status-bar widget
 
 Packaging/tester features:
 
@@ -77,11 +78,12 @@ Packaging/tester features:
 
 ### Important alpha limits
 
-The File Manager is useful but still intentionally conservative. It does **not** implement sync/mirror, partial-transfer resume, parallel transfers, recursive non-empty folder delete, rename, chmod/chown, permission/timestamp preservation, symlink following in folder transfer, or SFTP traffic integration in the Session Traffic widget yet.
+The File Manager is useful but still intentionally conservative. It does **not** implement sync/mirror, partial-transfer resume, parallel transfers, recursive non-empty folder delete, rename, chmod/chown, permission/timestamp preservation, symlink following in folder transfer, or global/OS-wide traffic monitoring. SFTP upload/download bytes are included in the DD-SSH Session Traffic widget, but delete/mkdir/listing operations are not treated as bulk transfer traffic.
 
 ### Recent checkpoints
 
-- `dev 0.1.8.7` refreshes documentation, Welcome/About status text, tester feature inventory, and packaging/tester checklists for Linux/Windows/macOS handoff.
+- `dev 0.1.8.9` adds SFTP upload/download byte counters to the live Session Traffic status-bar widget for active File Manager tabs while keeping transfer behavior unchanged.
+- `dev 0.1.8.8.1` polishes the Settings General page by moving config path action buttons below the read-only path field so they remain visible on macOS while keeping runtime behavior unchanged.
 - `dev 0.1.8.6.4` fixes queue delete confirmation ordering so upload/download overwrite prompts and delete confirmations appear in the same order as queue items.
 - `dev 0.1.8.6.3` polishes UI wording: saved-session context menu labels are now `Open terminal`, `Open file manager`, and `Open fallback shell`; the About dialog adds `Developer: DD-LAB vl. Dalibor Klobučarić`.
 - `dev 0.1.8.6.2` fixes multiline terminal paste newline handling for full-screen editors such as nano.
@@ -98,7 +100,7 @@ The File Manager is useful but still intentionally conservative. It does **not**
 - `dev 0.1.7.x` builds the SFTP probe, remote browser, two-panel File Manager, single-file download/upload, and progress/cancel polish.
 - `dev 0.1.7.1` remains the closed terminal foundation baseline after native paste hardening.
 
-The future file-transfer design is documented in `docs/FILE_TRANSFER_ARCHITECTURE.md`. Third-party tester flow is documented in `docs/TESTER_CHECKLIST_0.1.8.7.md`. File transfer uses libssh SFTP APIs, not shell command parsing hacks. Terminal tabs and File Manager tabs are intentionally separated so the working terminal foundation remains stable.
+The future file-transfer design is documented in `docs/FILE_TRANSFER_ARCHITECTURE.md`. Third-party tester flow is documented in `docs/TESTER_CHECKLIST_0.1.8.7.md`. Settings layout validation is documented in `docs/TESTCASE_0.1.8.8.1.md`; SFTP traffic validation is documented in `docs/TESTCASE_0.1.8.9.md`. File transfer uses libssh SFTP APIs, not shell command parsing hacks. Terminal tabs and File Manager tabs are intentionally separated so the working terminal foundation remains stable.
 
 ### Important session-save behavior
 
@@ -140,7 +142,7 @@ Saved sessions can be edited without retyping existing plaintext secrets. Leavin
 
 ![DD-SSH settings dialog](docs/screenshots/dd-ssh-settings-dialog.png)
 
-The Settings dialog exposes the active config path, app theme selection, terminal font settings, quick toolbar visibility, and rotating config-backup options. The config folder can be opened directly from here.
+The Settings dialog uses a category sidebar for General, Diagnostics, Appearance, Terminal, Config safety, and Security note. It exposes the active config path with Copy path/Open folder actions, app theme selection, terminal font settings, quick toolbar visibility, diagnostic logging, and rotating config-backup options.
 
 ### Dark theme terminal
 

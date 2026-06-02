@@ -1,3 +1,33 @@
+## dev 0.1.8.9 — SFTP traffic monitor integration
+
+- Updated `CMakeLists.txt` to `dev 0.1.8.9` with milestone `SFTP traffic monitor integration`.
+- Extended the existing status-bar Session Traffic widget to include active File Manager SFTP transfer bytes.
+- SFTP downloads increment the received/down total; SFTP uploads increment the sent/up total.
+- Immediate single-file transfers and queued upload/download items, including folder-expanded queue items, update the same per-tab SFTP traffic counters.
+- Delete, mkdir, directory listing, and metadata checks are intentionally not counted as bulk transfer traffic.
+- The traffic widget remains application-level DD-SSH traffic, not OS-wide network usage.
+- Diagnostic logging behavior is unchanged and still avoids secrets, file contents, terminal I/O, and clipboard contents.
+- SSH core, terminal runtime, transfer semantics, queue/delete behavior, known-host handling, config schema, Settings layout, and packaging scripts are unchanged.
+- Added `docs/BUILD_AND_TEST_0.1.8.9.md` and `docs/TESTCASE_0.1.8.9.md`.
+
+## dev 0.1.8.8.1 — Settings dialog General page polish
+
+- Updated `CMakeLists.txt` to `dev 0.1.8.8.1` with milestone `Settings dialog General page polish`.
+- Fixed the macOS General settings page artifact where the `Copy path`, `Open folder`, and info hint controls could be clipped when the config path was long.
+- Moved config path actions to their own row directly below the read-only path field, followed by the short description text.
+- Runtime behavior is unchanged: SSH, terminal paste, SFTP/File Manager, queue/delete, logging, known-hosts, config schema, and packaging scripts are untouched.
+- Added `docs/BUILD_AND_TEST_0.1.8.8.1.md` and `docs/TESTCASE_0.1.8.8.1.md`.
+
+## dev 0.1.8.8 — Settings dialog layout polish
+
+- Updated `CMakeLists.txt` to `dev 0.1.8.8` with milestone `Settings dialog layout polish`.
+- Reworked the Settings dialog into a category-sidebar + stacked-page layout for cleaner macOS/Linux/Windows rendering.
+- Replaced the tall mixed group-box layout with aligned setting rows, short descriptions, and info tooltips.
+- Improved config path handling with a read-only path field plus `Copy path` and `Open folder` actions.
+- Moved the plain-v1 warning into a dedicated Security note page.
+- Kept SSH, terminal, paste, SFTP/File Manager, queue/delete, logging, config schema, and packaging runtime behavior unchanged.
+- Added `docs/BUILD_AND_TEST_0.1.8.8.md` and `docs/TESTCASE_0.1.8.8.md`.
+
 ## dev 0.1.8.7 — Release/tester packaging polish
 
 - Updated `CMakeLists.txt` to `dev 0.1.8.7` with milestone `Release/tester packaging polish`.

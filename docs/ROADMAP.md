@@ -6,7 +6,7 @@
 
 Next practical candidates after tester packaging:
 
-- SFTP traffic monitor integration for upload/download bytes.
+- SFTP traffic monitor integration for upload/download bytes. [done in dev 0.1.8.9]
 - Tester-feedback bugfix pass.
 - File Manager safety/UX polish around real-world path and permission edge cases.
 
@@ -85,7 +85,7 @@ dev 0.1.8.6.2 — Terminal paste newline safety polish [accepted]
 dev 0.1.8.6.3 — UI wording and File Manager polish [accepted]
 dev 0.1.8.6.4 — Queue delete confirmation ordering polish [accepted]
 dev 0.1.8.7 — Release/tester packaging polish [current]
-dev 0.1.8.8 — SFTP traffic monitor widget integration [planned]
+dev 0.1.8.9 — SFTP traffic monitor widget integration [current]
 dev 0.1.9.x — cross-platform file transfer stabilization
 ```
 

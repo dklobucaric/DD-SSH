@@ -5,6 +5,7 @@
 #include <QList>
 #include <QString>
 #include <QWidget>
+#include <QtGlobal>
 
 class QFileSystemModel;
 class QLabel;
@@ -29,6 +30,10 @@ public:
     );
 
     QString displayName() const;
+    QString trafficSessionName() const;
+    qint64 receivedBytesTotal() const;
+    qint64 sentBytesTotal() const;
+    bool hasActiveSftpTransfer() const;
     bool hasTransferQueueWorkForExit() const;
     QString transferQueueExitSummary() const;
 
@@ -73,6 +78,9 @@ private:
     QString joinedRemotePath(const QString &basePath, const QString &entryName) const;
     QString parentRemotePath(const QString &path) const;
     QString statusPrefix() const;
+    void noteSftpDownloadProgress(quint64 bytesTransferred, quint64 *lastBytes);
+    void noteSftpUploadProgress(quint64 bytesTransferred, quint64 *lastBytes);
+    void setSftpTransferActive(bool active);
 
     QString m_sessionName;
     QString m_host;
@@ -99,6 +107,9 @@ private:
 
     QList<TransferQueueItem> m_transferQueue;
     bool m_transferQueueRunning = false;
+    qint64 m_sftpReceivedBytesTotal = 0;
+    qint64 m_sftpSentBytesTotal = 0;
+    bool m_sftpTransferActive = false;
 
     QLineEdit *m_localPathEdit = nullptr;
     QPushButton *m_localGoButton = nullptr;

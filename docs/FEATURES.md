@@ -1,10 +1,10 @@
 # DD-SSH Features and Limitations
 
-## dev 0.1.8.7 current feature summary
+## dev 0.1.8.9 current feature summary
 
-`dev 0.1.8.7` is a release/tester packaging polish checkpoint. Current working features include saved sessions, password/private-key auth, known-host trust with multi-key portability, xterm.js terminal tabs, multiline paste handling for nano/YAML/config editing, optional diagnostic logging, two-panel SFTP File Manager, queue-first upload/download/delete workflows, experimental recursive folder upload/download through queue expansion, Retry selected, Overwrite all / Skip all, overwrite metadata dialogs, and local/remote queued delete for regular files, symlinks, and empty folders. Packaging/tester support now includes Linux `.deb`, Windows portable deployment + ZIP helper, macOS Intel `.dmg`, and checksum helpers.
+`dev 0.1.8.9` is a SFTP traffic monitor integration checkpoint. Current working features include saved sessions, password/private-key auth, known-host trust with multi-key portability, xterm.js terminal tabs, multiline paste handling for nano/YAML/config editing, optional diagnostic logging, two-panel SFTP File Manager, queue-first upload/download/delete workflows, experimental recursive folder upload/download through queue expansion, Retry selected, Overwrite all / Skip all, overwrite metadata dialogs, and local/remote queued delete for regular files, symlinks, and empty folders. Packaging/tester support includes Linux `.deb`, Windows portable deployment + ZIP helper, macOS Intel `.dmg`, and checksum helpers. Settings now use a category sidebar with readable pages and config path actions.
 
-Intentional limits remain: no sync/mirror, no resume, no parallel transfers, no recursive non-empty folder delete, no chmod/chown/rename, no permission/timestamp preservation, no symlink following in folder transfer, and no SFTP traffic monitor integration yet.
+Intentional limits remain: no sync/mirror, no resume, no parallel transfers, no recursive non-empty folder delete, no chmod/chown/rename, no permission/timestamp preservation, no symlink following in folder transfer, and SFTP upload/download traffic is included in the Session Traffic widget; no OS-wide/global network monitor.
 
 
 ## Current feature set
@@ -26,7 +26,7 @@ Intentional limits remain: no sync/mirror, no resume, no parallel transfers, no 
 - Duplicate target warning for same `username + host + port`
 - Sidebar context menu
 - Double-click opens xterm.js terminal
-- Read-only File Manager / SFTP browser action for the future SFTP development track
+- Open file manager action for the queue-first SFTP File Manager
 
 ### SSH/auth
 
@@ -62,7 +62,7 @@ Intentional limits remain: no sync/mirror, no resume, no parallel transfers, no 
 - `Queue upload` and `Queue download` are the primary File Manager transfer workflows
 - `Delete local` and `Delete remote` add selected supported items to the sequential queue after destructive confirmation
 - Overwrite warning and basic progress dialog are included for single-file download and queued upload/download
-- Experimental recursive folder upload/download is available through queue expansion; remote `Delete remote` and local `Delete local` queued delete actions are available for regular files, symlinks, and empty folders; rename, sync, parallel transfer, resume, permission/timestamp preservation, symlink following, recursive non-empty folder delete, and SFTP traffic monitor integration are not implemented yet
+- Experimental recursive folder upload/download is available through queue expansion; remote `Delete remote` and local `Delete local` queued delete actions are available for regular files, symlinks, and empty folders; rename, sync, parallel transfer, resume, permission/timestamp preservation, symlink following, recursive non-empty folder delete, and OS-wide/global network monitoring is not implemented
 - Transfer queue foundation can queue multiple individual files and run them sequentially one at a time
 
 ### Config
@@ -81,6 +81,15 @@ Intentional limits remain: no sync/mirror, no resume, no parallel transfers, no 
 - Corrupt config recovery
 
 ### Settings
+
+- Category sidebar: General, Diagnostics, Appearance, Terminal, Config safety, Security note
+- Read-only config path with Copy path and Open folder actions
+- Diagnostic logging toggle with tooltip guidance
+- App theme selector
+- Terminal font family and size controls
+- Config backup toggle and retention count
+- Plain-v1 security warning on a dedicated page
+
 
 - App theme: System / Light / Dark
 - Terminal font family
