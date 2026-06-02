@@ -66,7 +66,7 @@ SettingsDialog::SettingsDialog(
     configPathLayout->addWidget(openConfigFolderButton);
     generalLayout->addRow(QStringLiteral("Config file:"), configPathRow);
 
-    m_doubleClickLabel = new QLabel(QStringLiteral("Open xterm.js terminal"), generalGroup);
+    m_doubleClickLabel = new QLabel(QStringLiteral("Open terminal"), generalGroup);
     generalLayout->addRow(QStringLiteral("Double-click session:"), m_doubleClickLabel);
 
     m_showQuickToolbarCheck = new QCheckBox(QStringLiteral("Show quick action toolbar"), generalGroup);

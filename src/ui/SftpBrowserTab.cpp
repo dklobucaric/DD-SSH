@@ -422,13 +422,13 @@ void SftpBrowserTab::setupUi()
     m_localRefreshButton = new QPushButton(QStringLiteral("Refresh"), localPanel);
     localPathLayout->addWidget(m_localRefreshButton);
 
-    m_localUploadButton = new QPushButton(QStringLiteral("Delete local"), localPanel);
-    m_localUploadButton->setToolTip(QStringLiteral("Add selected local file(s) or empty folder(s) to the queue for deletion. A destructive confirmation is required before the queue runs delete items. Non-empty recursive folder delete is not implemented."));
-    localPathLayout->addWidget(m_localUploadButton);
-
     m_localQueueUploadButton = new QPushButton(QStringLiteral("Queue upload"), localPanel);
     m_localQueueUploadButton->setToolTip(QStringLiteral("Add selected local file(s) and folder(s) to the transfer queue. Folders are scanned recursively after confirmation; symlinks are skipped."));
     localPathLayout->addWidget(m_localQueueUploadButton);
+
+    m_localUploadButton = new QPushButton(QStringLiteral("Delete local"), localPanel);
+    m_localUploadButton->setToolTip(QStringLiteral("Add selected local file(s) or empty folder(s) to the queue for deletion. A destructive confirmation is required before the queue runs delete items. Non-empty recursive folder delete is not implemented."));
+    localPathLayout->addWidget(m_localUploadButton);
 
     localLayout->addLayout(localPathLayout);
 
@@ -477,8 +477,8 @@ void SftpBrowserTab::setupUi()
     remotePathLayout->addWidget(m_remoteRefreshButton);
 
     m_remoteDownloadButton = new QPushButton(QStringLiteral("Download selected now"), remotePanel);
-    m_remoteDownloadButton->setToolTip(QStringLiteral("Download the first selected remote file into the currently open local folder immediately."));
-    remotePathLayout->addWidget(m_remoteDownloadButton);
+    m_remoteDownloadButton->setToolTip(QStringLiteral("Legacy immediate single-file download helper kept internally; the main UI now uses Queue download."));
+    m_remoteDownloadButton->setVisible(false);
 
     m_remoteQueueDownloadButton = new QPushButton(QStringLiteral("Queue download"), remotePanel);
     m_remoteQueueDownloadButton->setToolTip(QStringLiteral("Add selected remote file(s) and folder(s) to the transfer queue. Folders are scanned recursively after confirmation; symlinks are skipped."));
@@ -2412,24 +2412,10 @@ void SftpBrowserTab::startTransferQueue()
     }
 
     int pendingCount = 0;
-    int pendingLocalDeleteFileCount = 0;
-    int pendingLocalDeleteDirCount = 0;
-    int pendingDeleteFileCount = 0;
-    int pendingDeleteDirCount = 0;
 
     for (const TransferQueueItem &item : std::as_const(m_transferQueue)) {
         if (item.status == QStringLiteral("Pending")) {
             ++pendingCount;
-
-            if (item.direction == QStringLiteral("Delete local file")) {
-                ++pendingLocalDeleteFileCount;
-            } else if (item.direction == QStringLiteral("Delete local dir")) {
-                ++pendingLocalDeleteDirCount;
-            } else if (item.direction == QStringLiteral("Delete remote file")) {
-                ++pendingDeleteFileCount;
-            } else if (item.direction == QStringLiteral("Delete remote dir")) {
-                ++pendingDeleteDirCount;
-            }
         }
     }
 
@@ -2445,30 +2431,6 @@ void SftpBrowserTab::startTransferQueue()
             QStringLiteral("No pending queue items — DD-SSH"),
             QStringLiteral("There are no pending transfer items in the queue.\n\nAdd files to the queue or use Retry selected on finished/skipped/cancelled items first.")
         );
-        return;
-    }
-
-    if (!confirmPendingLocalDeleteRun(pendingLocalDeleteFileCount, pendingLocalDeleteDirCount)) {
-        AppLogger::warn(QStringLiteral("SFTP transfer queue start cancelled by local delete confirmation: session=") + quotedLogValue(m_sessionName)
-            + QStringLiteral(", pendingLocalDeleteFiles=") + QString::number(pendingLocalDeleteFileCount)
-            + QStringLiteral(", pendingLocalDeleteDirs=") + QString::number(pendingLocalDeleteDirCount));
-
-        if (m_queueStatusLabel != nullptr) {
-            m_queueStatusLabel->setText(QStringLiteral("Queue: start cancelled because pending local delete item(s) were not confirmed. %1").arg(transferQueueSummaryText()));
-        }
-
-        return;
-    }
-
-    if (!confirmPendingRemoteDeleteRun(pendingDeleteFileCount, pendingDeleteDirCount)) {
-        AppLogger::warn(QStringLiteral("SFTP transfer queue start cancelled by remote delete confirmation: session=") + quotedLogValue(m_sessionName)
-            + QStringLiteral(", pendingDeleteFiles=") + QString::number(pendingDeleteFileCount)
-            + QStringLiteral(", pendingDeleteDirs=") + QString::number(pendingDeleteDirCount));
-
-        if (m_queueStatusLabel != nullptr) {
-            m_queueStatusLabel->setText(QStringLiteral("Queue: start cancelled because pending remote delete item(s) were not confirmed. %1").arg(transferQueueSummaryText()));
-        }
-
         return;
     }
 
@@ -2565,6 +2527,23 @@ void SftpBrowserTab::startTransferQueue()
 
 
         if (item.direction == QStringLiteral("Delete local file") || item.direction == QStringLiteral("Delete local dir")) {
+            const bool deleteIsDir = item.direction == QStringLiteral("Delete local dir");
+
+            if (!confirmPendingLocalDeleteRun(deleteIsDir ? 0 : 1, deleteIsDir ? 1 : 0)) {
+                AppLogger::warn(QStringLiteral("SFTP queue local delete cancelled before item execution: session=") + quotedLogValue(m_sessionName)
+                    + QStringLiteral(", target=") + quotedLogValue(item.targetPath)
+                    + QStringLiteral(", direction=") + logSafeValue(item.direction));
+
+                setQueueItemStatus(i, QStringLiteral("Pending"), QStringLiteral("Local delete not confirmed; queue stopped before this item"));
+
+                if (m_queueStatusLabel != nullptr) {
+                    m_queueStatusLabel->setText(QStringLiteral("Queue: stopped before local delete item because it was not confirmed. %1").arg(transferQueueSummaryText()));
+                }
+
+                shouldStopQueue = true;
+                break;
+            }
+
             setQueueItemStatus(i, QStringLiteral("Running"), QStringLiteral("Deleting local item"));
 
             AppLogger::warn(QStringLiteral("SFTP queue local delete started: session=") + quotedLogValue(m_sessionName)
@@ -2617,6 +2596,23 @@ void SftpBrowserTab::startTransferQueue()
         }
 
         if (item.direction == QStringLiteral("Delete remote file") || item.direction == QStringLiteral("Delete remote dir")) {
+            const bool deleteIsDir = item.direction == QStringLiteral("Delete remote dir");
+
+            if (!confirmPendingRemoteDeleteRun(deleteIsDir ? 0 : 1, deleteIsDir ? 1 : 0)) {
+                AppLogger::warn(QStringLiteral("SFTP queue remote delete cancelled before item execution: session=") + quotedLogValue(m_sessionName)
+                    + QStringLiteral(", target=") + quotedLogValue(item.targetPath)
+                    + QStringLiteral(", direction=") + logSafeValue(item.direction));
+
+                setQueueItemStatus(i, QStringLiteral("Pending"), QStringLiteral("Remote delete not confirmed; queue stopped before this item"));
+
+                if (m_queueStatusLabel != nullptr) {
+                    m_queueStatusLabel->setText(QStringLiteral("Queue: stopped before remote delete item because it was not confirmed. %1").arg(transferQueueSummaryText()));
+                }
+
+                shouldStopQueue = true;
+                break;
+            }
+
             setQueueItemStatus(i, QStringLiteral("Running"), QStringLiteral("Deleting remote item"));
 
             AppLogger::warn(QStringLiteral("SFTP queue remote delete started: session=") + quotedLogValue(m_sessionName)

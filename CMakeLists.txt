@@ -6,9 +6,9 @@ project(DD_SSH
     LANGUAGES CXX
 )
 
-set(DD_SSH_VERSION_STRING "dev 0.1.8.6.1")
+set(DD_SSH_VERSION_STRING "dev 0.1.8.6.4")
 set(DD_SSH_CODENAME_STRING "Andromeda")
-set(DD_SSH_MILESTONE_STRING "macOS/Linux artifact version polish")
+set(DD_SSH_MILESTONE_STRING "Queue delete confirmation ordering polish")
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

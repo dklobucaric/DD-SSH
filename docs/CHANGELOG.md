@@ -1,3 +1,28 @@
+## dev 0.1.8.6.4 — Queue delete confirmation ordering polish
+
+- Fixed queue confirmation ordering for destructive local/remote delete items.
+- Delete confirmations are now shown just-in-time when the queue reaches the delete item instead of before the whole queue starts.
+- This preserves visible queue order: earlier upload/download overwrite prompts appear before later delete confirmations.
+- If a delete item is not confirmed, it stays Pending and the queue stops before that item.
+- No SSH/SFTP transfer core, known-host, logging, config, or terminal paste behavior was changed.
+
+## dev 0.1.8.6.3 — UI wording and File Manager polish
+
+- Polished saved-session context menu labels: `Open terminal`, `Open file manager`, and `Open fallback shell`.
+- Moved the About dialog Current phase line under Codename and added `Developer: DD-LAB vl. Dalibor Klobučarić`.
+- Hid the legacy immediate remote-download toolbar button so the visible File Manager flow stays queue-first.
+- Kept the accepted terminal paste newline fix from `dev 0.1.8.6.2`.
+- No SSH/SFTP transfer core, known-host, logging, config, or packaging behavior was changed.
+
+## dev 0.1.8.6.2 — Andromeda
+
+Terminal paste newline safety polish.
+
+- Fixed multiline paste into full-screen terminal applications such as `nano` by converting normalized clipboard line feeds (LF / `^J`) to terminal carriage returns (CR / `^M`) at the final PTY input boundary.
+- This preserves YAML/config indentation and line structure when pasting through the toolbar button, right-click paste, Ctrl+Shift+V, or Command+V safe paste paths.
+- Kept internal clipboard normalization and paste status counting unchanged.
+- Kept terminal output rendering, SSH/SFTP/File Manager runtime, queue/delete behavior, diagnostic logging, known-host handling, Windows KEX workaround, and config schema unchanged.
+
 ## dev 0.1.8.6.1 — Andromeda
 
 macOS/Linux release artifact version polish.
@@ -599,6 +624,19 @@ Bugfix stabilization checkpoint after the logging, Session Traffic, and config i
 - Packaging scripts remain functionally unchanged except version defaults/comments.
 
 # DD-SSH Changelog
+
+## dev 0.1.8.6.4 — Queue delete confirmation ordering polish
+
+- Renamed saved-session context menu actions:
+  - `Open xterm.js terminal` → `Open terminal`
+  - `Open File Manager` → `Open file manager`
+  - `Open basic shell (fallback)` → `Open fallback shell`
+- Updated Settings double-click description from `Open xterm.js terminal` to `Open terminal`.
+- Reordered About dialog metadata so Current phase appears below Codename and above Milestone, while Developer appears in the old upper phase location.
+- Added `Developer: DD-LAB vl. Dalibor Klobučarić` to the About dialog.
+- Hid the legacy remote `Download selected now` toolbar button to keep the File Manager workflow queue-first.
+- Swapped local toolbar order so `Queue upload` appears before `Delete local`.
+- Kept the legacy immediate download/upload helper functions in code for now; they are no longer primary toolbar actions.
 
 ## dev 0.1.6.5 — Andromeda
 

@@ -1364,13 +1364,15 @@ void MainWindow::setupMenus()
         const QString aboutText =
             QStringLiteral("DD-SSH\n\n")
             + QStringLiteral("A clean cross-platform SSH client and session manager.\n\n")
-            + QStringLiteral("Current phase: Tester release polish for File Manager alpha.\n\n")
+            + QStringLiteral("Developer: DD-LAB vl. Dalibor Klobučarić")
+            + QStringLiteral("\n\n")
             + QStringLiteral("Version: ")
             + QCoreApplication::applicationVersion()
             + QStringLiteral("\n")
             + QStringLiteral("Codename: ")
             + QStringLiteral(DD_SSH_CODENAME_STRING)
             + QStringLiteral("\n")
+            + QStringLiteral("Current phase: Tester release polish for File Manager alpha.\n")
             + QStringLiteral("Milestone: ")
             + QStringLiteral(DD_SSH_MILESTONE_STRING)
             + QStringLiteral("\n\n")
@@ -1894,10 +1896,10 @@ void MainWindow::showSessionContextMenu(const QPoint &position)
     }
 
     QMenu menu(this);
-    QAction *openWebTerminalAction = menu.addAction("Open xterm.js terminal");
-    QAction *fileManagerAction = menu.addAction("Open File Manager");
+    QAction *openWebTerminalAction = menu.addAction("Open terminal");
+    QAction *fileManagerAction = menu.addAction("Open file manager");
     QAction *connectAction = menu.addAction("Run auth test");
-    QAction *openShellAction = menu.addAction("Open basic shell (fallback)");
+    QAction *openShellAction = menu.addAction("Open fallback shell");
     menu.addSeparator();
     QAction *editAction = menu.addAction("Edit session");
     QAction *deleteAction = menu.addAction("Delete session");

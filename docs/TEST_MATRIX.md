@@ -1,8 +1,34 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.8.6.1 — Andromeda  
-**Milestone:** macOS/Linux artifact version polish  
-**Phase:** Release packaging script validation
+## dev 0.1.8.6.4 — Queue delete confirmation ordering polish smoke test
+
+[ ] About shows dev 0.1.8.6.4  
+[ ] Saved-session context menu shows `Open terminal`  
+[ ] Saved-session context menu shows `Open file manager`  
+[ ] Saved-session context menu shows `Run auth test`  
+[ ] Saved-session context menu shows `Open fallback shell`  
+[ ] About dialog shows Developer in the upper metadata area, then Version, Codename, Current phase, and Milestone  
+[ ] About dialog shows `Developer: DD-LAB vl. Dalibor Klobučarić`  
+[ ] Local File Manager toolbar shows `Queue upload` before `Delete local`  
+[ ] Remote File Manager toolbar shows `Queue download` and `Delete remote`; no visible `Download selected now` button  
+[ ] Queue upload/download/delete, folder queue, Retry selected, Overwrite all / Skip all, diagnostic logging, and terminal paste still work  
+
+**Checkpoint:** dev 0.1.8.6.4 — Andromeda  
+**Milestone:** Queue delete confirmation ordering polish  
+**Phase:** Tester release polish for File Manager alpha
+
+## dev 0.1.8.6.2 — terminal paste newline safety smoke test
+
+[ ] About shows dev 0.1.8.6.2  
+[ ] Open an SSH terminal and run `nano /tmp/dd-ssh-paste-test.yml`  
+[ ] Paste a multiline YAML/config block using toolbar Paste  
+[ ] Pasted text keeps one line per source line; nano must not show `Justified paragraph`  
+[ ] Indentation is preserved for nested YAML sections  
+[ ] Save and inspect with `cat -n /tmp/dd-ssh-paste-test.yml`  
+[ ] Repeat with right-click paste / Ctrl+Shift+V / Command+V where applicable  
+[ ] Single-line paste still works  
+[ ] Ctrl+C remote interrupt still works  
+[ ] File Manager queue/delete smoke still works  
 
 ## dev 0.1.8.6.1 — macOS/Linux artifact version polish smoke test
 

@@ -592,7 +592,11 @@ QString WebTerminalTab::terminalHtml() const
             normalized += '\n';
         }
 
-        return normalized;
+        // Terminal applications expect Enter/newline as carriage return (CR, ^M),
+        // not line feed (LF, ^J). Sending LF into full-screen apps such as nano
+        // can trigger commands like Justify Paragraph and destroy pasted YAML
+        // formatting. Keep internal normalization as LF, then convert for PTY input.
+        return normalized.replace(/\n/g, '\r');
     }
 
     function isSafePasteShortcut(event) {
@@ -1099,7 +1103,15 @@ void WebTerminalTab::pasteClipboard()
         ? text.count(QChar('\n'))
         : 1;
 
-    sendToWorker(text);
+    // PTY/newline safety: terminal programs treat CR (^M) as Enter/newline.
+    // LF (^J) can be interpreted as an application command in full-screen
+    // editors, for example nano's Justify Paragraph. Preserve clipboard line
+    // structure for YAML/config pastes by converting normalized LF to CR only
+    // at the final terminal-input boundary.
+    QString terminalText = text;
+    terminalText.replace(QChar('\n'), QChar('\r'));
+
+    sendToWorker(terminalText);
 
     if (m_bridge != nullptr) {
         m_bridge->emitStatus(

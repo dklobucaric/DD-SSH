@@ -39,6 +39,8 @@ This directory contains the working documentation for DD-SSH.
 - [Release Artifacts](RELEASE_ARTIFACTS.md)
 - [Release Notes Template](RELEASE_NOTES_TEMPLATE.md) — future release checklist
 - [Release Checklist](RELEASE_CHECKLIST.md) — focused checkpoint smoke-test checklist
+- [Build/Test 0.1.8.6.4](BUILD_AND_TEST_0.1.8.6.4.md) — Queue delete confirmation ordering polish build/test notes
+- [Testcase 0.1.8.6.4](TESTCASE_0.1.8.6.4.md) — Queue delete confirmation ordering polish validation checklist
 - [Build/Test 0.1.8.5](BUILD_AND_TEST_0.1.8.5.md) — remote queue delete build/test notes
 - [Build/Test 0.1.8.4](BUILD_AND_TEST_0.1.8.4.md) — overwrite metadata dialog build/test notes
 - [Testcase 0.1.8.5](TESTCASE_0.1.8.5.md) — remote queue delete validation checklist
@@ -85,7 +87,7 @@ This directory contains the working documentation for DD-SSH.
 ## Current checkpoint
 
 ```text
-Version: dev 0.1.8.6
+Version: dev 0.1.8.6.2
 Codename: Andromeda
 Milestone: File manager safety polish
 Phase: Third-party tester preparation
@@ -126,5 +128,7 @@ GitHub issue templates live under `.github/ISSUE_TEMPLATE/`.
 - docs/BUILD_AND_TEST_0.1.8.0.4.1.md — Build and test notes for the queue stabilization compile hotfix.
 - docs/TESTCASE_0.1.8.0.4.1.md — Testcase for the queue stabilization compile hotfix.
 
+- [Build and test 0.1.8.6.2](BUILD_AND_TEST_0.1.8.6.2.md)
+- [Test case 0.1.8.6.2](TESTCASE_0.1.8.6.2.md)
 - [Build and test 0.1.8.6.1](BUILD_AND_TEST_0.1.8.6.1.md)
 - [Test case 0.1.8.6.1](TESTCASE_0.1.8.6.1.md)
