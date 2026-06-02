@@ -39,9 +39,9 @@ Release artifacts belong in GitHub Releases, not in normal Git commits.
 Typical future release assets:
 
 ```text
-DD-SSH-dev-0.1.6.5-windows-portable.zip
-dd-ssh_0.1.6.5_amd64.deb
-DD-SSH-0.1.6.5-macOS-x86_64.dmg
+DD-SSH-0.1.8.7-Windows-x86_64-portable.zip
+dd-ssh_0.1.8.7_amd64.deb
+DD-SSH-0.1.8.7-macOS-x86_64.dmg
 SHA256SUMS
 ```
 
@@ -115,7 +115,7 @@ Windows portable release example:
 ```text
 1. Build Release on Windows.
 2. Run scripts\windows-deploy-release.bat.
-3. Zip dist\windows-release as DD-SSH-dev-0.1.6.5-windows-portable.zip.
+3. Zip dist\windows-release as DD-SSH-0.1.8.7-Windows-x86_64-portable.zip.
 4. Place/copy the zip under dist\.
 5. Run scripts\generate-checksums-windows.bat.
 6. Upload the zip and dist\SHA256SUMS to GitHub Releases.
@@ -137,3 +137,16 @@ A source-code ZIP prepared for testing is not a repository artifact. It may be s
 ## dev 0.1.8.6.1 artifact version note
 
 macOS and Debian packaging scripts now derive their default artifact version from `DD_SSH_VERSION_STRING` in `CMakeLists.txt`. Use `DD_SSH_MACOS_VERSION=...` or `DD_SSH_DEB_VERSION=...` only when an explicit override is needed.
+
+## dev 0.1.8.7 tester artifact note
+
+For tester builds, prepare all platform artifacts from the same pushed source baseline:
+
+```text
+dist/deb/dd-ssh_0.1.8.7_amd64.deb
+dist/DD-SSH-0.1.8.7-Windows-x86_64-portable.zip
+dist/macos/DD-SSH-0.1.8.7-macOS-x86_64.dmg
+dist/SHA256SUMS
+```
+
+Use `docs/RELEASE_TESTER_PACKAGING_0.1.8.7.md` as the step-by-step checklist.

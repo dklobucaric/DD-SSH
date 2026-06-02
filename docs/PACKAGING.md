@@ -1,9 +1,9 @@
 # Packaging DD-SSH
 
-**Checkpoint:** dev 0.1.7.0 — Andromeda
-**Phase:** macOS DMG/dependency polish
+**Checkpoint:** dev 0.1.8.7 — Andromeda
+**Phase:** Release/tester packaging polish
 
-DD-SSH has moved from source-build validation into the first packaging phase. `dev 0.1.6.4` added repository hygiene and checksum helpers so generated packages stay out of Git. `dev 0.1.6.5` keeps that release-artifact policy and improves the macOS tester package path with dependency-audit reporting.
+DD-SSH has moved from source-build validation into a tester packaging phase. Generated artifacts stay out of Git, and current tester targets are Linux `.deb`, Windows portable ZIP, and unsigned Intel macOS `.dmg` builds.
 
 The first Linux package target is a practical `.deb` for Debian/Ubuntu/Mint/LMDE-style systems. Windows already has a validated deploy-folder flow; a Windows installer is planned later.
 
@@ -86,13 +86,13 @@ From the project root on Linux:
 Expected output:
 
 ```text
-dist/deb/dd-ssh_0.1.6.5_amd64.deb
+dist/deb/dd-ssh_0.1.8.7_amd64.deb
 ```
 
 Install locally:
 
 ```bash
-sudo apt install ./dist/deb/dd-ssh_0.1.6.5_amd64.deb
+sudo apt install ./dist/deb/dd-ssh_0.1.8.7_amd64.deb
 ```
 
 Run:
@@ -171,3 +171,20 @@ dist/macos/DD-SSH-0.1.6.5-macOS-x86_64-otool-report.txt
 ```
 
 This first DMG is intentionally unsigned and not notarized. It is suitable for internal testing and early testers who understand Gatekeeper prompts. Developer ID signing, notarization, Homebrew Cask packaging, and native arm64/universal builds are later packaging tasks.
+
+
+## Windows portable ZIP helper
+
+`dev 0.1.8.7` adds a small wrapper for packaging the deployed Windows portable folder into a versioned ZIP:
+
+```cmd
+scripts\windows-deploy-release.bat
+scripts\windows-package-portable.bat
+scripts\generate-checksums-windows.bat
+```
+
+Expected ZIP style:
+
+```text
+dist\DD-SSH-0.1.8.7-Windows-x86_64-portable.zip
+```

@@ -1,7 +1,7 @@
 # DD-SSH Release Checklist
 
 **Current target line:** Andromeda / MF 0.2 candidate
-**Current checkpoint:** dev 0.1.7.0
+**Current checkpoint:** dev 0.1.8.7
 
 This checklist is shorter than the full public-alpha checklist. Use it before tagging any internal development checkpoint or before preparing `v0.2.0-alpha`.
 

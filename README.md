@@ -17,74 +17,88 @@ DD-SSH is designed for practical sysadmin use: saved sessions, one portable JSON
 
 ## Current status
 
-**Development checkpoint:** `dev 0.1.8.6.4`
-**Codename:** Andromeda
-**Milestone:** Queue delete confirmation ordering polish
-**Current phase:** Tester release polish for File Manager alpha
+**Development checkpoint:** `dev 0.1.8.7`  
+**Codename:** Andromeda  
+**Milestone:** Release/tester packaging polish  
+**Current phase:** Release/tester packaging polish for File Manager alpha
 
-DD-SSH is now moving from the closed terminal-foundation baseline into the File Transfer / File Manager development track. It is not a stable 1.0 release yet, but the core terminal workflow is functional and has been validated on Linux, Windows 10/11, and Intel macOS. Native Windows builds, a standalone Windows deployment folder, a Debian package, and a macOS Intel `.app` / `.dmg` tester flow have been tested.
+DD-SSH is currently in the Andromeda tester-build line: the terminal foundation is stable, and the SFTP File Manager alpha is ready for wider Linux/Windows/macOS tester validation. The app has been validated across Linux, Windows 10/11, and Intel macOS through earlier checkpoints. Current packaging targets are a Linux `.deb`, a Windows portable deployment folder/ZIP, and an unsigned Intel macOS `.app` / `.dmg` tester flow.
 
-The current checkpoint is Queue delete confirmation ordering polish: `dev 0.1.8.6.4` keeps the accepted paste-newline fix from `dev 0.1.8.6.2`, simplifies saved-session menu labels, moves the About dialog phase line, adds the DD-LAB developer line, hides the legacy immediate remote-download toolbar button, and keeps File Manager work focused on queue-first upload/download/delete workflows.
+The current checkpoint, `dev 0.1.8.7`, does not add risky runtime behavior. It refreshes the README, Welcome screen, feature inventory, test matrix, release/tester packaging checklist, and tester checklist so Linux/Windows/macOS builds can be packaged and handed to testers cleanly. It keeps the accepted `dev 0.1.8.6.4` queue/delete ordering behavior and the `dev 0.1.8.6.2` multiline paste fix.
 
-Recent checkpoints:
+### Current feature inventory
 
-- `dev 0.1.8.6.4` polishes UI wording: saved-session context menu labels are now `Open terminal`, `Open file manager`, and `Open fallback shell`; the About dialog moves Current phase under Codename and adds `Developer: DD-LAB vl. Dalibor Klobučarić`; the remote immediate `Download selected now` toolbar button is hidden so the main File Manager flow stays queue-first.
-- `dev 0.1.8.6.2` fixes multiline terminal paste newline handling for full-screen editors such as nano while preserving the accepted `dev 0.1.8.6` File Manager delete UI baseline.
+Core SSH/session features:
+
+- saved sessions in one portable human-readable `dd-ssh.json`
+- portable plaintext `plain-v1` secrets for early alpha portability
+- password and private-key authentication
+- SSH known-host verification before authentication
+- multi-key known-host portability per `host:port`
+- saved session create/edit/delete workflows
+- duplicate saved-session warning
+- config import/export/restore and corrupt-config recovery
+- optional diagnostic logging, OFF by default
+- Open Config Folder and Open Log Folder helpers
+
+Terminal features:
+
+- xterm.js terminal renderer with bundled local assets
+- SSH PTY resize sync
+- terminal lifecycle/disconnect handling
+- tested full-screen terminal apps such as `htop`, `nano`, `vim`, `top`, and `clear`
+- native paste routing for toolbar Paste, right-click paste, Ctrl+Shift+V, and macOS Command+V
+- multiline paste newline handling for `nano`, YAML, and config editing
+- Ctrl+C remote interrupt behavior
+- active terminal Session Traffic status-bar widget
+
+File Manager alpha features:
+
+- two-panel local/remote File Manager
+- remote browsing through libssh SFTP, not shell command parsing
+- queue-first upload and download workflow
+- recursive folder upload/download experiment via scan → queue items
+- sequential one-item-at-a-time transfer queue
+- Retry selected for Done/Failed/Cancelled/Skipped items
+- Overwrite / Skip / Overwrite all / Skip all
+- overwrite metadata dialogs with existing/incoming size and modified time
+- local and remote queued delete for regular files, symlinks, and empty directories
+- destructive delete confirmations shown only when the queue reaches the delete item
+- diagnostic SFTP/file-transfer logs when logging is enabled
+
+Packaging/tester features:
+
+- Linux release build and Debian package helper
+- macOS Intel `.app`/`.dmg` helper with otool dependency audit report
+- Windows portable deployment helper
+- Windows portable ZIP helper for tester artifacts
+- checksum helpers for Linux/macOS/Windows release assets
+- tester checklist and known limitations documentation
+
+### Important alpha limits
+
+The File Manager is useful but still intentionally conservative. It does **not** implement sync/mirror, partial-transfer resume, parallel transfers, recursive non-empty folder delete, rename, chmod/chown, permission/timestamp preservation, symlink following in folder transfer, or SFTP traffic integration in the Session Traffic widget yet.
+
+### Recent checkpoints
+
+- `dev 0.1.8.7` refreshes documentation, Welcome/About status text, tester feature inventory, and packaging/tester checklists for Linux/Windows/macOS handoff.
+- `dev 0.1.8.6.4` fixes queue delete confirmation ordering so upload/download overwrite prompts and delete confirmations appear in the same order as queue items.
+- `dev 0.1.8.6.3` polishes UI wording: saved-session context menu labels are now `Open terminal`, `Open file manager`, and `Open fallback shell`; the About dialog adds `Developer: DD-LAB vl. Dalibor Klobučarić`.
+- `dev 0.1.8.6.2` fixes multiline terminal paste newline handling for full-screen editors such as nano.
+- `dev 0.1.8.6.1` fixes macOS/Linux artifact version detection so package filenames follow `DD_SSH_VERSION_STRING`.
+- `dev 0.1.8.6` adds conservative local delete queue support and simplifies File Manager delete labels.
 - `dev 0.1.8.5` adds remote delete queue support for regular files, symlinks, and empty directories with destructive confirmation and diagnostic logging.
-- `dev 0.1.8.3.1` polishes SFTP upload logging: early upload attempts are logged as preflight/overwrite checks, and the real `SFTP file upload started` event is emitted only when the data-transfer phase actually begins.
-- `dev 0.1.8.3` adds explicit SFTP/file-transfer diagnostic logging for immediate transfers, queue runs, queue overwrite/skip/cancel decisions, folder queue confirmations, and queue summaries. Logging remains OFF by default and must not include secrets, private keys, terminal I/O, clipboard contents, or file contents.
-- `dev 0.1.8.2` is a file manager safety polish checkpoint. It adds clearer recursive-folder confirmation text, folder scan summaries, large-folder/scan-interruption warnings, final panel refresh after queue runs, and more useful local path failure messages.
-- `dev 0.1.8.1.1` consolidates File Manager queue actions into two clearer buttons: local `Queue upload` and remote `Queue download`. Selected files are queued directly; selected folders are confirmed and recursively expanded into normal queue items.
-- `dev 0.1.8.1` adds the first recursive folder-transfer experiment by expanding selected folders into normal queue items. Destination folders are created as queue items and symlinks are skipped.
-- `dev 0.1.8.0.3` adds `Retry selected` for finished queue items so selected `Done`, `Failed`, `Cancelled`, or `Skipped` transfers can be moved back to `Pending` and run again.
-- `dev 0.1.8.0.2` adds queue overwrite/skip-all decisions so repeated overwrite prompts do not have to be answered one file at a time.
-- `dev 0.1.8.0.1` fixes queue overwrite prompt ordering so overwrite questions appear in front of the user instead of being hidden by the queue progress dialog.
-- `dev 0.1.8.0` adds the first SFTP transfer queue foundation: queue multiple individual downloads/uploads, run them sequentially, track status, remove selected, and clear finished items.
-- `dev 0.1.7.8` polishes single-file SFTP transfer progress and cancel feedback: transfer dialogs show progress, speed, elapsed time, completion summaries, and clearer cancellation messages.
-- `dev 0.1.5.6` proved the Windows standalone deployment folder can run outside the build tree without manually extending `PATH`.
-- `dev 0.1.5.7` fixed portable `known_hosts` behavior so one shared `dd-ssh.json` can carry multiple legitimate host-key algorithms per `host:port`.
-- `dev 0.1.5.8` fixed a Windows/libssh handshake failure against newer OpenSSH servers that advertise ML-KEM/SNTRUP key-exchange algorithms before classic curve25519/ecdh algorithms.
-- `dev 0.1.6.3` verifies the approved SSH host key again in the real authentication/shell connection before any password or private key is sent.
-- `dev 0.1.6.4` adds `.gitignore` protection, release-artifact documentation, and checksum helpers for Linux, macOS, and Windows.
-- `dev 0.1.6.5` improves the macOS DMG/dependency flow and validates the simple DMG tester install path.
-- `dev 0.1.6.6` adds optional diagnostic logging for tester/debug workflows. Logging is OFF by default and can be enabled from Settings.
-- `dev 0.1.6.7` adds a compact Session Traffic indicator in the status bar for the active terminal tab, showing live received/sent rates and totals.
-- `dev 0.1.6.8` adds config import/export safety previews while keeping the human-readable JSON format unchanged.
-- `dev 0.1.6.9` is a small bugfix stabilization checkpoint for toolbar and config-dialog button labels.
-- `dev 0.1.7.7` adds the first single-file SFTP upload path: select one local file and upload it into the current remote folder with overwrite warning and basic progress.
-- `dev 0.1.7.6.1` polishes single-file download: remote Size sorting now uses raw bytes, and the completion dialog shows formatted size plus raw byte count.
-- `dev 0.1.7.6` adds the first single-file SFTP download path: select one remote file and download it into the current local folder with overwrite warning and basic progress.
-- `dev 0.1.7.5` added the first two-panel read-only file manager foundation: local browser on the left, remote SFTP browser on the right, both read-only and no transfers yet.
-- `dev 0.1.7.4.1` polishes the first read-only SFTP browser: exit safety now lists SFTP browser tabs, alternating table rows are disabled for dark-theme readability, and tab scroll-button hints are forced for crowded tab bars on macOS/Windows/Linux.
-- `dev 0.1.7.4` added the first graphical read-only SFTP remote browser: saved session → known-host preflight → host-key verification before auth → SFTP listing table with path, Go, Up, Refresh, and double-click folder navigation.
-- `dev 0.1.7.3` adds the first SFTP connection proof of concept: saved session → known-host preflight → host-key verification before auth → SFTP init → remote `.` listing in a text tab.
-- `dev 0.1.7.2` starts the File Transfer / File Manager track with architecture docs and a safe File Manager placeholder; it does not open SFTP yet.
-- `dev 0.1.7.1` hardens native xterm.js paste handling: toolbar Paste, right-click paste, Ctrl+Shift+V, and macOS Command+V now route through the same DD-SSH safe paste path and should not leak bracketed paste markers such as `^[[200~` into the remote shell.
-- `dev 0.1.7.0` hardens terminal transport: SSH output is carried as bytes to the WebEngine terminal, decoded with a streaming UTF-8 decoder, and input writes are partial-write aware so large paste/input is not silently truncated.
+- `dev 0.1.8.4` adds overwrite metadata dialogs.
+- `dev 0.1.8.3.1` polishes SFTP upload logging around overwrite preflight checks.
+- `dev 0.1.8.3` adds explicit SFTP/file-transfer diagnostic logging while keeping logs free of secrets and file contents.
+- `dev 0.1.8.2` adds file manager safety polish for tester runs.
+- `dev 0.1.8.1.1` consolidates File Manager queue actions into local `Queue upload` and remote `Queue download`.
+- `dev 0.1.8.1` adds the first recursive folder-transfer experiment by expanding folders into queue items.
+- `dev 0.1.8.0.x` builds the transfer queue foundation, Overwrite all / Skip all, Retry selected, and queue stabilization.
+- `dev 0.1.7.x` builds the SFTP probe, remote browser, two-panel File Manager, single-file download/upload, and progress/cancel polish.
+- `dev 0.1.7.1` remains the closed terminal foundation baseline after native paste hardening.
 
-In `dev 0.1.8.6.4`, DD-SSH polishes UI wording and keeps the accepted `dev 0.1.8.6.2` terminal paste newline fix. In `dev 0.1.8.6.2`, DD-SSH keeps the accepted `dev 0.1.8.6` File Manager delete UI baseline and fixes terminal paste newline handling for full-screen editors such as nano. In `dev 0.1.8.6`, DD-SSH keeps the accepted `dev 0.1.8.5` remote delete queue behavior and adds a matching conservative local delete queue action while simplifying File Manager labels. In `dev 0.1.8.5`, DD-SSH kept the accepted `dev 0.1.8.4` overwrite metadata behavior and added a conservative remote delete queue experiment. In `dev 0.1.8.4`, DD-SSH kept the accepted `dev 0.1.8.3.1` logging behavior and focused on clearer overwrite decisions with file metadata. In `dev 0.1.8.3`, DD-SSH kept the accepted `dev 0.1.8.2` queue/file-manager behavior and added diagnostic logging for tester runs. Diagnostic logging is still optional and OFF by default; when enabled, it records transfer metadata and queue outcomes only. It must not record secrets, file contents, clipboard data, or terminal input/output. In `dev 0.1.8.2`, DD-SSH focused on safety polish for tester runs. Queue processing remains sequential and conservative while the File Manager controls use local `Queue upload` and remote `Queue download` around the folder-transfer experiment. Folder transfer is still implemented as scan → expand into queue items → transfer one item at a time. No parallel execution, resume, sync engine, permission/timestamp preservation, symlink following, or SFTP Session Traffic integration yet.
-
-The future file-transfer design is documented in `docs/FILE_TRANSFER_ARCHITECTURE.md`. Third-party tester flow is documented in `docs/TESTER_CHECKLIST_0.1.8.1.2.md`. File transfer will use libssh SFTP APIs, not shell command parsing hacks. Terminal tabs and future File Manager tabs are intentionally separated so the working terminal foundation remains stable.
-
-The portable known-host model now supports multi-key storage per `host:port`:
-
-- old single-key known-host entries are migrated when saved
-- a new legitimate key algorithm is offered as **Trust additional key** instead of forcing **Replace stored key**
-- true same-algorithm fingerprint mismatches still show the strong SSH host-key-changed warning
-- `Trust once` continues for the current attempt without saving the new key
-
-On Windows builds, DD-SSH applies a conservative libssh KEX override before `ssh_connect()` so affected Windows/vcpkg/libssh builds can connect to modern OpenSSH servers where the default algorithm proposal previously failed with `Failed to construct client init buffer`. The server-side workaround used during debugging is no longer required for the validated regression case.
-
-The previous polish pass also added two user-safety clarifications:
-
-- new saved sessions are stored only after a successful SSH authentication test
-- closing DD-SSH with active SSH terminal tabs asks for confirmation before disconnecting them
-
-On Windows, the first xterm.js terminal tab may take a few seconds while Qt WebEngine initializes; DD-SSH reports that startup state more clearly:
-
-```text
-saved session → plaintext secret from dd-ssh.json → known_hosts check → SSH auth → xterm.js terminal → PTY resize → real shell
-```
+The future file-transfer design is documented in `docs/FILE_TRANSFER_ARCHITECTURE.md`. Third-party tester flow is documented in `docs/TESTER_CHECKLIST_0.1.8.7.md`. File transfer uses libssh SFTP APIs, not shell command parsing hacks. Terminal tabs and File Manager tabs are intentionally separated so the working terminal foundation remains stable.
 
 ### Important session-save behavior
 
@@ -92,14 +106,11 @@ DD-SSH saves a new session only after a successful SSH authentication test.
 
 If the host is unreachable, the port is wrong, the username/password is wrong, the private key is invalid, or the known-host check does not allow continuing, the session is not written to `dd-ssh.json`.
 
-This prevents broken or unverified sessions from being saved as normal connection profiles.
-
 ### Exit safety
 
-If one or more SSH terminal tabs or SFTP file manager tabs are open, closing the app with the window close button or `File → Exit` asks for confirmation before closing them.
+If SSH terminal tabs, SFTP file manager tabs, or pending/running queue work exist, closing the app with the window close button or `File → Exit` asks for confirmation.
 
 ---
-
 
 
 

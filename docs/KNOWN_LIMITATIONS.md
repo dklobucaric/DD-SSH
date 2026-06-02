@@ -1,6 +1,11 @@
 # DD-SSH Known Limitations
 
-**Checkpoint:** dev 0.1.8.6.2 — Andromeda
+## dev 0.1.8.7 tester-build limitations
+
+`dev 0.1.8.7` is a tester packaging/documentation checkpoint on top of the accepted `dev 0.1.8.6.4` File Manager baseline. Runtime behavior is still alpha quality. Use harmless test folders first. The current File Manager intentionally does not implement sync/mirror, resume, parallel transfers, recursive non-empty folder delete, rename, chmod/chown, permission/timestamp preservation, symlink following in recursive folder transfer, or SFTP traffic monitor integration. `plain-v1` secrets remain human-readable in `dd-ssh.json`; keep configs private.
+
+
+**Checkpoint:** dev 0.1.8.7 — Andromeda
 
 This document lists limitations that should be visible to testers. Nothing here is hidden or sugar-coated.
 
@@ -22,7 +27,7 @@ This document lists limitations that should be visible to testers. Nothing here 
 - Linux is the primary tested platform.
 - Native Windows Debug and Release builds have been validated for app launch and SSH/xterm workflows. Standalone deployment-folder validation passed on real Windows 10/11 machines. Known-host multi-key portability and Windows libssh KEX compatibility have also been validated.
 - macOS Intel builds and a first unsigned `.dmg` workflow have been validated locally, but clean tester-Mac coverage is still limited.
-- Windows installer packaging is not ready; the current Windows target is a copied `dist\windows-release` folder.
+- Windows installer packaging is not ready; the current Windows target is a portable `dist\windows-release` folder and optional versioned ZIP helper for testers.
 - macOS code signing/notarization is not ready; testers may need right-click → Open for unsigned apps.
 
 ---

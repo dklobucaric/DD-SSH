@@ -1,5 +1,26 @@
 # DD-SSH Test Matrix
 
+## dev 0.1.8.7 — Release/tester packaging polish smoke test
+
+[ ] About shows dev 0.1.8.7  
+[ ] About shows milestone `Release/tester packaging polish`  
+[ ] Welcome screen lists current SSH terminal and SFTP File Manager alpha features  
+[ ] README current status shows dev 0.1.8.7  
+[ ] `docs/FEATURE_AUDIT_0.1.8.7.md` exists and lists current features/limitations  
+[ ] `docs/RELEASE_TESTER_PACKAGING_0.1.8.7.md` exists and lists Linux/Windows/macOS packaging commands  
+[ ] `docs/TESTER_CHECKLIST_0.1.8.7.md` exists for third-party testers  
+[ ] Linux `.deb` helper produces a `0.1.8.7` artifact name  
+[ ] macOS `.dmg` helper produces a `0.1.8.7` artifact name and otool report  
+[ ] Windows portable ZIP helper produces `DD-SSH-0.1.8.7-Windows-x86_64-portable.zip`  
+[ ] Checksum helpers produce `dist/SHA256SUMS`  
+[ ] Terminal opens and multiline paste still works  
+[ ] File Manager queue upload/download/delete still works  
+[ ] Diagnostic logging remains OFF by default and logs no secrets/file contents when enabled  
+
+**Checkpoint:** dev 0.1.8.7 — Andromeda  
+**Milestone:** Release/tester packaging polish  
+**Phase:** Release/tester packaging polish for File Manager alpha
+
 ## dev 0.1.8.6.4 — Queue delete confirmation ordering polish smoke test
 
 [ ] About shows dev 0.1.8.6.4  

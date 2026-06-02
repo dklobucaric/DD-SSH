@@ -1,3 +1,15 @@
+## dev 0.1.8.7 — Release/tester packaging polish
+
+- Updated `CMakeLists.txt` to `dev 0.1.8.7` with milestone `Release/tester packaging polish`.
+- Refreshed the Welcome screen with the current terminal + File Manager alpha feature set, known limits, and tester/packaging documentation pointers.
+- Refreshed README current status and current feature inventory for Linux/Windows/macOS tester handoff.
+- Added `docs/FEATURE_AUDIT_0.1.8.7.md` with the current feature list and intentional limitations.
+- Added `docs/RELEASE_TESTER_PACKAGING_0.1.8.7.md` with Linux `.deb`, Windows portable ZIP, macOS `.dmg`, and checksum checklist.
+- Added `docs/TESTER_CHECKLIST_0.1.8.7.md` for third-party testers.
+- Added Windows portable ZIP helper scripts: `scripts/windows-package-portable.ps1` and `scripts/windows-package-portable.bat`.
+- Updated documentation index, feature/limitation notes, roadmap, packaging docs, release artifacts, and test matrix.
+- Runtime SSH/SFTP/terminal behavior remains the accepted `dev 0.1.8.6.4` baseline.
+
 ## dev 0.1.8.6.4 — Queue delete confirmation ordering polish
 
 - Fixed queue confirmation ordering for destructive local/remote delete items.

@@ -1,5 +1,16 @@
 # DD-SSH Roadmap
 
+## dev 0.1.8.7 — Release/tester packaging polish
+
+`dev 0.1.8.7` prepares the accepted terminal + File Manager alpha baseline for full Linux/Windows/macOS tester packaging. It refreshes README, Welcome screen, feature audit, tester checklist, packaging checklist, test matrix, and release-artifact documentation. Runtime SSH/SFTP behavior remains the accepted `dev 0.1.8.6.4` baseline.
+
+Next practical candidates after tester packaging:
+
+- SFTP traffic monitor integration for upload/download bytes.
+- Tester-feedback bugfix pass.
+- File Manager safety/UX polish around real-world path and permission edge cases.
+
+
 ## Codename roadmap
 
 ```text
@@ -44,7 +55,7 @@ Already implemented:
 
 Active File Transfer / File Manager track:
 
-Current checkpoint: `dev 0.1.8.6.2` — terminal paste newline safety polish. This checkpoint keeps the accepted `dev 0.1.8.6` File Manager delete UI baseline and fixes multiline paste into full-screen terminal editors such as nano by sending pasted line breaks as terminal carriage returns.
+Current checkpoint: `dev 0.1.8.7` — release/tester packaging polish. This checkpoint packages and documents the accepted terminal + File Manager alpha baseline for Linux/Windows/macOS tester validation while keeping runtime behavior stable.
 
 ```text
 dev 0.1.7.2 — File transport architecture/design foundation [done]
@@ -67,9 +78,14 @@ dev 0.1.8.2 — file manager safety polish [done]
 dev 0.1.8.3 — file transfer logging and diagnostics [accepted]
 dev 0.1.8.3.1 — SFTP logging polish [accepted]
 dev 0.1.8.4 — overwrite metadata dialog polish [accepted]
-dev 0.1.8.6.2 — Terminal paste newline safety polish [current]
-dev 0.1.8.6 — File Manager delete UI polish
-dev 0.1.8.7 — SFTP traffic monitor widget integration [planned]
+dev 0.1.8.5 — Remote queue delete experiment [accepted]
+dev 0.1.8.6 — File Manager delete UI polish [accepted]
+dev 0.1.8.6.1 — Linux/macOS package version detection polish [accepted]
+dev 0.1.8.6.2 — Terminal paste newline safety polish [accepted]
+dev 0.1.8.6.3 — UI wording and File Manager polish [accepted]
+dev 0.1.8.6.4 — Queue delete confirmation ordering polish [accepted]
+dev 0.1.8.7 — Release/tester packaging polish [current]
+dev 0.1.8.8 — SFTP traffic monitor widget integration [planned]
 dev 0.1.9.x — cross-platform file transfer stabilization
 ```
 

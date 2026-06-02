@@ -1,5 +1,12 @@
 # DD-SSH Features and Limitations
 
+## dev 0.1.8.7 current feature summary
+
+`dev 0.1.8.7` is a release/tester packaging polish checkpoint. Current working features include saved sessions, password/private-key auth, known-host trust with multi-key portability, xterm.js terminal tabs, multiline paste handling for nano/YAML/config editing, optional diagnostic logging, two-panel SFTP File Manager, queue-first upload/download/delete workflows, experimental recursive folder upload/download through queue expansion, Retry selected, Overwrite all / Skip all, overwrite metadata dialogs, and local/remote queued delete for regular files, symlinks, and empty folders. Packaging/tester support now includes Linux `.deb`, Windows portable deployment + ZIP helper, macOS Intel `.dmg`, and checksum helpers.
+
+Intentional limits remain: no sync/mirror, no resume, no parallel transfers, no recursive non-empty folder delete, no chmod/chown/rename, no permission/timestamp preservation, no symlink following in folder transfer, and no SFTP traffic monitor integration yet.
+
+
 ## Current feature set
 
 ### Core app

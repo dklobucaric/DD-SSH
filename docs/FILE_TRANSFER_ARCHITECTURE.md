@@ -1,5 +1,10 @@
 # DD-SSH File Transfer Architecture
 
+## dev 0.1.8.7 release/tester baseline [current]
+
+The accepted File Manager baseline is queue-first: local `Queue upload` / `Delete local`, remote `Queue download` / `Delete remote`, sequential processing, metadata overwrite dialogs, Retry selected, destructive delete confirmation at the point where the queue reaches the delete item, and optional diagnostic logging. `dev 0.1.8.7` does not change this runtime architecture; it packages and documents it for external tester validation.
+
+
 **Checkpoint:** dev 0.1.8.6 — Andromeda  
 **Status:** Transfer queue foundation  
 **Runtime behavior:** saved-session File Manager can browse local/remote directories, perform immediate one-file download/upload, queue multiple individual file downloads/uploads, and run queued items sequentially
@@ -566,7 +571,7 @@ This proves the first remote browser UI without risking the tested terminal base
 Queue foundation adds multiple individual file items and sequential execution while preserving existing transfer safety behavior. Overwrite metadata comparison, folder transfer, parallel transfer, and SFTP traffic integration remain deferred.
 
 
-### dev 0.1.8.6 — File Manager delete UI polish [current]
+### dev 0.1.8.6 — File Manager delete UI polish [accepted]
 
 `dev 0.1.8.6` renames remote delete to `Delete remote`, adds local `Delete local`, and keeps both actions routed through the existing sequential transfer queue. Delete items require destructive confirmations before enqueue and before queue execution, and emit diagnostic log events when logging is enabled. Supported in this checkpoint: regular files, symlinks, and empty directories. Recursive non-empty folder delete is intentionally not implemented.
 
