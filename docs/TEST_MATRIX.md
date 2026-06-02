@@ -1,8 +1,19 @@
 # DD-SSH Test Matrix
 
-**Checkpoint:** dev 0.1.8.6 — Andromeda  
-**Milestone:** File Manager delete UI polish  
-**Phase:** Local/remote queued delete validation
+**Checkpoint:** dev 0.1.8.6.1 — Andromeda  
+**Milestone:** macOS/Linux artifact version polish  
+**Phase:** Release packaging script validation
+
+## dev 0.1.8.6.1 — macOS/Linux artifact version polish smoke test
+
+[ ] About shows dev 0.1.8.6.1  
+[ ] macOS build still succeeds with `./scripts/macos-build-release.sh`  
+[ ] macOS deploy prints `Package version: 0.1.8.6.1`  
+[ ] macOS deploy creates `dist/macos/DD-SSH-0.1.8.6.1-macOS-x86_64.dmg` by default  
+[ ] macOS dependency audit report is named `DD-SSH-0.1.8.6.1-macOS-x86_64-otool-report.txt` by default  
+[ ] `DD_SSH_MACOS_VERSION=custom ./scripts/macos-deploy-release.sh` still overrides the artifact version if needed  
+[ ] Linux Debian package script prints the detected package version and no longer defaults to stale `0.1.7.1`  
+[ ] File Manager, terminal, queue upload/download, local/remote delete, and diagnostic logging still work  
 
 ## dev 0.1.8.6 — local/remote delete UI polish smoke test
 

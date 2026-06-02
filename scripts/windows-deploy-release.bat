@@ -2,7 +2,7 @@
 setlocal EnableExtensions
 
 REM DD-SSH Windows deployment helper
-REM Checkpoint: dev 0.1.7.1 — Native paste event hardening
+REM Checkpoint: current DD-SSH Windows standalone deployment helper
 REM This is the simple working deployment BAT validated during the 0.1.5.6+ Windows standalone tests.
 REM Run from the DD-SSH repository root after building build-win-release\dd-ssh.exe.
 

@@ -1,3 +1,13 @@
+## dev 0.1.8.6.1 — Andromeda
+
+macOS/Linux release artifact version polish.
+
+- Fixed `scripts/macos-deploy-release.sh` so DMG and dependency-audit filenames derive their default version from `DD_SSH_VERSION_STRING` in `CMakeLists.txt` instead of falling back to the stale `0.1.7.1` value.
+- Kept the optional `DD_SSH_MACOS_VERSION=...` environment override for manual artifact naming.
+- Fixed `scripts/linux-package-deb.sh` with the same automatic version detection so Debian package filenames/control metadata default to the current app checkpoint.
+- Added package-version output lines to macOS and Debian packaging scripts so release logs clearly show the artifact version being produced.
+- No runtime, SSH, SFTP, File Manager, queue, delete, logging, or config-schema behavior changes.
+
 ## dev 0.1.8.6 — Andromeda
 
 File Manager delete UI polish.

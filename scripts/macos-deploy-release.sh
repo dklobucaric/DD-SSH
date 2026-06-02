@@ -7,7 +7,26 @@ PROJECT_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 BUILD_DIR="${BUILD_DIR:-${PROJECT_ROOT}/build-macos-release}"
 DIST_DIR="${DIST_DIR:-${PROJECT_ROOT}/dist/macos}"
 QT_DIR="${QT_DIR:-${HOME}/Qt/6.11.1/macos}"
-VERSION="${DD_SSH_MACOS_VERSION:-0.1.7.1}"
+detect_project_version() {
+    local cmake_file="${PROJECT_ROOT}/CMakeLists.txt"
+    local version=""
+
+    if [[ -f "${cmake_file}" ]]; then
+        version="$(sed -nE 's/^[[:space:]]*set[[:space:]]*\([[:space:]]*DD_SSH_VERSION_STRING[[:space:]]+"dev[[:space:]]+([^"]+)".*$/\1/p' "${cmake_file}" | head -n 1 || true)"
+        if [[ -z "${version}" ]]; then
+            version="$(sed -nE 's/^[[:space:]]*set[[:space:]]*\([[:space:]]*DD_SSH_VERSION_STRING[[:space:]]+"v?([0-9][^"]*)".*$/\1/p' "${cmake_file}" | head -n 1 || true)"
+        fi
+    fi
+
+    if [[ -n "${version}" ]]; then
+        echo "${version}"
+        return 0
+    fi
+
+    echo "0.0.0"
+}
+PROJECT_VERSION="$(detect_project_version)"
+VERSION="${DD_SSH_MACOS_VERSION:-${PROJECT_VERSION}}"
 MACOS_ARCH="${MACOS_ARCH:-x86_64}"
 APP_NAME="${APP_NAME:-DD-SSH}"
 SOURCE_APP="${BUILD_DIR}/dd-ssh.app"
@@ -165,6 +184,7 @@ Notes:
 EOFMSG
 }
 
+echo "[DD-SSH] Package version: ${VERSION}"
 echo "[DD-SSH] Creating macOS deploy folder..."
 rm -rf "${DIST_DIR}"
 mkdir -p "${DIST_DIR}"

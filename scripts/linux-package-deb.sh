@@ -5,7 +5,26 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 
 PACKAGE_NAME="${PACKAGE_NAME:-dd-ssh}"
-DEB_VERSION="${DD_SSH_DEB_VERSION:-0.1.7.1}"
+detect_project_version() {
+    local cmake_file="${PROJECT_ROOT}/CMakeLists.txt"
+    local version=""
+
+    if [[ -f "${cmake_file}" ]]; then
+        version="$(sed -nE 's/^[[:space:]]*set[[:space:]]*\([[:space:]]*DD_SSH_VERSION_STRING[[:space:]]+"dev[[:space:]]+([^"]+)".*$/\1/p' "${cmake_file}" | head -n 1 || true)"
+        if [[ -z "${version}" ]]; then
+            version="$(sed -nE 's/^[[:space:]]*set[[:space:]]*\([[:space:]]*DD_SSH_VERSION_STRING[[:space:]]+"v?([0-9][^"]*)".*$/\1/p' "${cmake_file}" | head -n 1 || true)"
+        fi
+    fi
+
+    if [[ -n "${version}" ]]; then
+        echo "${version}"
+        return 0
+    fi
+
+    echo "0.0.0"
+}
+PROJECT_VERSION="$(detect_project_version)"
+DEB_VERSION="${DD_SSH_DEB_VERSION:-${PROJECT_VERSION}}"
 ARCH="${DEB_ARCH:-$(dpkg --print-architecture 2>/dev/null || echo amd64)}"
 BUILD_DIR="${BUILD_DIR:-${PROJECT_ROOT}/build-linux-release}"
 OUT_DIR="${OUT_DIR:-${PROJECT_ROOT}/dist/deb}"
@@ -22,6 +41,7 @@ if [[ ! -x "${BUILD_DIR}/dd-ssh" ]]; then
     "${SCRIPT_DIR}/linux-build-release.sh"
 fi
 
+echo "[DD-SSH] Debian package version: ${DEB_VERSION}"
 echo "[DD-SSH] Creating Debian package staging tree..."
 rm -rf "${PKG_ROOT}" "${DEB_FILE}"
 mkdir -p "${PKG_ROOT}"

@@ -125,3 +125,6 @@ GitHub issue templates live under `.github/ISSUE_TEMPLATE/`.
 
 - docs/BUILD_AND_TEST_0.1.8.0.4.1.md — Build and test notes for the queue stabilization compile hotfix.
 - docs/TESTCASE_0.1.8.0.4.1.md — Testcase for the queue stabilization compile hotfix.
+
+- [Build and test 0.1.8.6.1](BUILD_AND_TEST_0.1.8.6.1.md)
+- [Test case 0.1.8.6.1](TESTCASE_0.1.8.6.1.md)

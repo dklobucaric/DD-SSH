@@ -103,7 +103,7 @@ They do not checksum every file inside a Windows portable folder. Create a porta
 ```bash
 # Linux .deb
 ./scripts/linux-build-release.sh
-DD_SSH_DEB_VERSION=0.1.6.5 ./scripts/linux-package-deb.sh
+./scripts/linux-package-deb.sh
 
 # Optional: put/copy all final assets under dist/ before generating checksums
 ./scripts/generate-checksums-linux.sh
@@ -125,10 +125,15 @@ macOS release example:
 
 ```bash
 ./scripts/macos-build-release.sh
-DD_SSH_MACOS_VERSION=0.1.6.5 ./scripts/macos-deploy-release.sh
+./scripts/macos-deploy-release.sh
 ./scripts/generate-checksums-macos.sh
 ```
 
 ## Source ZIP note
 
 A source-code ZIP prepared for testing is not a repository artifact. It may be shared manually for review, but it should not be committed back into the repository.
+
+
+## dev 0.1.8.6.1 artifact version note
+
+macOS and Debian packaging scripts now derive their default artifact version from `DD_SSH_VERSION_STRING` in `CMakeLists.txt`. Use `DD_SSH_MACOS_VERSION=...` or `DD_SSH_DEB_VERSION=...` only when an explicit override is needed.
